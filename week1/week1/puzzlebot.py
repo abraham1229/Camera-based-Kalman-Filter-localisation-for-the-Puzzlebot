@@ -8,42 +8,41 @@ import numpy as np
 class FramePublisher(Node):
 
     def __init__(self):
-        super().__init__('frame_publisher')
+        super().__init__('frame_publisher_ri', namespace='robo_inges')
         
         # Static frames
-        # self.map = StaticTransformBroadcaster(self)
-        # self.odom = StaticTransformBroadcaster(self)
+        self.map = StaticTransformBroadcaster(self)
+        self.odom = StaticTransformBroadcaster(self)
         self.base_link = StaticTransformBroadcaster(self)
         self.caster_link = StaticTransformBroadcaster(self)
 
-
         # # Map values
-        # t = TransformStamped()
-        # t.header.stamp = self.get_clock().now().to_msg()
-        # t.header.frame_id = 'world'
-        # t.child_frame_id = 'map'
-        # t.transform.translation.x = 1.0
-        # t.transform.translation.y = 0.0
-        # t.transform.translation.z = 0.0
-        # q = transforms3d.euler.euler2quat(0, 0, 0)      #input euler2quat(roll, pitch, yaw) , output q=[w, x, y, z] 
-        # t.transform.rotation.x = q[1]
-        # t.transform.rotation.y = q[2]
-        # t.transform.rotation.z = q[3]
-        # t.transform.rotation.w = q[0]
+        t = TransformStamped()
+        t.header.stamp = self.get_clock().now().to_msg()
+        t.header.frame_id = 'world'
+        t.child_frame_id = 'map'
+        t.transform.translation.x = 1.0
+        t.transform.translation.y = 0.0
+        t.transform.translation.z = 0.0
+        q = transforms3d.euler.euler2quat(0, 0, 0)      #input euler2quat(roll, pitch, yaw) , output q=[w, x, y, z] 
+        t.transform.rotation.x = q[1]
+        t.transform.rotation.y = q[2]
+        t.transform.rotation.z = q[3]
+        t.transform.rotation.w = q[0]
 
         # # Odom values
-        # t2 = TransformStamped()
-        # t2.header.stamp = self.get_clock().now().to_msg()
-        # t2.header.frame_id = 'map'
-        # t2.child_frame_id = 'odom'
-        # t2.transform.translation.x = 1.0
-        # t2.transform.translation.y = 0.0
-        # t2.transform.translation.z = 0.0
-        # q = transforms3d.euler.euler2quat(0, 0, 0)      #input euler2quat(roll, pitch, yaw) , output q=[w, x, y, z] 
-        # t2.transform.rotation.x = q[1]
-        # t2.transform.rotation.y = q[2]
-        # t2.transform.rotation.z = q[3]
-        # t2.transform.rotation.w = q[0]
+        t2 = TransformStamped()
+        t2.header.stamp = self.get_clock().now().to_msg()
+        t2.header.frame_id = 'map'
+        t2.child_frame_id = 'odom'
+        t2.transform.translation.x = 1.0
+        t2.transform.translation.y = 0.0
+        t2.transform.translation.z = 0.0
+        q = transforms3d.euler.euler2quat(0, 0, 0)      #input euler2quat(roll, pitch, yaw) , output q=[w, x, y, z] 
+        t2.transform.rotation.x = q[1]
+        t2.transform.rotation.y = q[2]
+        t2.transform.rotation.z = q[3]
+        t2.transform.rotation.w = q[0]
 
         # Base link values
         t3 = TransformStamped()
@@ -76,9 +75,9 @@ class FramePublisher(Node):
 
 
 
-        # Publish the nodes
-        # self.map.sendTransform(t)
-        # self.odom.sendTransform(t2)
+        # Publish the static nodes
+        self.map.sendTransform(t)
+        self.odom.sendTransform(t2)
         self.base_link.sendTransform(t3)
         self.caster_link.sendTransform(t4)
 
@@ -112,7 +111,7 @@ class FramePublisher(Node):
         self.base_footprint.header.stamp = self.get_clock().now().to_msg()
         self.base_footprint.header.frame_id = 'odom'
         self.base_footprint.child_frame_id = 'base_footprint'
-        self.base_footprint.transform.translation.x = 1.0 + elapsed_time*0.05
+        self.base_footprint.transform.translation.x = 1.0 + elapsed_time*0.03
         self.base_footprint.transform.translation.y = 0.0
         self.base_footprint.transform.translation.z = 0.0
         q = transforms3d.euler.euler2quat(0, 0, 0)      #input euler2quat(roll, pitch, yaw) , output q=[w, x, y, z] 
@@ -126,9 +125,9 @@ class FramePublisher(Node):
         self.wheel_r_link.header.stamp = self.get_clock().now().to_msg()
         self.wheel_r_link.header.frame_id = 'base_link'
         self.wheel_r_link.child_frame_id = 'wheel_r_link'
-        self.wheel_r_link.transform.translation.x = 0.052*5
-        self.wheel_r_link.transform.translation.y = -0.095*5
-        self.wheel_r_link.transform.translation.z = -0.0025*5
+        self.wheel_r_link.transform.translation.x = 0.052*3
+        self.wheel_r_link.transform.translation.y = -0.095*3
+        self.wheel_r_link.transform.translation.z = -0.0025*3
         q = transforms3d.euler.euler2quat(0, elapsed_time, 0)      #input euler2quat(roll, pitch, yaw) , output q=[w, x, y, z] 
         self.wheel_r_link.transform.rotation.x = q[1]
         self.wheel_r_link.transform.rotation.y = q[2]
@@ -139,9 +138,9 @@ class FramePublisher(Node):
         self.wheel_l_link.header.stamp = self.get_clock().now().to_msg()
         self.wheel_l_link.header.frame_id = 'base_link'
         self.wheel_l_link.child_frame_id = 'wheel_l_link'
-        self.wheel_l_link.transform.translation.x = 0.052*5
-        self.wheel_l_link.transform.translation.y = 0.095*5
-        self.wheel_l_link.transform.translation.z = -0.0025*5
+        self.wheel_l_link.transform.translation.x = 0.052*3
+        self.wheel_l_link.transform.translation.y = 0.095*3
+        self.wheel_l_link.transform.translation.z = -0.0025*3
         q = transforms3d.euler.euler2quat(0, elapsed_time, 0)      #input euler2quat(roll, pitch, yaw) , output q=[w, x, y, z] 
         self.wheel_l_link.transform.rotation.x = q[1]
         self.wheel_l_link.transform.rotation.y = q[2]
