@@ -1,0 +1,45 @@
+running egg_info
+creating ../build/week1/week1.egg-info
+writing ../build/week1/week1.egg-info/PKG-INFO
+writing dependency_links to ../build/week1/week1.egg-info/dependency_links.txt
+writing entry points to ../build/week1/week1.egg-info/entry_points.txt
+writing requirements to ../build/week1/week1.egg-info/requires.txt
+writing top-level names to ../build/week1/week1.egg-info/top_level.txt
+writing manifest file '../build/week1/week1.egg-info/SOURCES.txt'
+reading manifest file '../build/week1/week1.egg-info/SOURCES.txt'
+adding license file 'LICENSE'
+writing manifest file '../build/week1/week1.egg-info/SOURCES.txt'
+running build
+running build_py
+creating /home/ai31/ros2_ws/src/files/build/week1/build/lib/week1
+copying week1/__init__.py -> /home/ai31/ros2_ws/src/files/build/week1/build/lib/week1
+copying week1/puzzlebot.py -> /home/ai31/ros2_ws/src/files/build/week1/build/lib/week1
+running install
+running install_lib
+creating /home/ai31/ros2_ws/src/files/install/week1/lib/python3.10/site-packages/week1
+copying /home/ai31/ros2_ws/src/files/build/week1/build/lib/week1/__init__.py -> /home/ai31/ros2_ws/src/files/install/week1/lib/python3.10/site-packages/week1
+copying /home/ai31/ros2_ws/src/files/build/week1/build/lib/week1/puzzlebot.py -> /home/ai31/ros2_ws/src/files/install/week1/lib/python3.10/site-packages/week1
+byte-compiling /home/ai31/ros2_ws/src/files/install/week1/lib/python3.10/site-packages/week1/__init__.py to __init__.cpython-310.pyc
+byte-compiling /home/ai31/ros2_ws/src/files/install/week1/lib/python3.10/site-packages/week1/puzzlebot.py to puzzlebot.cpython-310.pyc
+running install_data
+creating /home/ai31/ros2_ws/src/files/install/week1/share/ament_index/resource_index/packages
+copying resource/week1 -> /home/ai31/ros2_ws/src/files/install/week1/share/ament_index/resource_index/packages
+copying package.xml -> /home/ai31/ros2_ws/src/files/install/week1/share/week1
+creating /home/ai31/ros2_ws/src/files/install/week1/share/week1/launch
+copying launch/urtf_launch.py -> /home/ai31/ros2_ws/src/files/install/week1/share/week1/launch
+copying launch/week1_launch.py -> /home/ai31/ros2_ws/src/files/install/week1/share/week1/launch
+creating /home/ai31/ros2_ws/src/files/install/week1/share/week1/config
+creating /home/ai31/ros2_ws/src/files/install/week1/share/week1/rviz
+creating /home/ai31/ros2_ws/src/files/install/week1/share/week1/meshes
+copying meshes/MCR2_caster_wheel.stl -> /home/ai31/ros2_ws/src/files/install/week1/share/week1/meshes
+copying meshes/MCR2_puzzlebot_jetson_lidar_base.stl -> /home/ai31/ros2_ws/src/files/install/week1/share/week1/meshes
+copying meshes/MCR2_puzzlebot_jetson_base.stl -> /home/ai31/ros2_ws/src/files/install/week1/share/week1/meshes
+copying meshes/MCR2_puzzlebot_base.stl -> /home/ai31/ros2_ws/src/files/install/week1/share/week1/meshes
+copying meshes/MCR2_wheel.stl -> /home/ai31/ros2_ws/src/files/install/week1/share/week1/meshes
+creating /home/ai31/ros2_ws/src/files/install/week1/share/week1/urdf
+copying urdf/puzzle.urdf -> /home/ai31/ros2_ws/src/files/install/week1/share/week1/urdf
+running install_egg_info
+Copying ../build/week1/week1.egg-info to /home/ai31/ros2_ws/src/files/install/week1/lib/python3.10/site-packages/week1-0.0.0-py3.10.egg-info
+running install_scripts
+Installing puzzlebot script to /home/ai31/ros2_ws/src/files/install/week1/lib/week1
+writing list of installed files to '/home/ai31/ros2_ws/src/files/build/week1/install.log'

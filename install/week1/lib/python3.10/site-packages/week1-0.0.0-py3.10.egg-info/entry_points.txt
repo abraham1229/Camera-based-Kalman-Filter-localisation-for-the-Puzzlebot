@@ -1,0 +1,2 @@
+[console_scripts]
+puzzlebot = week1.puzzlebot:main
