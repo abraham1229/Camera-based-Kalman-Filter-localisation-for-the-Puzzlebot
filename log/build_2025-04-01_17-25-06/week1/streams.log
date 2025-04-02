@@ -1,0 +1,49 @@
+[0.374s] Invoking command in '/home/ai31/ros2_ws/src/files/week1': PYTHONPATH=/home/ai31/ros2_ws/src/files/build/week1/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/ai31/ros2_ws/src/files/install/week1/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py egg_info --egg-base ../build/week1 build --build-base /home/ai31/ros2_ws/src/files/build/week1/build install --record /home/ai31/ros2_ws/src/files/build/week1/install.log --single-version-externally-managed install_data
+[0.474s] /home/ai31/.local/lib/python3.10/site-packages/setuptools/_distutils/dist.py:289: UserWarning: Unknown distribution option: 'tests_require'
+[0.474s]   warnings.warn(msg)
+[0.517s] running egg_info
+[0.524s] creating ../build/week1/week1.egg-info
+[0.524s] writing ../build/week1/week1.egg-info/PKG-INFO
+[0.524s] writing dependency_links to ../build/week1/week1.egg-info/dependency_links.txt
+[0.524s] writing entry points to ../build/week1/week1.egg-info/entry_points.txt
+[0.524s] writing requirements to ../build/week1/week1.egg-info/requires.txt
+[0.524s] writing top-level names to ../build/week1/week1.egg-info/top_level.txt
+[0.524s] writing manifest file '../build/week1/week1.egg-info/SOURCES.txt'
+[0.539s] reading manifest file '../build/week1/week1.egg-info/SOURCES.txt'
+[0.539s] adding license file 'LICENSE'
+[0.540s] writing manifest file '../build/week1/week1.egg-info/SOURCES.txt'
+[0.540s] running build
+[0.540s] running build_py
+[0.540s] creating /home/ai31/ros2_ws/src/files/build/week1/build/lib/week1
+[0.540s] copying week1/__init__.py -> /home/ai31/ros2_ws/src/files/build/week1/build/lib/week1
+[0.540s] copying week1/puzzlebot.py -> /home/ai31/ros2_ws/src/files/build/week1/build/lib/week1
+[0.540s] running install
+[0.543s] running install_lib
+[0.550s] creating /home/ai31/ros2_ws/src/files/install/week1/lib/python3.10/site-packages/week1
+[0.550s] copying /home/ai31/ros2_ws/src/files/build/week1/build/lib/week1/__init__.py -> /home/ai31/ros2_ws/src/files/install/week1/lib/python3.10/site-packages/week1
+[0.550s] copying /home/ai31/ros2_ws/src/files/build/week1/build/lib/week1/puzzlebot.py -> /home/ai31/ros2_ws/src/files/install/week1/lib/python3.10/site-packages/week1
+[0.550s] byte-compiling /home/ai31/ros2_ws/src/files/install/week1/lib/python3.10/site-packages/week1/__init__.py to __init__.cpython-310.pyc
+[0.550s] byte-compiling /home/ai31/ros2_ws/src/files/install/week1/lib/python3.10/site-packages/week1/puzzlebot.py to puzzlebot.cpython-310.pyc
+[0.551s] running install_data
+[0.551s] creating /home/ai31/ros2_ws/src/files/install/week1/share/ament_index/resource_index/packages
+[0.551s] copying resource/week1 -> /home/ai31/ros2_ws/src/files/install/week1/share/ament_index/resource_index/packages
+[0.551s] copying package.xml -> /home/ai31/ros2_ws/src/files/install/week1/share/week1
+[0.551s] creating /home/ai31/ros2_ws/src/files/install/week1/share/week1/launch
+[0.552s] copying launch/urtf_launch.py -> /home/ai31/ros2_ws/src/files/install/week1/share/week1/launch
+[0.552s] copying launch/week1_launch.py -> /home/ai31/ros2_ws/src/files/install/week1/share/week1/launch
+[0.552s] creating /home/ai31/ros2_ws/src/files/install/week1/share/week1/config
+[0.552s] creating /home/ai31/ros2_ws/src/files/install/week1/share/week1/rviz
+[0.552s] creating /home/ai31/ros2_ws/src/files/install/week1/share/week1/meshes
+[0.552s] copying meshes/MCR2_caster_wheel.stl -> /home/ai31/ros2_ws/src/files/install/week1/share/week1/meshes
+[0.552s] copying meshes/MCR2_puzzlebot_jetson_lidar_base.stl -> /home/ai31/ros2_ws/src/files/install/week1/share/week1/meshes
+[0.552s] copying meshes/MCR2_puzzlebot_jetson_base.stl -> /home/ai31/ros2_ws/src/files/install/week1/share/week1/meshes
+[0.552s] copying meshes/MCR2_puzzlebot_base.stl -> /home/ai31/ros2_ws/src/files/install/week1/share/week1/meshes
+[0.552s] copying meshes/MCR2_wheel.stl -> /home/ai31/ros2_ws/src/files/install/week1/share/week1/meshes
+[0.552s] creating /home/ai31/ros2_ws/src/files/install/week1/share/week1/urdf
+[0.553s] copying urdf/puzzle.urdf -> /home/ai31/ros2_ws/src/files/install/week1/share/week1/urdf
+[0.553s] running install_egg_info
+[0.560s] Copying ../build/week1/week1.egg-info to /home/ai31/ros2_ws/src/files/install/week1/lib/python3.10/site-packages/week1-0.0.0-py3.10.egg-info
+[0.561s] running install_scripts
+[0.622s] Installing puzzlebot script to /home/ai31/ros2_ws/src/files/install/week1/lib/week1
+[0.622s] writing list of installed files to '/home/ai31/ros2_ws/src/files/build/week1/install.log'
+[0.637s] Invoked command in '/home/ai31/ros2_ws/src/files/week1' returned '0': PYTHONPATH=/home/ai31/ros2_ws/src/files/build/week1/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/ai31/ros2_ws/src/files/install/week1/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py egg_info --egg-base ../build/week1 build --build-base /home/ai31/ros2_ws/src/files/build/week1/build install --record /home/ai31/ros2_ws/src/files/build/week1/install.log --single-version-externally-managed install_data
