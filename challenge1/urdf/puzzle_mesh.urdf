@@ -23,7 +23,7 @@
     <link name="wheel_left_link">
         <visual>
             <origin xyz="0.055 0.0048 0" rpy="-1.57 0 0" />
-            <geometry>robot_desc
+            <geometry>robot_desc </geometry>
             <material name="yellow">
                 <color rgba="0.8 0.8 0.05 1.0"/>
             </material>
