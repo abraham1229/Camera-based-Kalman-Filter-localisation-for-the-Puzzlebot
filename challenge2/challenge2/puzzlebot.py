@@ -53,17 +53,7 @@ class DronePublisher(Node):
 
         time = self.get_clock().now().nanoseconds/1e9
 
-        #Create Transform Messages
-        # self.base_link_tf.header.stamp = self.get_clock().now().to_msg()
-        # self.base_link_tf.transform.translation.x = self.intial_pos_x + 0.5*np.cos(self.omega*time)
-        # self.base_link_tf.transform.translation.y = self.intial_pos_y + 0.5*np.sin(self.omega*time)
-        # self.base_link_tf.transform.translation.z = 0.0
-        # q = transforms3d.euler.euler2quat(self.intial_pos_roll, self.intial_pos_pitch, self.intial_pos_yaw+self.omega*time)       
-        # self.base_link_tf.transform.rotation.x = q[1]
-        # self.base_link_tf.transform.rotation.y = q[2]
-        # self.base_link_tf.transform.rotation.z = q[3]
-        # self.base_link_tf.transform.rotation.w = q[0]
-
+       
         self.base_footprint_tf.header.stamp = self.get_clock().now().to_msg()
         self.base_footprint_tf.transform.translation.x = self.intial_pos_x + 0.5*np.cos(self.omega*time)
         self.base_footprint_tf.transform.translation.y = self.intial_pos_y + 0.5*np.sin(self.omega*time)
@@ -79,7 +69,6 @@ class DronePublisher(Node):
         self.ctrlJoints.position[1] = self.omega*time
 
         self.tf_br_base.sendTransform(self.base_footprint_tf)
-        #self.tf_br_base_footprint.sendTransform(self.base_footprint_tf)
 
         self.publisher.publish(self.ctrlJoints)
 
@@ -99,20 +88,6 @@ class DronePublisher(Node):
         self.base_footprint_tf.transform.rotation.z = q_foot[3]
         self.base_footprint_tf.transform.rotation.w = q_foot[0]
 
-
-        #Create Transform Messages
-        # self.base_link_tf = TransformStamped()
-        # self.base_link_tf.header.stamp = self.get_clock().now().to_msg()
-        # self.base_link_tf.header.frame_id = 'odom'
-        # self.base_link_tf.child_frame_id = 'base_link'
-        # self.base_link_tf.transform.translation.x = self.intial_pos_x
-        # self.base_link_tf.transform.translation.y = self.intial_pos_y
-        # self.base_link_tf.transform.translation.z = self.intial_pos_z
-        # q = transforms3d.euler.euler2quat(self.intial_pos_roll, self.intial_pos_pitch, self.intial_pos_yaw)       
-        # self.base_link_tf.transform.rotation.x = q[1]
-        # self.base_link_tf.transform.rotation.y = q[2]
-        # self.base_link_tf.transform.rotation.z = q[3]
-        # self.base_link_tf.transform.rotation.w = q[0]
 
 
 def main(args=None):
