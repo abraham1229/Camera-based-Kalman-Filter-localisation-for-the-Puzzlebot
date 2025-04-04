@@ -37,7 +37,30 @@ def generate_launch_description():
         name='robot_state_publisher',
         output='screen',
         parameters=[{'robot_description': robot_desc}],
+        arguments=[urdf_file_path]
     )
+
+    static_transform_node = Node(
+                                package='tf2_ros',
+                                executable='static_transform_publisher',
+                                arguments = ['--x', '2', '--y', '1', '--z', '0.0',
+                                            '--yaw', '0.0', '--pitch', '0', '--roll', '0.0',
+                                            '--frame-id', 'map', '--child-frame-id', 'odom']
+                                )
+
+    static_transform_node_2 = Node(
+                                package='tf2_ros',
+                                executable='static_transform_publisher',
+                                arguments = ['--x', '0', '--y', '0', '--z', '0.0',
+                                            '--yaw', '0.0', '--pitch', '0', '--roll', '0.0',
+                                            '--frame-id', 'world', '--child-frame-id', 'map']
+                                )
+    
+
+    puzzlebot_node = Node(name="puzzlebot",
+                            package='challenge2',
+                            executable='puzzlebot'
+                            )
     
     # Include additional launch file (if needed, modify the package and path)
     display_launch = IncludeLaunchDescription(
@@ -51,10 +74,13 @@ def generate_launch_description():
 
     # Create launch description
     ld = LaunchDescription([
+        static_transform_node,
+        static_transform_node_2,
         gui_arg,
         model_arg,
         robot_state_pub_node,
-        display_launch
+        display_launch,
+        puzzlebot_node
     ])
 
     return ld

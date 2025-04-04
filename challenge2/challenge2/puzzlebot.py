@@ -1,162 +1,124 @@
 import rclpy
 from rclpy.node import Node
-from tf2_ros import StaticTransformBroadcaster, TransformBroadcaster
+from tf2_ros import TransformBroadcaster
 from geometry_msgs.msg import TransformStamped
+from sensor_msgs.msg import JointState
 import transforms3d
 import numpy as np
 
-class FramePublisher(Node):
+class DronePublisher(Node):
 
     def __init__(self):
-        super().__init__('frame_publisher_ri', namespace='robo_inges')
-        
-        # Static frames
-        self.map = StaticTransformBroadcaster(self)
-        self.odom = StaticTransformBroadcaster(self)
-        self.base_link = StaticTransformBroadcaster(self)
-        self.caster_link = StaticTransformBroadcaster(self)
+        super().__init__('frame_publisher')
 
-        # # Map values
-        t = TransformStamped()
-        t.header.stamp = self.get_clock().now().to_msg()
-        t.header.frame_id = 'world'
-        t.child_frame_id = 'map'
-        t.transform.translation.x = 1.0
-        t.transform.translation.y = 0.0
-        t.transform.translation.z = 0.0
-        q = transforms3d.euler.euler2quat(0, 0, 0)      #input euler2quat(roll, pitch, yaw) , output q=[w, x, y, z] 
-        t.transform.rotation.x = q[1]
-        t.transform.rotation.y = q[2]
-        t.transform.rotation.z = q[3]
-        t.transform.rotation.w = q[0]
-
-        # # Odom values
-        t2 = TransformStamped()
-        t2.header.stamp = self.get_clock().now().to_msg()
-        t2.header.frame_id = 'map'
-        t2.child_frame_id = 'odom'
-        t2.transform.translation.x = 1.0
-        t2.transform.translation.y = 0.0
-        t2.transform.translation.z = 0.0
-        q = transforms3d.euler.euler2quat(0, 0, 0)      #input euler2quat(roll, pitch, yaw) , output q=[w, x, y, z] 
-        t2.transform.rotation.x = q[1]
-        t2.transform.rotation.y = q[2]
-        t2.transform.rotation.z = q[3]
-        t2.transform.rotation.w = q[0]
-
-        # Base link values
-        t3 = TransformStamped()
-        t3.header.stamp = self.get_clock().now().to_msg()
-        t3.header.frame_id = 'base_footprint'
-        t3.child_frame_id = 'base_link'
-        t3.transform.translation.x = 0.0*5
-        t3.transform.translation.y = 0.0*5
-        t3.transform.translation.z = 0.5*5
-        q = transforms3d.euler.euler2quat(0, 0, 0)      #input euler2quat(roll, pitch, yaw) , output q=[w, x, y, z] 
-        t3.transform.rotation.x = q[1]
-        t3.transform.rotation.y = q[2]
-        t3.transform.rotation.z = q[3]
-        t3.transform.rotation.w = q[0]
-
-        # Caster link values
-        t4 = TransformStamped()
-        t4.header.stamp = self.get_clock().now().to_msg()
-        t4.header.frame_id = 'base_link'
-        t4.child_frame_id = 'caster_link'
-        t4.transform.translation.x = -0.095*5
-        t4.transform.translation.y = 0.0*5
-        t4.transform.translation.z = -0.03*5
-        q = transforms3d.euler.euler2quat(0, 0, 0)      #input euler2quat(roll, pitch, yaw) , output q=[w, x, y, z] 
-        t4.transform.rotation.x = q[1]
-        t4.transform.rotation.y = q[2]
-        t4.transform.rotation.z = q[3]
-        t4.transform.rotation.w = q[0]
+        #Drone Initial Pose
+        self.intial_pos_x = 1.0
+        self.intial_pos_y = 1.0
+        self.intial_pos_z = 0.0
+        self.intial_pos_yaw = np.pi/2
+        self.intial_pos_pitch = 0.0
+        self.intial_pos_roll = 0.0
 
 
+        #Angular velocity for the pose change and propellers
+        self.omega = 0.5
+        self.omega_prop = 100.0
 
+        #Define Transformations
+        self.define_TF()
 
-        # Publish the static nodes
-        self.map.sendTransform(t)
-        self.odom.sendTransform(t2)
-        self.base_link.sendTransform(t3)
-        self.caster_link.sendTransform(t4)
+        #initialise Message to be published
+        self.ctrlJoints = JointState()
+        self.ctrlJoints.header.stamp = self.get_clock().now().to_msg()
+        self.ctrlJoints.name = ["wheel_right_joint","wheel_left_joint"]
+        self.ctrlJoints.position = [0.0] * 2
+        self.ctrlJoints.velocity = [0.0] * 2
+        self.ctrlJoints.effort = [0.0] * 2
 
-
-
-        # Dynamic frames
-        #Create Trasnform Messages
-        self.base_footprint = TransformStamped()
-        self.wheel_r_link = TransformStamped()
-        self.wheel_l_link = TransformStamped()
-        
         #Create Transform Boradcasters
-        self.tf_base_footprint = TransformBroadcaster(self)
-        self.tf_wheel_r_link = TransformBroadcaster(self)
-        self.tf_wheel_l_link = TransformBroadcaster(self)
+        self.tf_br_base = TransformBroadcaster(self)
+        self.tf_br_base_footprint = TransformBroadcaster(self)
+
+        #Publisher
+        self.publisher = self.create_publisher(JointState, '/joint_states', 10)
+        
 
         #Create a Timer
-        timer_period = 0.1 #seconds
+        timer_period = 0.01 #seconds
         self.timer = self.create_timer(timer_period, self.timer_cb)
 
-        #Variables to be used
-        self.start_time = self.get_clock().now()
-        self.omega = 0.1
 
     #Timer Callback
     def timer_cb(self):
 
-        elapsed_time = (self.get_clock().now() - self.start_time).nanoseconds/1e9
+        time = self.get_clock().now().nanoseconds/1e9
 
-        # Base footprint data 
-        self.base_footprint.header.stamp = self.get_clock().now().to_msg()
-        self.base_footprint.header.frame_id = 'odom'
-        self.base_footprint.child_frame_id = 'base_footprint'
-        self.base_footprint.transform.translation.x = 1.0 + elapsed_time*0.03
-        self.base_footprint.transform.translation.y = 0.0
-        self.base_footprint.transform.translation.z = 0.0
-        q = transforms3d.euler.euler2quat(0, 0, 0)      #input euler2quat(roll, pitch, yaw) , output q=[w, x, y, z] 
-        self.base_footprint.transform.rotation.x = q[1]
-        self.base_footprint.transform.rotation.y = q[2]
-        self.base_footprint.transform.rotation.z = q[3]
-        self.base_footprint.transform.rotation.w = q[0]
+        #Create Transform Messages
+        # self.base_link_tf.header.stamp = self.get_clock().now().to_msg()
+        # self.base_link_tf.transform.translation.x = self.intial_pos_x + 0.5*np.cos(self.omega*time)
+        # self.base_link_tf.transform.translation.y = self.intial_pos_y + 0.5*np.sin(self.omega*time)
+        # self.base_link_tf.transform.translation.z = 0.0
+        # q = transforms3d.euler.euler2quat(self.intial_pos_roll, self.intial_pos_pitch, self.intial_pos_yaw+self.omega*time)       
+        # self.base_link_tf.transform.rotation.x = q[1]
+        # self.base_link_tf.transform.rotation.y = q[2]
+        # self.base_link_tf.transform.rotation.z = q[3]
+        # self.base_link_tf.transform.rotation.w = q[0]
+
+        self.base_footprint_tf.header.stamp = self.get_clock().now().to_msg()
+        self.base_footprint_tf.transform.translation.x = self.intial_pos_x + 0.5*np.cos(self.omega*time)
+        self.base_footprint_tf.transform.translation.y = self.intial_pos_y + 0.5*np.sin(self.omega*time)
+        self.base_footprint_tf.transform.translation.z = 0.0
+        q = transforms3d.euler.euler2quat(0, 0, self.intial_pos_yaw+self.omega*time)
+        self.base_footprint_tf.transform.rotation.x = q[1]
+        self.base_footprint_tf.transform.rotation.y = q[2]
+        self.base_footprint_tf.transform.rotation.z = q[3]
+        self.base_footprint_tf.transform.rotation.w = q[0]
+
+        self.ctrlJoints.header.stamp = self.get_clock().now().to_msg()
+        self.ctrlJoints.position[0] = self.omega*time
+        self.ctrlJoints.position[1] = self.omega*time
+
+        self.tf_br_base.sendTransform(self.base_footprint_tf)
+        #self.tf_br_base_footprint.sendTransform(self.base_footprint_tf)
+
+        self.publisher.publish(self.ctrlJoints)
+
+    def define_TF(self):
+
+        #Create Transform Messages
+        self.base_footprint_tf = TransformStamped()
+        self.base_footprint_tf.header.stamp = self.get_clock().now().to_msg()
+        self.base_footprint_tf.header.frame_id = 'odom'
+        self.base_footprint_tf.child_frame_id = 'base_footprint'
+        self.base_footprint_tf.transform.translation.x = self.intial_pos_x
+        self.base_footprint_tf.transform.translation.y = self.intial_pos_y
+        self.base_footprint_tf.transform.translation.z = 0.0
+        q_foot = transforms3d.euler.euler2quat(self.intial_pos_roll, self.intial_pos_pitch, self.intial_pos_yaw)       
+        self.base_footprint_tf.transform.rotation.x = q_foot[1]
+        self.base_footprint_tf.transform.rotation.y = q_foot[2]
+        self.base_footprint_tf.transform.rotation.z = q_foot[3]
+        self.base_footprint_tf.transform.rotation.w = q_foot[0]
 
 
-        # Right wheel data 
-        self.wheel_r_link.header.stamp = self.get_clock().now().to_msg()
-        self.wheel_r_link.header.frame_id = 'base_link'
-        self.wheel_r_link.child_frame_id = 'wheel_r_link'
-        self.wheel_r_link.transform.translation.x = 0.052*3
-        self.wheel_r_link.transform.translation.y = -0.095*3
-        self.wheel_r_link.transform.translation.z = -0.0025*3
-        q = transforms3d.euler.euler2quat(0, elapsed_time, 0)      #input euler2quat(roll, pitch, yaw) , output q=[w, x, y, z] 
-        self.wheel_r_link.transform.rotation.x = q[1]
-        self.wheel_r_link.transform.rotation.y = q[2]
-        self.wheel_r_link.transform.rotation.z = q[3]
-        self.wheel_r_link.transform.rotation.w = q[0]
+        #Create Transform Messages
+        # self.base_link_tf = TransformStamped()
+        # self.base_link_tf.header.stamp = self.get_clock().now().to_msg()
+        # self.base_link_tf.header.frame_id = 'odom'
+        # self.base_link_tf.child_frame_id = 'base_link'
+        # self.base_link_tf.transform.translation.x = self.intial_pos_x
+        # self.base_link_tf.transform.translation.y = self.intial_pos_y
+        # self.base_link_tf.transform.translation.z = self.intial_pos_z
+        # q = transforms3d.euler.euler2quat(self.intial_pos_roll, self.intial_pos_pitch, self.intial_pos_yaw)       
+        # self.base_link_tf.transform.rotation.x = q[1]
+        # self.base_link_tf.transform.rotation.y = q[2]
+        # self.base_link_tf.transform.rotation.z = q[3]
+        # self.base_link_tf.transform.rotation.w = q[0]
 
-        # Left wheel data 
-        self.wheel_l_link.header.stamp = self.get_clock().now().to_msg()
-        self.wheel_l_link.header.frame_id = 'base_link'
-        self.wheel_l_link.child_frame_id = 'wheel_l_link'
-        self.wheel_l_link.transform.translation.x = 0.052*3
-        self.wheel_l_link.transform.translation.y = 0.095*3
-        self.wheel_l_link.transform.translation.z = -0.0025*3
-        q = transforms3d.euler.euler2quat(0, elapsed_time, 0)      #input euler2quat(roll, pitch, yaw) , output q=[w, x, y, z] 
-        self.wheel_l_link.transform.rotation.x = q[1]
-        self.wheel_l_link.transform.rotation.y = q[2]
-        self.wheel_l_link.transform.rotation.z = q[3]
-        self.wheel_l_link.transform.rotation.w = q[0]
-
-
-        # Publish data
-        self.tf_base_footprint.sendTransform(self.base_footprint)
-        self.tf_wheel_r_link.sendTransform(self.wheel_r_link)
-        self.tf_wheel_l_link.sendTransform(self.wheel_l_link)
 
 def main(args=None):
     rclpy.init(args=args)
 
-    node = FramePublisher()
+    node = DronePublisher()
 
     try:
         rclpy.spin(node)
