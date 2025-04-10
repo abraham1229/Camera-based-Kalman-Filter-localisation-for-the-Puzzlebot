@@ -45,13 +45,6 @@ def generate_launch_description():
                             parameters=[{'robot_description': robot_desc}],
                             arguments=[urdf]
                             )
-
-    # # Define joint_state_publisher node (for simulation)
-    # joint_state_publisher_node = Node(
-    #                             package='joint_state_publisher_gui',
-    #                             executable='joint_state_publisher_gui',
-    #                             output='screen'
-    #                         )
     
     rviz_config = os.path.join(
                             get_package_share_directory('challenge2'),

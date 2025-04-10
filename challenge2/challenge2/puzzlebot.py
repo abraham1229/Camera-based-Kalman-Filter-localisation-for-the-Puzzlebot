@@ -11,7 +11,7 @@ class DronePublisher(Node):
     def __init__(self):
         super().__init__('frame_publisher')
 
-        #Drone Initial Pose
+        #Puzzlebot Initial Pose
         self.intial_pos_x = 1.0
         self.intial_pos_y = 1.0
         self.intial_pos_z = 0.0
@@ -20,9 +20,8 @@ class DronePublisher(Node):
         self.intial_pos_roll = 0.0
 
 
-        #Angular velocity for the pose change and propellers
+        #Angular velocity for wheels puzzlebot
         self.omega = 0.5
-        self.omega_prop = 100.0
 
         #Define Transformations
         self.define_TF()
