@@ -95,7 +95,6 @@ def generate_launch_description():
     l_d = LaunchDescription([
         static_transform_node, 
         static_transform_node_2,
-        # joint_state_publisher_node,
         robot_state_pub_node, 
         rviz_node, 
         rqt_tf_tree_node,
