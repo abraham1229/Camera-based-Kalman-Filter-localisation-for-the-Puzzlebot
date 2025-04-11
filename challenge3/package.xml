@@ -7,7 +7,7 @@
   <maintainer email="abrahamortizcastro1229@gmail.com">abraham1229</maintainer>
   <license>Apache-2.0</license>
 
-   <depend>geometry_msgs</depend>
+  <depend>geometry_msgs</depend>
   <depend>nav_msgs</depend>
   <depend>sensor_msgs</depend>
   <depend>python3-numpy</depend>
@@ -19,6 +19,8 @@
   <depend>visualization_msgs</depend>
   <depend>robot_state_publisher</depend>
   <depend>joint_state_publisher</depend>
+  <exec_depend>msgs_clase</exec_depend>
+
 
   <test_depend>ament_copyright</test_depend>
   <test_depend>ament_flake8</test_depend>
