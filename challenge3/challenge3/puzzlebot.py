@@ -1,6 +1,7 @@
 import rclpy
 from rclpy.node import Node
 from tf2_ros import TransformBroadcaster
+from std_msgs.msg import Float32
 from geometry_msgs.msg import TransformStamped
 from sensor_msgs.msg import JointState
 import transforms3d
@@ -10,6 +11,16 @@ class DronePublisher(Node):
 
     def __init__(self):
         super().__init__('frame_publisher')
+
+        # Crear publisher de velocidad de las llantas
+        self.pub_r_vel = self.create_publisher(Float32, 'VelocityEncR', 1000)
+        self.pub_l_vel = self.create_publisher(Float32, 'VelocityEncL', 1000)
+        
+
+
+
+
+
 
         #Puzzlebot Initial Pose
         self.intial_pos_x = 1.0
@@ -31,8 +42,11 @@ class DronePublisher(Node):
         self.ctrlJoints.header.stamp = self.get_clock().now().to_msg()
         self.ctrlJoints.name = ["wheel_right_joint","wheel_left_joint"]
         self.ctrlJoints.position = [0.0] * 2
+        self.position_prev = [0.0] * 2
         self.ctrlJoints.velocity = [0.0] * 2
         self.ctrlJoints.effort = [0.0] * 2
+        self.wheel_right_vel = 0.0
+        self.wheel_left_vel = 0.0
 
         #Create Transform Boradcasters
         self.tf_br_base = TransformBroadcaster(self)
@@ -43,8 +57,8 @@ class DronePublisher(Node):
         
 
         #Create a Timer
-        timer_period = 0.01 #seconds
-        self.timer = self.create_timer(timer_period, self.timer_cb)
+        self.timer_period = 0.01 #seconds
+        self.timer = self.create_timer(self.timer_period, self.timer_cb)
 
 
     #Timer Callback
@@ -65,9 +79,30 @@ class DronePublisher(Node):
 
         self.ctrlJoints.header.stamp = self.get_clock().now().to_msg()
         self.ctrlJoints.position[0] = self.omega*time
-        self.ctrlJoints.position[1] = self.omega*time
+        self.ctrlJoints.position[1] = self.omega*time   
+
+
+        # Se obtiene velocidad
+        self.wheel_right_vel = (self.ctrlJoints.position[0] - self.position_prev[0])/self.timer_period
+        self.wheel_left_vel = (self.ctrlJoints.position[1] - self.position_prev[1])/self.timer_period
+
+        # Se actualiza posicion anterior
+        self.position_prev[0] = self.ctrlJoints.position[0]
+        self.position_prev[1] = self.ctrlJoints.position[1]
+
+
 
         self.tf_br_base.sendTransform(self.base_footprint_tf)
+
+        # Se publican valores
+
+        right_wheel = Float32()
+        left_wheel = Float32()
+        right_wheel.data = self.wheel_right_vel
+        left_wheel.data = self.wheel_left_vel
+
+        self.pub_r_vel.publish(right_wheel)
+        self.pub_l_vel.publish(left_wheel)
 
         self.publisher.publish(self.ctrlJoints)
 
