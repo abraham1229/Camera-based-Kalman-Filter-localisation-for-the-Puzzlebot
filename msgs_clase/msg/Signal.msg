@@ -1,0 +1,11 @@
+bool ahead_only
+bool turn_right
+bool turn_left
+bool roundabout
+bool give_way
+bool roadwork
+bool stop
+bool red_light
+bool yellow_light
+bool green_light
+bool dot_line

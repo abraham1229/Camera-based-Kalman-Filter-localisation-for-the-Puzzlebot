@@ -1,0 +1,2 @@
+float64 err_theta
+float64 err_lineal
