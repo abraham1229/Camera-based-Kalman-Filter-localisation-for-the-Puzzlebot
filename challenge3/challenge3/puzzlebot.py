@@ -2,6 +2,7 @@ import rclpy
 from rclpy.node import Node
 from tf2_ros import TransformBroadcaster
 from std_msgs.msg import Float32
+from msgs_clase.msg import Vector   # type: ignore
 from geometry_msgs.msg import TransformStamped
 from sensor_msgs.msg import JointState
 import transforms3d
@@ -15,13 +16,16 @@ class DronePublisher(Node):
         # Crear publisher de velocidad de las llantas
         self.pub_r_vel = self.create_publisher(Float32, 'VelocityEncR', 1000)
         self.pub_l_vel = self.create_publisher(Float32, 'VelocityEncL', 1000)
+
+
+        #Se hacen las suscripciones pertinentes
+        self.subscription_odometry = self.create_subscription(
+            Vector,
+            'odometria',
+            self.callback_odometry,
+            rclpy.qos.qos_profile_sensor_data ) #Se debe de incluir la lectura de datos
         
-
-
-
-
-
-
+    
         #Puzzlebot Initial Pose
         self.intial_pos_x = 1.0
         self.intial_pos_y = 1.0
@@ -29,6 +33,11 @@ class DronePublisher(Node):
         self.intial_pos_yaw = np.pi/2
         self.intial_pos_pitch = 0.0
         self.intial_pos_roll = 0.0
+
+        # Puzzlebot odometry
+        self.Posx = self.intial_pos_x
+        self.Posy = self.intial_pos_y
+        self.Postheta = self.intial_pos_yaw
 
 
         #Angular velocity for wheels puzzlebot
@@ -68,16 +77,18 @@ class DronePublisher(Node):
 
        
         self.base_footprint_tf.header.stamp = self.get_clock().now().to_msg()
-        self.base_footprint_tf.transform.translation.x = self.intial_pos_x + 0.5*np.cos(self.omega*time)
-        self.base_footprint_tf.transform.translation.y = self.intial_pos_y + 0.5*np.sin(self.omega*time)
+        self.base_footprint_tf.transform.translation.x = self.Posx
+        self.base_footprint_tf.transform.translation.y = self.Posy
         self.base_footprint_tf.transform.translation.z = 0.0
-        q = transforms3d.euler.euler2quat(0, 0, self.intial_pos_yaw+self.omega*time)
+        q = transforms3d.euler.euler2quat(0, 0, self.Postheta)
         self.base_footprint_tf.transform.rotation.x = q[1]
         self.base_footprint_tf.transform.rotation.y = q[2]
         self.base_footprint_tf.transform.rotation.z = q[3]
         self.base_footprint_tf.transform.rotation.w = q[0]
 
         self.ctrlJoints.header.stamp = self.get_clock().now().to_msg()
+
+        
         self.ctrlJoints.position[0] = self.omega*time
         self.ctrlJoints.position[1] = self.omega*time   
 
@@ -105,6 +116,14 @@ class DronePublisher(Node):
         self.pub_l_vel.publish(left_wheel)
 
         self.publisher.publish(self.ctrlJoints)
+
+
+    #Lee los datos del nodo de la llanta derecha
+    def callback_odometry(self, msg):
+        if msg is not None:
+            self.Posx = msg.x
+            self.Posy = msg.y
+            self.Postheta = msg.theta
 
     def define_TF(self):
 
