@@ -28,7 +28,8 @@ setup(
     entry_points={
         'console_scripts': [
             'odometry = challenge3.odometry:main',
-            'puzzlebot = challenge3.puzzlebot:main'
+            'puzzlebot = challenge3.puzzlebot:main',
+            'controller = challenge3.controller:main'
         ],
     },
 )
