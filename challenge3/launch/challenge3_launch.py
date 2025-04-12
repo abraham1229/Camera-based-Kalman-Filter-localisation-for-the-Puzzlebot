@@ -67,6 +67,16 @@ def generate_launch_description():
                             package='challenge3',
                             executable='puzzlebot'
                             )
+    
+    controller_node = Node(name="controller",
+                            package='challenge3',
+                            executable='controller'
+                            )
+    
+    odometry_node = Node(name="odometry",
+                            package='challenge3',
+                            executable='odometry'
+                            )
 
     shutdown_on_exit = [RegisterEventHandler(
                             OnProcessExit(
@@ -98,7 +108,9 @@ def generate_launch_description():
         robot_state_pub_node, 
         rviz_node, 
         rqt_tf_tree_node,
-        puzzlebot_node, 
+        puzzlebot_node,
+        controller_node,
+        odometry_node,
         shutdown_log,
         *shutdown_on_exit])
 
