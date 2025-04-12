@@ -3,7 +3,7 @@ from rclpy.node import Node
 from tf2_ros import TransformBroadcaster
 from std_msgs.msg import Float32
 from msgs_clase.msg import Vector   # type: ignore
-from geometry_msgs.msg import TransformStamped
+from geometry_msgs.msg import TransformStamped, Twist
 from sensor_msgs.msg import JointState
 import transforms3d
 import numpy as np
@@ -25,6 +25,13 @@ class DronePublisher(Node):
             self.callback_odometry,
             rclpy.qos.qos_profile_sensor_data ) #Se debe de incluir la lectura de datos
         
+        #Se hacen las suscripciones pertinentes
+        self.subscription_odometry = self.create_subscription(
+            Twist,
+            'cmd_vel',
+            self.callback_cmd_vel,
+            rclpy.qos.qos_profile_sensor_data ) #Se debe de incluir la lectura de datos
+        
     
         #Puzzlebot Initial Pose
         self.intial_pos_x = 1.0
@@ -42,6 +49,14 @@ class DronePublisher(Node):
 
         #Angular velocity for wheels puzzlebot
         self.omega = 0.5
+        self.cmd_vel_linear = 0.0
+        self.cmd_vel_angular = 0.0
+
+        #Variables físicas del robot
+        #Valor del radio de la llanta
+        self.radius = 0.05
+        #Valor de la distancia entre llantas
+        self.lenght = 0.19
 
         #Define Transformations
         self.define_TF()
@@ -89,11 +104,16 @@ class DronePublisher(Node):
         self.ctrlJoints.header.stamp = self.get_clock().now().to_msg()
 
         
-        self.ctrlJoints.position[0] = self.omega*time
-        self.ctrlJoints.position[1] = self.omega*time   
+        # Velocidad desde cmd_vel
+
+        right_distance = (self.cmd_vel_linear + (self.lenght / 2) * self.cmd_vel_angular) / self.radius * self.timer_period
+        left_distance = (self.cmd_vel_linear - (self.lenght / 2) * self.cmd_vel_angular) / self.radius * self.timer_period
+
+        self.ctrlJoints.position[0] += right_distance
+        self.ctrlJoints.position[1] += left_distance
 
 
-        # Se obtiene velocidad
+        # Velocidad para encoders
         self.wheel_right_vel = (self.ctrlJoints.position[0] - self.position_prev[0])/self.timer_period
         self.wheel_left_vel = (self.ctrlJoints.position[1] - self.position_prev[1])/self.timer_period
 
@@ -124,6 +144,11 @@ class DronePublisher(Node):
             self.Posx = msg.x
             self.Posy = msg.y
             self.Postheta = msg.theta
+
+    def callback_cmd_vel(self, msg):
+        if msg is not None:
+            self.cmd_vel_linear = msg.linear.x
+            self.cmd_vel_angular = msg.angular.z
 
     def define_TF(self):
 

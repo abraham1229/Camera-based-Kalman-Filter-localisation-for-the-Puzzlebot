@@ -1,0 +1,5 @@
+Path_generator:
+  ros__parameters:
+    type: 0
+    velocidad_lineal: 0.1
+    velocidad_angular: 0.1
