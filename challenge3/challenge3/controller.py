@@ -75,8 +75,23 @@ class Controller(Node):
         #Control
         self.Ulineal = 0.0
 
+        # Variables para distinguir trayectoria
+        self.tipo_trayectoria_actual = 0
+        self.tipo_trayectoria_prev = 0
+        self.trayectoria_finalizda = False
+
 
     def timer_callback(self):
+
+        # Se verifica que se haya terminado la trayectoria y no existe una nueva
+        if self.trayectoria_finalizda:
+            if self.tipo_trayectoria_actual == self.tipo_trayectoria_prev:
+                self.get_logger().warn('Esperado nueva trayectoria')
+                return
+            else:
+                self.trayectoria_finalizda = False
+    
+
         # Verificar si hay puntos en la trayectoria
         if not self.trayectoria:
             self.get_logger().warn('No hay puntos en la trayectoria')
@@ -92,6 +107,9 @@ class Controller(Node):
         # Se finaliza la trayectoria
         if self.trayectoria[self.indice_punto_actual] == (0,0) and self.indice_punto_actual != 0:
             self.get_logger().warn('Trayectoria terminada')
+            self.trayectoria_finalizda = True
+            self.velL = 0.0
+            self.velA = 0.0
             # Se crea mensaje a publicar
             twist_msg = Twist()
             twist_msg.linear.x = self.velL
@@ -149,6 +167,9 @@ class Controller(Node):
         if self.errorTheta < 0.05 and self.errorTheta > -0.05 and self.error_distancia < 0.05:
             self.indice_punto_actual += 1
 
+        # Se actualiza valor previo de trayectoria
+        self.tipo_trayectoria_prev = self.tipo_trayectoria_actual
+
         # Se publica el mensaje 
         twist_msg = Twist()
         twist_msg.linear.x = self.velL
@@ -170,7 +191,7 @@ class Controller(Node):
     def callback_path(self, msg):
         if msg is not None:
             self.trayectoria = [(0,0),(msg.x1, msg.y1), (msg.x2, msg.y2), (msg.x3, msg.y3), (msg.x4, msg.y4), (msg.x5, msg.y5), (msg.x6, msg.y6),(msg.x7, msg.y7),(msg.x8, msg.y8)]
-
+            self.tipo_trayectoria_actual = msg.type
 
 
 def main(args=None):

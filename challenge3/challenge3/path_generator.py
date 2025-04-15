@@ -25,7 +25,9 @@ class My_Talker_Params(Node):
 
     def timer_callback(self):
         ri_type = self.get_parameter('type').get_parameter_value().integer_value
- 
+
+        self.msg.type = ri_type
+
         if ri_type == 1:
             # Triángulo
             self.msg.x1 = 0.5
