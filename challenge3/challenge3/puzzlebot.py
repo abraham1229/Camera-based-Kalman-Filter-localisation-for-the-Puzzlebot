@@ -84,6 +84,10 @@ class DronePublisher(Node):
         self.timer_period = 0.01 #seconds
         self.timer = self.create_timer(self.timer_period, self.timer_cb)
 
+        # Message 
+        self.get_logger().info('Puzzlebot node initialized')
+
+
 
     #Timer Callback
     def timer_cb(self):

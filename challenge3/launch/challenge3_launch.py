@@ -11,6 +11,22 @@ from launch.substitutions import EnvironmentVariable, LocalSubstitution
 
 def generate_launch_description():
 
+    # Parameters
+    config = os.path.join(
+        get_package_share_directory('challenge3'),
+        'config',
+        'params.yaml'
+        )
+    
+    path_generator_node = Node(
+        package='challenge3',
+        executable='path_generator',
+        output='screen',
+        parameters = [config]
+    )
+    
+
+
     urdf_file_name = 'puzzle_mesh.urdf'
     urdf = os.path.join(
         get_package_share_directory('challenge3'),
@@ -103,15 +119,17 @@ def generate_launch_description():
                                 )
 
     l_d = LaunchDescription([
-        static_transform_node, 
-        static_transform_node_2,
-        robot_state_pub_node, 
-        rviz_node, 
-        rqt_tf_tree_node,
-        puzzlebot_node,
-        controller_node,
-        odometry_node,
-        shutdown_log,
-        *shutdown_on_exit])
+        # static_transform_node, 
+        # static_transform_node_2,
+        # robot_state_pub_node, 
+        # rviz_node, 
+        # rqt_tf_tree_node,
+        # puzzlebot_node,
+        # controller_node,
+        # odometry_node,
+        # shutdown_log,
+        # *shutdown_on_exit
+        path_generator_node
+        ])
 
     return l_d

@@ -31,7 +31,7 @@ setup(
             'odometry = challenge3.odometry:main',
             'puzzlebot = challenge3.puzzlebot:main',
             'controller = challenge3.controller:main',
-            'path_generator = challenge3.controller:main',
+            'path_generator = challenge3.path_generator:main',
         ],
     },
 )
