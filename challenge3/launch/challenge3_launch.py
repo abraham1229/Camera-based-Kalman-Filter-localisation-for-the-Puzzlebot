@@ -119,16 +119,16 @@ def generate_launch_description():
                                 )
 
     l_d = LaunchDescription([
-        # static_transform_node, 
-        # static_transform_node_2,
-        # robot_state_pub_node, 
-        # rviz_node, 
-        # rqt_tf_tree_node,
-        # puzzlebot_node,
-        # controller_node,
-        # odometry_node,
-        # shutdown_log,
-        # *shutdown_on_exit
+        static_transform_node, 
+        static_transform_node_2,
+        robot_state_pub_node, 
+        rviz_node, 
+        rqt_tf_tree_node,
+        puzzlebot_node,
+        controller_node,
+        odometry_node,
+        shutdown_log,
+        *shutdown_on_exit,
         path_generator_node
         ])
 
