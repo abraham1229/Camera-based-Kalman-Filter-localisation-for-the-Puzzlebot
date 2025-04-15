@@ -1,6 +1,6 @@
 import rclpy
 from rclpy.node import Node
-from std_msgs.msg import Bool
+from std_msgs.msg import Float32
 from msgs_clase.msg import Vector, Path   # type: ignore
 from geometry_msgs.msg import Twist
 import math
@@ -12,7 +12,6 @@ class Controller(Node):
 
         # Se crea publicadores correspondientes
         self.pub_cmd_vel = self.create_publisher(Twist, 'cmd_vel', 1000)
-        self.pub_path_finalized = self.create_publisher(Bool, 'path_status',1000)
 
 
         self.timer_period = 0.1
@@ -79,7 +78,7 @@ class Controller(Node):
         # Variables para distinguir trayectoria
         self.tipo_trayectoria_actual = 0
         self.tipo_trayectoria_prev = 0
-        self.trayectoria_finalizda = False
+        self.trayectoria_finalizda = True
 
 
     def timer_callback(self):
@@ -111,11 +110,6 @@ class Controller(Node):
             self.trayectoria_finalizda = True
             self.velL = 0.0
             self.velA = 0.0
-
-            msg_status = Bool()
-            msg_status.data = self.trayectoria_finalizda
-            self.pub_path_finalized.publish(msg_status)
-            
             # Se crea mensaje a publicar
             twist_msg = Twist()
             twist_msg.linear.x = self.velL
@@ -175,16 +169,13 @@ class Controller(Node):
 
         # Se actualiza valor previo de trayectoria
         self.tipo_trayectoria_prev = self.tipo_trayectoria_actual
+        self.trayectoria_finalizda = False
 
         # Se publica el mensaje 
         twist_msg = Twist()
         twist_msg.linear.x = self.velL
         twist_msg.angular.z = self.velA
         self.pub_cmd_vel.publish(twist_msg)
-
-        msg_status = Bool()
-        msg_status.data = self.trayectoria_finalizda
-        self.pub_path_finalized.publish(msg_status)
         
 
 
@@ -199,7 +190,7 @@ class Controller(Node):
 
     # Callback para recibir los puntos de la trayectoria
     def callback_path(self, msg):
-        if msg is not None:
+        if msg is not None and self.trayectoria_finalizda:
             self.trayectoria = [(0,0),(msg.x1, msg.y1), (msg.x2, msg.y2), (msg.x3, msg.y3), (msg.x4, msg.y4), (msg.x5, msg.y5), (msg.x6, msg.y6),(msg.x7, msg.y7),(msg.x8, msg.y8)]
             self.tipo_trayectoria_actual = msg.type
 
