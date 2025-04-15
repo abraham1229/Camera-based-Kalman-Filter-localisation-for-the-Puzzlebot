@@ -1,6 +1,6 @@
 import rclpy
 from rclpy.node import Node
-from std_msgs.msg import Float32
+from std_msgs.msg import Bool
 from msgs_clase.msg import Vector, Path   # type: ignore
 from geometry_msgs.msg import Twist
 import math
@@ -12,6 +12,7 @@ class Controller(Node):
 
         # Se crea publicadores correspondientes
         self.pub_cmd_vel = self.create_publisher(Twist, 'cmd_vel', 1000)
+        self.pub_path_finalized = self.create_publisher(Bool, 'path_status',1000)
 
 
         self.timer_period = 0.1
@@ -110,6 +111,11 @@ class Controller(Node):
             self.trayectoria_finalizda = True
             self.velL = 0.0
             self.velA = 0.0
+
+            msg_status = Bool()
+            msg_status.data = self.trayectoria_finalizda
+            self.pub_path_finalized.publish(msg_status)
+            
             # Se crea mensaje a publicar
             twist_msg = Twist()
             twist_msg.linear.x = self.velL
@@ -175,6 +181,10 @@ class Controller(Node):
         twist_msg.linear.x = self.velL
         twist_msg.angular.z = self.velA
         self.pub_cmd_vel.publish(twist_msg)
+
+        msg_status = Bool()
+        msg_status.data = self.trayectoria_finalizda
+        self.pub_path_finalized.publish(msg_status)
         
 
 
