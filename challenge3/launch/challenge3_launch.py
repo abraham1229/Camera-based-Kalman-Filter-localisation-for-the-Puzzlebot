@@ -123,7 +123,7 @@ def generate_launch_description():
         static_transform_node_2,
         robot_state_pub_node, 
         rviz_node, 
-        rqt_tf_tree_node,
+        # rqt_tf_tree_node,
         puzzlebot_node,
         controller_node,
         odometry_node,
