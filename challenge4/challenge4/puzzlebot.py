@@ -13,6 +13,20 @@ class DronePublisher(Node):
     def __init__(self):
         super().__init__('frame_publisher')
 
+        self.namespace = self.get_namespace().rstrip('/')
+
+        # Declare the parameter with a default value
+        self.declare_parameter('init_pose_x', 0.0)
+        self.declare_parameter('init_pose_y', 0.0)
+        self.declare_parameter('init_pose_z', 0.0)
+        self.declare_parameter('init_pose_yaw', np.pi/2)
+        self.declare_parameter('init_pose_pitch', 0.0)
+        self.declare_parameter('init_pose_roll', 0.0)
+        self.declare_parameter('odom_frame', 'odom')
+
+        # Retrieve the parameter value
+        self.odom_frame = self.get_parameter('odom_frame').get_parameter_value().string_value.strip('/')
+
         # Crear publisher de velocidad de las llantas
         self.pub_r_vel = self.create_publisher(Float32, 'VelocityEncR', 1000)
         self.pub_l_vel = self.create_publisher(Float32, 'VelocityEncL', 1000)
@@ -34,12 +48,12 @@ class DronePublisher(Node):
         
     
         #Puzzlebot Initial Pose
-        self.intial_pos_x = 1.0
-        self.intial_pos_y = 1.0
-        self.intial_pos_z = 0.0
-        self.intial_pos_yaw = np.pi/2
-        self.intial_pos_pitch = 0.0
-        self.intial_pos_roll = 0.0
+        self.intial_pos_x = self.get_parameter('init_pose_x').value
+        self.intial_pos_y = self.get_parameter('init_pose_y').value
+        self.intial_pos_z = self.get_parameter('init_pose_z').value
+        self.intial_pos_yaw = self.get_parameter('init_pose_yaw').value
+        self.intial_pos_pitch = self.get_parameter('init_pose_pitch').value
+        self.intial_pos_roll = self.get_parameter('init_pose_roll').value
 
         # Puzzlebot odometry
         self.Posx = self.intial_pos_x
@@ -77,7 +91,7 @@ class DronePublisher(Node):
         self.tf_br_base_footprint = TransformBroadcaster(self)
 
         #Publisher
-        self.publisher = self.create_publisher(JointState, '/joint_states', 10)
+        self.publisher = self.create_publisher(JointState, 'joint_states', 10)
         
 
         #Create a Timer
@@ -91,9 +105,6 @@ class DronePublisher(Node):
 
     #Timer Callback
     def timer_cb(self):
-
-        time = self.get_clock().now().nanoseconds/1e9
-
        
         self.base_footprint_tf.header.stamp = self.get_clock().now().to_msg()
         self.base_footprint_tf.transform.translation.x = self.Posx
@@ -159,8 +170,8 @@ class DronePublisher(Node):
         #Create Transform Messages
         self.base_footprint_tf = TransformStamped()
         self.base_footprint_tf.header.stamp = self.get_clock().now().to_msg()
-        self.base_footprint_tf.header.frame_id = 'odom'
-        self.base_footprint_tf.child_frame_id = 'base_footprint'
+        self.base_footprint_tf.header.frame_id = self.odom_frame
+        self.base_footprint_tf.child_frame_id = f"{self.namespace}/base_footprint"
         self.base_footprint_tf.transform.translation.x = self.intial_pos_x
         self.base_footprint_tf.transform.translation.y = self.intial_pos_y
         self.base_footprint_tf.transform.translation.z = 0.0
