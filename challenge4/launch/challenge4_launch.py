@@ -31,49 +31,49 @@ def generate_launch_description():
         executable='puzzlebot',
         namespace='group1',
         parameters=[{
-                    'init_pose_x':2.0,
-                    'init_pose_y': 2.0,
-                    'init_pose_yaw': 1.57,
-                    'odom_frame':'odom'
-                }]
-            )   
+                'init_pose_x':2.0,
+                'init_pose_y': 2.0,
+                'init_pose_yaw': 1.57,
+                'odom_frame':'odom'
+            }]
+        )   
 
     robot1_controller = Node(
-            name='controller',
-            package='challenge4',
-            executable='controller',
-            namespace='group1',
-            parameters=[{
-                    'init_pose_x':2.0,
-                    'init_pose_y': 2.0,
-                    'init_pose_yaw': 1.57,
-                    'odom_frame':'odom'
-                }]
-            )  
+        name='controller',
+        package='challenge4',
+        executable='controller',
+        namespace='group1',
+        parameters=[{
+            'init_pose_x':2.0,
+            'init_pose_y': 2.0,
+            'init_pose_yaw': 1.57,
+            'odom_frame':'odom'
+        }]
+    )  
 
     robot1_odometry = Node(
-            name='odometry',
-            package='challenge4',
-            executable='odometry',
-            namespace='group1',
-            parameters=[{
-                    'init_pose_x':2.0,
-                    'init_pose_y': 2.0,
-                    'init_pose_yaw': 1.57
-                }]
-            )   
+        name='odometry',
+        package='challenge4',
+        executable='odometry',
+        namespace='group1',
+        parameters=[{
+            'init_pose_x':2.0,
+            'init_pose_y': 2.0,
+            'init_pose_yaw': 1.57
+        }]
+    )   
 
     robot1_path_generator = Node(
-            name='path_generator',
-            package='challenge4',
-            executable='path_generator',
-            namespace='group1',
-            parameters=[{
-                    'init_pose_x':2.0,
-                    'init_pose_y': 2.0,
-                    'init_pose_yaw': 1.57
-                }]
-            )   
+        name='path_generator',
+        package='challenge4',
+        executable='path_generator',
+        namespace='group1',
+        parameters=[{
+            'init_pose_x':2.0,
+            'init_pose_y': 2.0,
+            'init_pose_yaw': 1.57
+        }]
+    )   
 
 
     # Robot 2: group2
@@ -103,6 +103,43 @@ def generate_launch_description():
                 }]
             )   
     
+    robot2_controller = Node(
+        name='controller',
+        package='challenge4',
+        executable='controller',
+        namespace='group2',
+        parameters=[{
+            'init_pose_x':-2.0,
+            'init_pose_y': 2.0,
+            'init_pose_yaw': 1.57,
+            'odom_frame':'odom'
+        }]
+    )  
+
+    robot2_odometry = Node(
+        name='odometry',
+        package='challenge4',
+        executable='odometry',
+        namespace='group2',
+        parameters=[{
+            'init_pose_x':-2.0,
+            'init_pose_y': 2.0,
+            'init_pose_yaw': 1.57
+        }]
+    )   
+
+    robot2_path_generator = Node(
+        name='path_generator',
+        package='challenge4',
+        executable='path_generator',
+        namespace='group2',
+        parameters=[{
+            'init_pose_x':-2.0,
+            'init_pose_y': 2.0,
+            'init_pose_yaw': 1.57
+        }]
+    )   
+    
     rviz_config = os.path.join(
                             get_package_share_directory('challenge4'),
                             'rviz',
@@ -124,5 +161,8 @@ def generate_launch_description():
         robot1_path_generator,
         robot2_state_pub,
         robot2_node,
+        robot2_controller,
+        robot2_odometry,
+        robot2_path_generator,
         rviz_node
     ])
