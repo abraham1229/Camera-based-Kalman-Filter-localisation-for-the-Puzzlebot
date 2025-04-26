@@ -4,11 +4,19 @@ from std_msgs.msg import Float32
 from msgs_clase.msg import Vector, Path   # type: ignore
 from geometry_msgs.msg import Twist
 import math
-
+import numpy as np
 
 class Controller(Node):
     def __init__(self):
         super().__init__('Controller')
+
+        # Declare the parameter with a default value
+        self.declare_parameter('init_pose_x', 0.0)
+        self.declare_parameter('init_pose_y', 0.0)
+        self.declare_parameter('init_pose_yaw', np.pi/2)
+
+        self.initial_point_x = self.get_parameter('init_pose_x').value
+        self.initial_point_y = self.get_parameter('init_pose_y').value
 
         # Se crea publicadores correspondientes
         self.pub_cmd_vel = self.create_publisher(Twist, 'cmd_vel', 1000)
@@ -85,11 +93,7 @@ class Controller(Node):
 
         # Se verifica que se haya terminado la trayectoria y no existe una nueva
         if self.trayectoria_finalizda:
-            if self.tipo_trayectoria_actual == self.tipo_trayectoria_prev:
-                self.get_logger().warn('Esperado nueva trayectoria')
-                return
-            else:
-                self.trayectoria_finalizda = False
+            self.get_logger().warn('Trayectoria finalizada')
     
 
         # Verificar si hay puntos en la trayectoria
@@ -105,7 +109,7 @@ class Controller(Node):
             return
         
         # Se finaliza la trayectoria
-        if self.trayectoria[self.indice_punto_actual] == (0,0) and self.indice_punto_actual != 0:
+        if self.trayectoria[self.indice_punto_actual] == (self.initial_point_x,self.initial_point_y) and self.indice_punto_actual != 0:
             self.get_logger().warn('Trayectoria terminada')
             self.trayectoria_finalizda = True
             self.velL = 0.0
@@ -191,7 +195,15 @@ class Controller(Node):
     # Callback para recibir los puntos de la trayectoria
     def callback_path(self, msg):
         if msg is not None and self.trayectoria_finalizda:
-            self.trayectoria = [(0,0),(msg.x1, msg.y1), (msg.x2, msg.y2), (msg.x3, msg.y3), (msg.x4, msg.y4), (msg.x5, msg.y5), (msg.x6, msg.y6),(msg.x7, msg.y7),(msg.x8, msg.y8)]
+            self.trayectoria = [(self.initial_point_x,self.initial_point_y),
+                                (msg.x1, msg.y1), 
+                                (msg.x2, msg.y2),
+                                (msg.x3, msg.y3), 
+                                (msg.x4, msg.y4),
+                                (msg.x5, msg.y5), 
+                                (msg.x6, msg.y6),
+                                (msg.x7, msg.y7),
+                                (msg.x8, msg.y8)]
             self.tipo_trayectoria_actual = msg.type
 
 

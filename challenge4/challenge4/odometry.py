@@ -3,6 +3,7 @@ from rclpy.node import Node
 from std_msgs.msg import Float32
 from msgs_clase.msg import Vector   # type: ignore
 import math
+import numpy as np
 
 #Se crea el nodo My_Talker_Params tomando objeto de Node.
 class Odometry_Node(Node):   
@@ -11,6 +12,13 @@ class Odometry_Node(Node):
     def __init__(self):
         #Se crear el nodo que será encargado de publicar la señal
         super().__init__('Odometria')
+
+        # Declare the parameter with a default value
+        self.declare_parameter('init_pose_x', 0.0)
+        self.declare_parameter('init_pose_y', 0.0)
+        self.declare_parameter('init_pose_yaw', np.pi/2)
+        self.declare_parameter('odom_frame', 'odom')
+
 
         #Se hacen las suscripciones pertinentes
         self.subscription_velocity_left = self.create_subscription(
@@ -48,9 +56,9 @@ class Odometry_Node(Node):
         self.velLineal = 0.0 #Variable para obtener las velocidades del robot
 
         #Variables de odometría
-        self.theta = 0.0
-        self.posX = 0.0
-        self.posY = 0.0
+        self.posX = self.get_parameter('init_pose_x').value
+        self.posY = self.get_parameter('init_pose_y').value
+        self.theta = self.get_parameter('init_pose_yaw').value
 
         #Se declara mensaje personalizado
         self.msgDato = Vector()

@@ -4,18 +4,17 @@ from std_msgs.msg import Float32
 from msgs_clase.msg import Path   # type: ignore
 from scipy import signal
 import math
-
+import numpy as np
 
 class My_Talker_Params(Node):
     def __init__(self):
         super().__init__('Path_generator')
         
         # Declare parameters
-        self.declare_parameters(
-            namespace='',
-            parameters=[
-                ('type', rclpy.Parameter.Type.INTEGER),
-            ])
+        self.declare_parameter('init_pose_x', 0.0)
+        self.declare_parameter('init_pose_y', 0.0)
+        self.declare_parameter('init_pose_yaw', np.pi/2)
+        self.declare_parameter('type', 2)
         
         self.pub = self.create_publisher(Path, 'path_generator', 1000)
         timer_period = 0.1
@@ -105,7 +104,22 @@ class My_Talker_Params(Node):
             self.msg.x8 = 0.0
             self.msg.y8 = 0.0
 
-        
+        self.msg.x1 += self.get_parameter('init_pose_x').value
+        self.msg.y1 += self.get_parameter('init_pose_y').value
+        self.msg.x2 += self.get_parameter('init_pose_x').value
+        self.msg.y2 += self.get_parameter('init_pose_y').value
+        self.msg.x3 += self.get_parameter('init_pose_x').value
+        self.msg.y3 += self.get_parameter('init_pose_y').value
+        self.msg.x4 += self.get_parameter('init_pose_x').value
+        self.msg.y4 += self.get_parameter('init_pose_y').value
+        self.msg.x5 += self.get_parameter('init_pose_x').value
+        self.msg.y5 += self.get_parameter('init_pose_y').value
+        self.msg.x6 += self.get_parameter('init_pose_x').value
+        self.msg.y6 += self.get_parameter('init_pose_y').value
+        self.msg.x7 += self.get_parameter('init_pose_x').value
+        self.msg.y7 += self.get_parameter('init_pose_y').value
+        self.msg.x8 += self.get_parameter('init_pose_x').value
+        self.msg.y8 += self.get_parameter('init_pose_y').value
 
         self.pub.publish(self.msg)
 
