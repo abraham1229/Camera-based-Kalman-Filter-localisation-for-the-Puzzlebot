@@ -33,12 +33,36 @@ def generate_launch_description():
         parameters=[{
                     'init_pose_x':2.0,
                     'init_pose_y': 2.0,
-                    'init_pose_z': 1.0,
                     'init_pose_yaw': 1.57,
-                    'init_pose_pitch': 0.0,
-                    'init_pose_roll': 0.0,
                     'odom_frame':'odom'
                 }]
+            )   
+
+    robot1_controller = Node(
+            name='controller',
+            package='challenge4',
+            executable='controller',
+            namespace='group1'
+            )  
+
+    robot1_odometry = Node(
+            name='odometry',
+            package='challenge4',
+            executable='odometry',
+            namespace='group1',
+            parameters=[{
+                    'init_pose_x':2.0,
+                    'init_pose_y': 2.0,
+                    'init_pose_yaw': 1.57,
+                    'odom_frame':'odom'
+                }]
+            )   
+
+    robot1_path_generator = Node(
+            name='path_generator',
+            package='challenge4',
+            executable='path_generator',
+            namespace='group1'
             )   
 
 
@@ -85,6 +109,9 @@ def generate_launch_description():
     return LaunchDescription([
         robot1_state_pub,
         robot1_node,
+        robot1_controller,
+        robot1_odometry,
+        robot1_path_generator,
         robot2_state_pub,
         robot2_node,
         rviz_node

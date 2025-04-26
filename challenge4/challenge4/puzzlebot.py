@@ -18,10 +18,7 @@ class DronePublisher(Node):
         # Declare the parameter with a default value
         self.declare_parameter('init_pose_x', 0.0)
         self.declare_parameter('init_pose_y', 0.0)
-        self.declare_parameter('init_pose_z', 0.0)
         self.declare_parameter('init_pose_yaw', np.pi/2)
-        self.declare_parameter('init_pose_pitch', 0.0)
-        self.declare_parameter('init_pose_roll', 0.0)
         self.declare_parameter('odom_frame', 'odom')
 
         # Retrieve the parameter value
@@ -50,10 +47,7 @@ class DronePublisher(Node):
         #Puzzlebot Initial Pose
         self.intial_pos_x = self.get_parameter('init_pose_x').value
         self.intial_pos_y = self.get_parameter('init_pose_y').value
-        self.intial_pos_z = self.get_parameter('init_pose_z').value
         self.intial_pos_yaw = self.get_parameter('init_pose_yaw').value
-        self.intial_pos_pitch = self.get_parameter('init_pose_pitch').value
-        self.intial_pos_roll = self.get_parameter('init_pose_roll').value
 
         # Puzzlebot odometry
         self.Posx = self.intial_pos_x
@@ -175,7 +169,7 @@ class DronePublisher(Node):
         self.base_footprint_tf.transform.translation.x = self.intial_pos_x
         self.base_footprint_tf.transform.translation.y = self.intial_pos_y
         self.base_footprint_tf.transform.translation.z = 0.0
-        q_foot = transforms3d.euler.euler2quat(self.intial_pos_roll, self.intial_pos_pitch, self.intial_pos_yaw)       
+        q_foot = transforms3d.euler.euler2quat(0.0, 0.0, self.intial_pos_yaw)       
         self.base_footprint_tf.transform.rotation.x = q_foot[1]
         self.base_footprint_tf.transform.rotation.y = q_foot[2]
         self.base_footprint_tf.transform.rotation.z = q_foot[3]
