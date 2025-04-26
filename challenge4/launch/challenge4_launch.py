@@ -42,7 +42,13 @@ def generate_launch_description():
             name='controller',
             package='challenge4',
             executable='controller',
-            namespace='group1'
+            namespace='group1',
+            parameters=[{
+                    'init_pose_x':2.0,
+                    'init_pose_y': 2.0,
+                    'init_pose_yaw': 1.57,
+                    'odom_frame':'odom'
+                }]
             )  
 
     robot1_odometry = Node(
@@ -53,8 +59,7 @@ def generate_launch_description():
             parameters=[{
                     'init_pose_x':2.0,
                     'init_pose_y': 2.0,
-                    'init_pose_yaw': 1.57,
-                    'odom_frame':'odom'
+                    'init_pose_yaw': 1.57
                 }]
             )   
 
@@ -62,7 +67,12 @@ def generate_launch_description():
             name='path_generator',
             package='challenge4',
             executable='path_generator',
-            namespace='group1'
+            namespace='group1',
+            parameters=[{
+                    'init_pose_x':2.0,
+                    'init_pose_y': 2.0,
+                    'init_pose_yaw': 1.57
+                }]
             )   
 
 
