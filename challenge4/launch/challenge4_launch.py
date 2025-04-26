@@ -3,7 +3,75 @@ from launch import LaunchDescription
 from launch_ros.actions import Node
 from ament_index_python.packages import get_package_share_directory
 
+
+def generate_robot_group(robot_index, robot_desc, path_type):
+    namespace = f'group{robot_index}'
+
+    robot_state_pub = Node(
+        package='robot_state_publisher',
+        executable='robot_state_publisher',
+        name=f'robot_state_publisher_{robot_index}',
+        output='screen',
+        parameters=[{'frame_prefix': f'{namespace}/','robot_description': robot_desc}],
+        namespace=namespace
+    )
+
+    puzzlebot_node = Node(
+        name='puzzlebot',
+        package='challenge4',
+        executable='puzzlebot',
+        namespace=namespace,
+        parameters=[{
+            'init_pose_x': 1.0 * robot_index,
+            'init_pose_y': 1.0,
+            'init_pose_yaw': 1.57,
+            'odom_frame': 'odom'
+        }]
+    )
+
+    controller_node = Node(
+        name='controller',
+        package='challenge4',
+        executable='controller',
+        namespace=namespace,
+        parameters=[{
+            'init_pose_x': 1.0,
+            'init_pose_y': 1.0 * robot_index,
+            'init_pose_yaw': 1.57
+        }]
+    )
+
+    odometry_node = Node(
+        name='odometry',
+        package='challenge4',
+        executable='odometry',
+        namespace=namespace,
+        parameters=[{
+            'init_pose_x': 1.0 ,
+            'init_pose_y': 1.0 * robot_index,
+            'init_pose_yaw': 1.57
+        }]
+    )
+
+    path_generator_node = Node(
+        name='path_generator',
+        package='challenge4',
+        executable='path_generator',
+        namespace=namespace,
+        parameters=[{
+            'init_pose_x': 1.0,
+            'init_pose_y': 1.0 * robot_index,
+            'init_pose_yaw': 1.57,
+            'type': path_type
+        }]
+    )
+
+    return [robot_state_pub, puzzlebot_node, controller_node, odometry_node, path_generator_node]
+
+
+
 def generate_launch_description():
+    
     urdf_file_name = 'puzzle_mesh.urdf'
     urdf = os.path.join(
         get_package_share_directory('challenge4'),
@@ -13,156 +81,25 @@ def generate_launch_description():
     with open(urdf, 'r') as infp:
         robot_desc = infp.read()
 
+    # Número de robots
+    num_robots = 3  
 
-    # Robot 1: group1
+    robot_nodes = []
+    for i in range(1, num_robots + 1):
+        robot_nodes.extend(generate_robot_group(i, robot_desc,i))
 
-    robot1_state_pub = Node(
-        package='robot_state_publisher',
-        executable='robot_state_publisher',
-        name='robot_state_publisher',
-        output='screen',
-        parameters=[{'frame_prefix': 'group1/','robot_description': robot_desc}],
-        namespace='group1'
-    )
-
-    robot1_node = Node(
-        name='puzzlebot',
-        package='challenge4',
-        executable='puzzlebot',
-        namespace='group1',
-        parameters=[{
-                'init_pose_x':2.0,
-                'init_pose_y': 2.0,
-                'init_pose_yaw': 1.57,
-                'odom_frame':'odom'
-            }]
-        )   
-
-    robot1_controller = Node(
-        name='controller',
-        package='challenge4',
-        executable='controller',
-        namespace='group1',
-        parameters=[{
-            'init_pose_x':2.0,
-            'init_pose_y': 2.0,
-            'init_pose_yaw': 1.57,
-            'odom_frame':'odom'
-        }]
-    )  
-
-    robot1_odometry = Node(
-        name='odometry',
-        package='challenge4',
-        executable='odometry',
-        namespace='group1',
-        parameters=[{
-            'init_pose_x':2.0,
-            'init_pose_y': 2.0,
-            'init_pose_yaw': 1.57
-        }]
-    )   
-
-    robot1_path_generator = Node(
-        name='path_generator',
-        package='challenge4',
-        executable='path_generator',
-        namespace='group1',
-        parameters=[{
-            'init_pose_x':2.0,
-            'init_pose_y': 2.0,
-            'init_pose_yaw': 1.57
-        }]
-    )   
-
-
-    # Robot 2: group2
-    
-    robot2_state_pub = Node(
-        package='robot_state_publisher',
-        executable='robot_state_publisher',
-        name='robot_state_publisher',
-        output='screen',
-        parameters=[{'frame_prefix': 'group2/','robot_description': robot_desc}],
-        namespace='group2'
-    )
-
-    robot2_node = Node(
-        name='puzzlebot',
-        package='challenge4',
-        executable='puzzlebot',
-        namespace='group2',
-        parameters=[{
-                    'init_pose_x':-2.0,
-                    'init_pose_y': 2.0,
-                    'init_pose_z': 1.0,
-                    'init_pose_yaw': 1.57,
-                    'init_pose_pitch': 0.0,
-                    'init_pose_roll': 0.0,
-                    'odom_frame':'odom'
-                }]
-            )   
-    
-    robot2_controller = Node(
-        name='controller',
-        package='challenge4',
-        executable='controller',
-        namespace='group2',
-        parameters=[{
-            'init_pose_x':-2.0,
-            'init_pose_y': 2.0,
-            'init_pose_yaw': 1.57,
-            'odom_frame':'odom'
-        }]
-    )  
-
-    robot2_odometry = Node(
-        name='odometry',
-        package='challenge4',
-        executable='odometry',
-        namespace='group2',
-        parameters=[{
-            'init_pose_x':-2.0,
-            'init_pose_y': 2.0,
-            'init_pose_yaw': 1.57
-        }]
-    )   
-
-    robot2_path_generator = Node(
-        name='path_generator',
-        package='challenge4',
-        executable='path_generator',
-        namespace='group2',
-        parameters=[{
-            'init_pose_x':-2.0,
-            'init_pose_y': 2.0,
-            'init_pose_yaw': 1.57
-        }]
-    )   
-    
+    # Agregar RViz
     rviz_config = os.path.join(
-                            get_package_share_directory('challenge4'),
-                            'rviz',
-                            'multi_puzzledrone.rviz'
-                            )
-    
-    rviz_node = Node(name='rviz',
-                    package='rviz2',
-                    executable='rviz2',
-                    arguments=['-d', rviz_config],
-                    )
+        get_package_share_directory('challenge4'),
+        'rviz',
+        'multi_puzzledrone.rviz'
+    )
 
-    
-    return LaunchDescription([
-        robot1_state_pub,
-        robot1_node,
-        robot1_controller,
-        robot1_odometry,
-        robot1_path_generator,
-        robot2_state_pub,
-        robot2_node,
-        robot2_controller,
-        robot2_odometry,
-        robot2_path_generator,
-        rviz_node
-    ])
+    rviz_node = Node(
+        name='rviz',
+        package='rviz2',
+        executable='rviz2',
+        arguments=['-d', rviz_config],
+    )
+
+    return LaunchDescription(robot_nodes + [rviz_node])
