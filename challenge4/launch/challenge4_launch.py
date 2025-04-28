@@ -88,7 +88,7 @@ def generate_launch_description():
         (0.0, -2.0, 1.57),  # Robot 5
         (0.0, 2.0, 1.57),  # Robot 6
         (2.0, 0.0, 1.57),  # Robot 7
-        (-2.0, 0.0, 1.57),  # Robot 4
+        (-2.0, 0.0, 1.57),  # Robot 8
     ]
 
     robot_nodes = []
