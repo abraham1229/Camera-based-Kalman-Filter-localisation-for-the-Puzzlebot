@@ -93,7 +93,11 @@ class Controller(Node):
 
         # Se verifica que se haya terminado la trayectoria y no existe una nueva
         if self.trayectoria_finalizda:
-            self.get_logger().warn('Trayectoria finalizada')
+            if self.tipo_trayectoria_actual == self.tipo_trayectoria_prev:
+                self.get_logger().warn('Esperado nueva trayectoria')
+                return
+            else:
+                self.trayectoria_finalizda = False
     
 
         # Verificar si hay puntos en la trayectoria

@@ -86,7 +86,7 @@ def generate_launch_description():
 
     robot_nodes = []
     for i in range(1, num_robots + 1):
-        robot_nodes.extend(generate_robot_group(i, robot_desc,i))
+        robot_nodes.extend(generate_robot_group(i, robot_desc,0))
 
     # Agregar RViz
     rviz_config = os.path.join(
