@@ -3,8 +3,7 @@ from launch import LaunchDescription
 from launch_ros.actions import Node
 from ament_index_python.packages import get_package_share_directory
 
-
-def generate_robot_group(robot_index, robot_desc, path_type):
+def generate_robot_group(robot_index, robot_desc, init_x, init_y, init_yaw):
     namespace = f'group{robot_index}'
 
     robot_state_pub = Node(
@@ -12,7 +11,7 @@ def generate_robot_group(robot_index, robot_desc, path_type):
         executable='robot_state_publisher',
         name=f'robot_state_publisher_{robot_index}',
         output='screen',
-        parameters=[{'frame_prefix': f'{namespace}/','robot_description': robot_desc}],
+        parameters=[{'frame_prefix': f'{namespace}/', 'robot_description': robot_desc}],
         namespace=namespace
     )
 
@@ -22,9 +21,9 @@ def generate_robot_group(robot_index, robot_desc, path_type):
         executable='puzzlebot',
         namespace=namespace,
         parameters=[{
-            'init_pose_x': 1.0 * robot_index,
-            'init_pose_y': 1.0,
-            'init_pose_yaw': 1.57,
+            'init_pose_x': init_x,
+            'init_pose_y': init_y,
+            'init_pose_yaw': init_yaw,
             'odom_frame': 'odom'
         }]
     )
@@ -35,9 +34,9 @@ def generate_robot_group(robot_index, robot_desc, path_type):
         executable='controller',
         namespace=namespace,
         parameters=[{
-            'init_pose_x': 1.0,
-            'init_pose_y': 1.0 * robot_index,
-            'init_pose_yaw': 1.57
+            'init_pose_x': init_x,
+            'init_pose_y': init_y,
+            'init_pose_yaw': init_yaw
         }]
     )
 
@@ -47,9 +46,9 @@ def generate_robot_group(robot_index, robot_desc, path_type):
         executable='odometry',
         namespace=namespace,
         parameters=[{
-            'init_pose_x': 1.0 ,
-            'init_pose_y': 1.0 * robot_index,
-            'init_pose_yaw': 1.57
+            'init_pose_x': init_x,
+            'init_pose_y': init_y,
+            'init_pose_yaw': init_yaw
         }]
     )
 
@@ -59,34 +58,42 @@ def generate_robot_group(robot_index, robot_desc, path_type):
         executable='path_generator',
         namespace=namespace,
         parameters=[{
-            'init_pose_x': 1.0,
-            'init_pose_y': 1.0 * robot_index,
-            'init_pose_yaw': 1.57,
-            'type': path_type
+            'init_pose_x': init_x,
+            'init_pose_y': init_y,
+            'init_pose_yaw': init_yaw,
+            'type': 0
         }]
     )
 
     return [robot_state_pub, puzzlebot_node, controller_node, odometry_node, path_generator_node]
 
 
-
 def generate_launch_description():
-    
     urdf_file_name = 'puzzle_mesh.urdf'
     urdf = os.path.join(
         get_package_share_directory('challenge4'),
         'urdf',
-        urdf_file_name)
-    
+        urdf_file_name
+    )
+
     with open(urdf, 'r') as infp:
         robot_desc = infp.read()
 
-    # Número de robots
-    num_robots = 3  
+    # Definir posiciones iniciales manualmente (x, y, yaw)
+    robots_positions = [
+        (-2.0, 2.0, 1.57),  # Robot 1
+        (-2.0, -2.0, 1.57), # Robot 2
+        (2.0, 2.0, 1.57),  # Robot 3
+        (2.0, -2.0, 1.57),  # Robot 4
+        (0.0, -2.0, 1.57),  # Robot 5
+        (0.0, 2.0, 1.57),  # Robot 6
+        (2.0, 0.0, 1.57),  # Robot 7
+        (-2.0, 0.0, 1.57),  # Robot 4
+    ]
 
     robot_nodes = []
-    for i in range(1, num_robots + 1):
-        robot_nodes.extend(generate_robot_group(i, robot_desc,0))
+    for idx, (x, y, yaw) in enumerate(robots_positions, start=1):
+        robot_nodes.extend(generate_robot_group(idx, robot_desc, x, y, yaw))
 
     # Agregar RViz
     rviz_config = os.path.join(
