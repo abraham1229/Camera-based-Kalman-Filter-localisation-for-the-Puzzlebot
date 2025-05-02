@@ -1,7 +1,8 @@
 import rclpy
 from rclpy.node import Node
 from std_msgs.msg import Float32
-from msgs_clase.msg import Vector   # type: ignore
+from nav_msgs.msg import Odometry
+import transforms3d
 import math
 import numpy as np
 
@@ -34,7 +35,7 @@ class Odometry_Node(Node):
             rclpy.qos.qos_profile_sensor_data)
         
         #Se crea el publicador que mandará mensaje personalizado
-        self.pub_odometry = self.create_publisher(Vector, 'odometria', 1000)
+        self.pub_odometry = self.create_publisher(Odometry, 'odometria', 1000)
         # Período de temporizador para 10Hz
         self.timer_period = 0.01 
         #Se declara el timer que llamará al callback
@@ -59,9 +60,6 @@ class Odometry_Node(Node):
         self.posX = self.get_parameter('init_pose_x').value
         self.posY = self.get_parameter('init_pose_y').value
         self.theta = self.get_parameter('init_pose_yaw').value
-
-        #Se declara mensaje personalizado
-        self.msgDato = Vector()
 
         #Se despliega en pantalla que se ha inicializado el nodo
         self.get_logger().info('Odometry node initialized')
@@ -100,13 +98,27 @@ class Odometry_Node(Node):
         self.posX += self.velLineal*math.cos(self.theta) *self.timer_period
         self.posY += self.velLineal*math.sin(self.theta) *self.timer_period
         
-        #Se declara el mensaje costumizado
-        self.msgDato.x = self.posX
-        self.msgDato.y = self.posY
-        self.msgDato.theta = self.theta
-        
-        #Se publica el dato
-        self.pub_odometry.publish(self.msgDato)
+        # Create Odometry message
+        odom_msg = Odometry()
+        odom_msg.header.stamp = self.get_clock().now().to_msg()
+        odom_msg.header.frame_id = self.get_parameter('odom_frame').get_parameter_value().string_value.strip('/')
+        ns = self.get_namespace().strip('/')
+        odom_msg.child_frame_id = f'{ns}/base_link' if ns else 'base_link'
+
+        # Set position
+        odom_msg.pose.pose.position.x = self.posX
+        odom_msg.pose.pose.position.y = self.posY
+        odom_msg.pose.pose.position.z = 0.0
+
+        # Convert theta (yaw) to quaternion
+        quat = transforms3d.euler.euler2quat(0, 0, self.theta)
+        odom_msg.pose.pose.orientation.x = quat[0]
+        odom_msg.pose.pose.orientation.y = quat[1]
+        odom_msg.pose.pose.orientation.z = quat[2]
+        odom_msg.pose.pose.orientation.w = quat[3]
+
+        # Publish the Odometry message
+        self.pub_odometry.publish(odom_msg)
 
         
 
