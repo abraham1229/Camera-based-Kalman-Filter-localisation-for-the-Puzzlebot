@@ -17,7 +17,7 @@ def generate_robot_group(robot_index, robot_desc, init_x, init_y, init_yaw):
 
     puzzlebot_node = Node(
         name='puzzlebot',
-        package='challenge4',
+        package='challenge5',
         executable='puzzlebot',
         namespace=namespace,
         parameters=[{
@@ -30,7 +30,7 @@ def generate_robot_group(robot_index, robot_desc, init_x, init_y, init_yaw):
 
     controller_node = Node(
         name='controller',
-        package='challenge4',
+        package='challenge5',
         executable='controller',
         namespace=namespace,
         parameters=[{
@@ -42,7 +42,7 @@ def generate_robot_group(robot_index, robot_desc, init_x, init_y, init_yaw):
 
     odometry_node = Node(
         name='odometry',
-        package='challenge4',
+        package='challenge5',
         executable='odometry',
         namespace=namespace,
         parameters=[{
@@ -54,7 +54,7 @@ def generate_robot_group(robot_index, robot_desc, init_x, init_y, init_yaw):
 
     path_generator_node = Node(
         name='path_generator',
-        package='challenge4',
+        package='challenge5',
         executable='path_generator',
         namespace=namespace,
         parameters=[{
@@ -71,7 +71,7 @@ def generate_robot_group(robot_index, robot_desc, init_x, init_y, init_yaw):
 def generate_launch_description():
     urdf_file_name = 'puzzle_mesh.urdf'
     urdf = os.path.join(
-        get_package_share_directory('challenge4'),
+        get_package_share_directory('challenge5'),
         'urdf',
         urdf_file_name
     )
@@ -97,7 +97,7 @@ def generate_launch_description():
 
     # Agregar RViz
     rviz_config = os.path.join(
-        get_package_share_directory('challenge4'),
+        get_package_share_directory('challenge5'),
         'rviz',
         'multi_puzzledrone.rviz'
     )
