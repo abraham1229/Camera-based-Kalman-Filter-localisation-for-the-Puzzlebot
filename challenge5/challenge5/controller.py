@@ -6,6 +6,7 @@ from geometry_msgs.msg import Twist, Pose
 from nav_msgs.msg import Odometry
 import math
 import numpy as np
+import transforms3d
 
 class Controller(Node):
     def __init__(self):
@@ -190,7 +191,13 @@ class Controller(Node):
         if msg is not None:
             self.Posx = msg.pose.pose.position.x
             self.Posy = msg.pose.pose.position.y
-            self.Postheta = msg.pose.pose.orientation.z
+            qx = msg.pose.pose.orientation.x
+            qy = msg.pose.pose.orientation.y
+            qz = msg.pose.pose.orientation.z
+            qw = msg.pose.pose.orientation.w
+
+            _, _, yaw = transforms3d.euler.quat2euler([qw, qx, qy, qz])  # Orden: w, x, y, z
+            self.Postheta = yaw
 
     # Callback para recibir los puntos de la trayectoria
     def callback_path(self, msg):

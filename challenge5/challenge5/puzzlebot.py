@@ -37,7 +37,7 @@ class DronePublisher(Node):
             rclpy.qos.qos_profile_sensor_data ) #Se debe de incluir la lectura de datos
         
         #Se hacen las suscripciones pertinentes
-        self.subscription_odometry = self.create_subscription(
+        self.subscription_cmd_vel = self.create_subscription(
             Twist,
             'cmd_vel',
             self.callback_cmd_vel,
@@ -152,7 +152,13 @@ class DronePublisher(Node):
         if msg is not None:
             self.Posx = msg.pose.pose.position.x
             self.Posy = msg.pose.pose.position.y
-            self.Postheta = msg.pose.pose.orientation.z
+            qx = msg.pose.pose.orientation.x
+            qy = msg.pose.pose.orientation.y
+            qz = msg.pose.pose.orientation.z
+            qw = msg.pose.pose.orientation.w
+
+            _, _, yaw = transforms3d.euler.quat2euler([qw, qx, qy, qz])  # Orden: w, x, y, z
+            self.Postheta = yaw
 
     def callback_cmd_vel(self, msg):
         if msg is not None:

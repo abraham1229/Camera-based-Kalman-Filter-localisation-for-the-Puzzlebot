@@ -112,10 +112,10 @@ class Odometry_Node(Node):
 
         # Convert theta (yaw) to quaternion
         quat = transforms3d.euler.euler2quat(0, 0, self.theta)
-        odom_msg.pose.pose.orientation.x = quat[0]
-        odom_msg.pose.pose.orientation.y = quat[1]
-        odom_msg.pose.pose.orientation.z = quat[2]
-        odom_msg.pose.pose.orientation.w = quat[3]
+        odom_msg.pose.pose.orientation.x = quat[1]
+        odom_msg.pose.pose.orientation.y = quat[2]
+        odom_msg.pose.pose.orientation.z = quat[3]
+        odom_msg.pose.pose.orientation.w = quat[0]
 
         # Publish the Odometry message
         self.pub_odometry.publish(odom_msg)
