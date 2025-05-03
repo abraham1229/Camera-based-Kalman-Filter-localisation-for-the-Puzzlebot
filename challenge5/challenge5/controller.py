@@ -1,10 +1,12 @@
 import rclpy
 from rclpy.node import Node
 from std_msgs.msg import Float32
-from msgs_clase.msg import Vector, Path   # type: ignore
-from geometry_msgs.msg import Twist
+from msgs_clase.msg import Path   # type: ignore
+from geometry_msgs.msg import Twist, Pose
+from nav_msgs.msg import Odometry
 import math
 import numpy as np
+import transforms3d
 
 class Controller(Node):
     def __init__(self):
@@ -28,7 +30,7 @@ class Controller(Node):
 
         # Se crean suscripciones correspondientes
         self.subscription_odometry = self.create_subscription(
-            Vector,
+            Odometry,
             'odometria',
             self.callback_odometry,
             rclpy.qos.qos_profile_sensor_data )
@@ -184,17 +186,18 @@ class Controller(Node):
         twist_msg.linear.x = self.velL
         twist_msg.angular.z = self.velA
         self.pub_cmd_vel.publish(twist_msg)
-        
 
-
-
-
-    # Se recibe posicion actual del robot
-    def callback_odometry(self, msg):
+    def callback_odometry(self, msg: Odometry):
         if msg is not None:
-            self.Posx = msg.x
-            self.Posy = msg.y
-            self.Postheta = msg.theta
+            self.Posx = msg.pose.pose.position.x
+            self.Posy = msg.pose.pose.position.y
+            qx = msg.pose.pose.orientation.x
+            qy = msg.pose.pose.orientation.y
+            qz = msg.pose.pose.orientation.z
+            qw = msg.pose.pose.orientation.w
+
+            _, _, yaw = transforms3d.euler.quat2euler([qw, qx, qy, qz])  # Orden: w, x, y, z
+            self.Postheta = yaw
 
     # Callback para recibir los puntos de la trayectoria
     def callback_path(self, msg):
