@@ -11,6 +11,10 @@ from launch.substitutions import EnvironmentVariable, LocalSubstitution
 
 def generate_launch_description():
 
+  init_x = 0.0
+  init_y = 0.0
+  init_yaw = 0.0
+
   # Parameters
   config = os.path.join(
       get_package_share_directory('challenge5'),
@@ -27,12 +31,22 @@ def generate_launch_description():
     
   controller_node = Node(name="controller",
                           package='challenge5',
-                          executable='controller'
+                          executable='controller',
+                          parameters=[{
+                              'init_pose_x': init_x,
+                              'init_pose_y': init_y,
+                              'init_pose_yaw': init_yaw
+                          }]
                           )
   
   odometry_node = Node(name="odometry",
                           package='challenge5',
-                          executable='odometry'
+                          executable='odometry',
+                          parameters=[{
+                              'init_pose_x': init_x,
+                              'init_pose_y': init_y,
+                              'init_pose_yaw': init_yaw
+                          }]
                           )
 
 
@@ -49,8 +63,8 @@ def generate_launch_description():
   l_d = LaunchDescription([
       controller_node,
       odometry_node,
+      path_generator_node,
       shutdown_log,
-      path_generator_node
       ])
 
   return l_d
