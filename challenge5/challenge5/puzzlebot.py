@@ -2,8 +2,8 @@ import rclpy
 from rclpy.node import Node
 from tf2_ros import TransformBroadcaster
 from std_msgs.msg import Float32
-from msgs_clase.msg import Vector   # type: ignore
-from geometry_msgs.msg import TransformStamped, Twist
+from geometry_msgs.msg import TransformStamped, Twist, Pose
+from nav_msgs.msg import Odometry
 from sensor_msgs.msg import JointState
 import transforms3d
 import numpy as np
@@ -31,13 +31,13 @@ class DronePublisher(Node):
 
         #Se hacen las suscripciones pertinentes
         self.subscription_odometry = self.create_subscription(
-            Vector,
+            Odometry,
             'odometria',
             self.callback_odometry,
             rclpy.qos.qos_profile_sensor_data ) #Se debe de incluir la lectura de datos
         
         #Se hacen las suscripciones pertinentes
-        self.subscription_odometry = self.create_subscription(
+        self.subscription_cmd_vel = self.create_subscription(
             Twist,
             'cmd_vel',
             self.callback_cmd_vel,
@@ -148,11 +148,17 @@ class DronePublisher(Node):
 
 
     #Lee los datos del nodo de la llanta derecha
-    def callback_odometry(self, msg):
+    def callback_odometry(self, msg: Odometry):
         if msg is not None:
-            self.Posx = msg.x
-            self.Posy = msg.y
-            self.Postheta = msg.theta
+            self.Posx = msg.pose.pose.position.x
+            self.Posy = msg.pose.pose.position.y
+            qx = msg.pose.pose.orientation.x
+            qy = msg.pose.pose.orientation.y
+            qz = msg.pose.pose.orientation.z
+            qw = msg.pose.pose.orientation.w
+
+            _, _, yaw = transforms3d.euler.quat2euler([qw, qx, qy, qz])  # Orden: w, x, y, z
+            self.Postheta = yaw
 
     def callback_cmd_vel(self, msg):
         if msg is not None:
