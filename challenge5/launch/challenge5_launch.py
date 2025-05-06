@@ -3,7 +3,7 @@ from launch import LaunchDescription
 from launch_ros.actions import Node
 from ament_index_python.packages import get_package_share_directory
 
-def generate_robot_group(robot_index, robot_desc, init_x, init_y, init_yaw):
+def generate_robot_group(robot_index, robot_desc, init_x, init_y, init_yaw, linear_model):
     namespace = f'group{robot_index}'
 
     robot_state_pub = Node(
@@ -48,7 +48,8 @@ def generate_robot_group(robot_index, robot_desc, init_x, init_y, init_yaw):
         parameters=[{
             'init_pose_x': init_x,
             'init_pose_y': init_y,
-            'init_pose_yaw': init_yaw
+            'init_pose_yaw': init_yaw,
+            'use_linear_model': linear_model
         }]
     )
 
@@ -61,7 +62,7 @@ def generate_robot_group(robot_index, robot_desc, init_x, init_y, init_yaw):
             'init_pose_x': init_x,
             'init_pose_y': init_y,
             'init_pose_yaw': init_yaw,
-            'type': 0
+            'type': 0,
         }]
     )
 
@@ -85,14 +86,15 @@ def generate_launch_description():
     ]
 
     robot_nodes = []
+    robot_linear_model = True
     for idx, (x, y, yaw) in enumerate(robots_positions, start=1):
-        robot_nodes.extend(generate_robot_group(idx, robot_desc, x, y, yaw))
+        robot_nodes.extend(generate_robot_group(idx, robot_desc, x, y, yaw, robot_linear_model))
 
     # Agregar RViz
     rviz_config = os.path.join(
         get_package_share_directory('challenge5'),
         'rviz',
-        'multi_puzzledrone.rviz'
+        'puzzledrone.rviz'
     )
 
     rviz_node = Node(

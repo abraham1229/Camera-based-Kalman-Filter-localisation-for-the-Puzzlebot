@@ -19,7 +19,7 @@ class Odometry_Node(Node):
         self.declare_parameter('init_pose_y', 0.0)
         self.declare_parameter('init_pose_yaw', np.pi/2)
         self.declare_parameter('odom_frame', 'odom')
-
+        self.declare_parameter("use_linear_model", True)
 
         #Se hacen las suscripciones pertinentes
         self.subscription_velocity_left = self.create_subscription(
@@ -56,10 +56,17 @@ class Odometry_Node(Node):
         self.velocidadTheta = 0.0 #Velocidad thetha
         self.velLineal = 0.0 #Variable para obtener las velocidades del robot
 
+        self.Sigma = np.array([
+            [0.8512, 0.4717,  0.2421],
+            [0.4717,  3.1026, 0.4084],
+            [0.2421,  0.4084,  0.1812]
+        ])
+
         #Variables de odometría
         self.posX = self.get_parameter('init_pose_x').value
         self.posY = self.get_parameter('init_pose_y').value
         self.theta = self.get_parameter('init_pose_yaw').value
+        self.use_linear_model = self.get_parameter("use_linear_model").get_parameter_value().bool_value
 
         #Se despliega en pantalla que se ha inicializado el nodo
         self.get_logger().info('Odometry node initialized')
@@ -83,23 +90,57 @@ class Odometry_Node(Node):
         self.velocidadTheta = self.radius*((self.vel_right-self.vel_left)/self.lenght)
         #Se calcula argumento velocidad
         self.velLineal = self.radius*((self.vel_right+self.vel_left)/2) * 1.09
-        
+        #Se calcula theta
+        self.theta += self.velocidadTheta * self.timer_period * 1.1722
+                
+        #Se calcula posición en x y y
+        self.posX += self.velLineal*math.cos(self.theta) *self.timer_period
+        self.posY += self.velLineal*math.sin(self.theta) *self.timer_period
+
+        # Create Odometry message
+        odom_msg = Odometry()
+
+        if self.use_linear_model:
+            # Current state
+            s = np.array([self.posX, self.posY, self.theta])
+            u = np.array([self.velLineal, self.velocidadTheta])
+
+            # Linearization: Compute A_k and B_k
+            A_k = np.array([
+                [1, 0, -self.velLineal * math.sin(self.theta) * self.timer_period],
+                [0, 1,  self.velLineal * math.cos(self.theta) * self.timer_period],
+                [0, 0, 1]
+            ])
+
+            B_k = np.array([
+                [math.cos(self.theta) * self.timer_period, 0],
+                [math.sin(self.theta) * self.timer_period, 0],
+                [0, self.timer_period]
+            ])
+
+            # State update using linearized model
+            s_new = A_k @ s + B_k @ u
+            self.posX, self.posY, self.theta = s_new
+
+            # Propagate covariance using affine transform
+            self.Sigma = A_k @ self.Sigma @ A_k.T
+
+            odom_msg.pose.covariance = [
+            self.Sigma[0, 0], self.Sigma[0, 1], 0.0, 0.0, 0.0, self.Sigma[0, 2], # Row 1
+            self.Sigma[1, 0], self.Sigma[1, 1], 0.0, 0.0, 0.0, self.Sigma[1, 2], # Row 2
+            0.0, 0.0, 0.0, 0.0, 0.0, 0.0,                                        # Row 3 (z)
+            0.0, 0.0, 0.0, 0.0, 0.0, 0.0,                                        # Row 4 (roll)
+            0.0, 0.0, 0.0, 0.0, 0.0, 0.0,                                        # Row 5 (pitch)
+            self.Sigma[2, 0], self.Sigma[2, 1], 0.0, 0.0, 0.0, self.Sigma[2, 2]  # Row 6 (yaw)
+            ]
+
         # Se hace cambio de signo del ángulo si es necesario.
         if self.theta >= math.pi:
             self.theta -= 2 * math.pi
         elif self.theta <= -math.pi:
             self.theta += 2 * math.pi
-        
-        # self.theta += self.velocidadTheta * self.timer_period * 1.069
-        self.theta += self.velocidadTheta * self.timer_period * 1.1722
-        
-                
-        #Se calcula posición en x y y
-        self.posX += self.velLineal*math.cos(self.theta) *self.timer_period
-        self.posY += self.velLineal*math.sin(self.theta) *self.timer_period
-        
-        # Create Odometry message
-        odom_msg = Odometry()
+
+        #Odom message
         odom_msg.header.stamp = self.get_clock().now().to_msg()
         odom_msg.header.frame_id = self.get_parameter('odom_frame').get_parameter_value().string_value.strip('/')
         ns = self.get_namespace().strip('/')
@@ -116,6 +157,10 @@ class Odometry_Node(Node):
         odom_msg.pose.pose.orientation.y = quat[2]
         odom_msg.pose.pose.orientation.z = quat[3]
         odom_msg.pose.pose.orientation.w = quat[0]
+
+        # TWIST
+        odom_msg.twist.twist.linear.x  = self.velLineal # linear velocity (forward)
+        odom_msg.twist.twist.angular.z = self.velocidadTheta # angular velocity (around Z)
 
         # Publish the Odometry message
         self.pub_odometry.publish(odom_msg)
