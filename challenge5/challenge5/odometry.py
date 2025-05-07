@@ -56,11 +56,25 @@ class Odometry_Node(Node):
         self.velocidadTheta = 0.0 #Velocidad thetha
         self.velLineal = 0.0 #Variable para obtener las velocidades del robot
 
-        self.Sigma = np.array([
-            [0.8512, 0.4717,  0.2421],
-            [0.4717,  3.1026, 0.4084],
-            [0.2421,  0.4084,  0.1812]
+        self.Sigma = np.zeros((3, 3))
+
+        #self.covariance = np.array([
+        #    [0.8512, 0.4717,  0.2421],
+        #    [0.4717,  3.1026, 0.4084],
+        #    [0.2421,  0.4084,  0.1812]
+        #])
+
+        self.covariance = np.array([
+            [0.046, 0.0000000001,  0.0000000001],
+            [0.0000000001,  0.03, 0.0000000001],
+            [0.0000000001,  0.0000000001, 0.002]
         ])
+
+        #self.covariance = np.array([
+        #    [0.046, 0.01, 0.01],
+        #    [0.01, 0.03, 0.01],
+        #    [0.01, 0.01, 0.002]
+        #])
 
         #Variables de odometría
         self.posX = self.get_parameter('init_pose_x').value
@@ -120,10 +134,10 @@ class Odometry_Node(Node):
 
             # State update using linearized model
             s_new = A_k @ s + B_k @ u
-            self.posX, self.posY, self.theta = s_new
+            #self.posX, self.posY, self.theta = s_new
 
             # Propagate covariance using affine transform
-            self.Sigma = A_k @ self.Sigma @ A_k.T
+            self.Sigma = A_k @ self.Sigma @ A_k.T + self.covariance
 
             odom_msg.pose.covariance = [
             self.Sigma[0, 0], self.Sigma[0, 1], 0.0, 0.0, 0.0, self.Sigma[0, 2], # Row 1
