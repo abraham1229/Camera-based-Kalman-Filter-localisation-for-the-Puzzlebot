@@ -58,10 +58,10 @@ class Odometry_Node(Node):
 
         self.Sigma = np.zeros((3, 3))
 
-        self.covariance =  np.array([
-            [0.0000847, 0.00001,  0.00003],
-            [0.00001, 0.000379,  0.00016],
-            [0.00003,  0.00016,  0.000025]
+        self.covariance = 0.0001 * np.array([
+            [0.1059, 0.1106, 0.1516],
+            [0.1106, 1.7173, 0.6924],
+            [0.1516, 0.6924, 1.5237]
         ])
 
         #Variables de odometría
