@@ -110,53 +110,6 @@ class Odometry_Node(Node):
 
         return s_new, Sigma_new
 
-    def update(self, z, landmark_pos):
-        """
-        Update the robot's position using a Kalman Filter.
-
-        Args:
-            z (np.array): Measurement vector [range, bearing].
-            landmark_pos (np.array): Landmark position [x, y].
-        """
-        dx = landmark_pos[0] - self.posX
-        dy = landmark_pos[1] - self.posY
-        eps = 1e-6
-        p = max(dx**2 + dy**2, eps)  # Avoid division by zero
-
-        # Expected measurement (eq. 20)
-        z_hat = np.array([
-            np.sqrt(p),
-            np.arctan2(dy, dx) - self.theta
-        ])
-        z_hat[1] = self.normalize_angle(z_hat[1])
-
-        # Measurement Jacobian (eq. 21)
-        G = np.array([
-            [-dx / np.sqrt(p), -dy / np.sqrt(p), 0],
-            [ dy / p,          -dx / p,         -1]
-        ])
-
-        # Innovation covariance (eq. 22)
-        S = G @ self.Sigma @ G.T + self.R
-
-        # Kalman gain (eq. 23)
-        K = self.Sigma @ G.T @ np.linalg.inv(S)
-
-        # Innovation (difference between actual and expected measurement)
-        innovation = z - z_hat
-        innovation[1] = self.normalize_angle(innovation[1])
-
-        # State update (eq. 24)
-        state = np.array([self.posX, self.posY, self.theta])
-        state += K @ innovation
-        self.posX = state[0]
-        self.posY = state[1]
-        self.theta = self.normalize_angle(state[2])
-
-        # Covariance update (eq. 25)
-        I = np.eye(3)
-        self.Sigma = (I - K @ G) @ self.Sigma
-
     
     #Se hace callback en el que se calcula la posición en x, y y theta
     def timer_callback(self):
@@ -182,26 +135,6 @@ class Odometry_Node(Node):
 
             ## Call the linearized state update function
             s_new, self.Sigma = self.linearized_state_update(s, u)
-
-            # Linearization: Compute A_k and B_k
-            A_k = np.array([
-                [1, 0, -self.velLineal * math.sin(self.theta) * self.timer_period],
-                [0, 1,  self.velLineal * math.cos(self.theta) * self.timer_period],
-                [0, 0, 1]
-            ])
-
-            B_k = np.array([
-                [math.cos(self.theta) * self.timer_period, 0],
-                [math.sin(self.theta) * self.timer_period, 0],
-                [0, self.timer_period]
-            ])
-
-            # State update using linearized model
-            s_new = A_k @ s + B_k @ u
-            #self.posX, self.posY, self.theta = s_new
-
-            # Propagate covariance using affine transform
-            self.Sigma = A_k @ self.Sigma @ A_k.T + self.covariance
 
             # Update the covariance in the odometry message
             odom_msg.pose.covariance = [
