@@ -74,43 +74,6 @@ class Odometry_Node(Node):
         self.get_logger().info('Odometry node initialized')
 
         
-    #Lee los datos del nodo de la llanta izquierda
-    def signal_callback_left(self, msg):
-        if msg is not None:
-            self.vel_left = msg.data
-
-    #Lee los datos del nodo de la llanta derecha
-    def signal_callback_right(self, msg):
-        if msg is not None:
-            self.vel_right = msg.data
-
-    # utils.py or top of your main file
-    def normalize_angle(self, theta):
-        return (theta + math.pi) % (2 * math.pi) - math.pi
-    
-    def linearized_state_update(self, s, u):
-        # Linearization: Compute A_k and B_k
-        A_k = np.array([
-            [1, 0, -u[0] * math.sin(self.theta) * self.timer_period],
-            [0, 1,  u[0] * math.cos(self.theta) * self.timer_period],
-            [0, 0, 1]
-        ])
-
-        B_k = np.array([
-            [math.cos(self.theta) * self.timer_period, 0],
-            [math.sin(self.theta) * self.timer_period, 0],
-            [0, self.timer_period]
-        ])
-
-        # State update using linearized model
-        s_new = A_k @ s + B_k @ u
-
-        # Propagate covariance using affine transform
-        Sigma_new = A_k @ self.Sigma @ A_k.T + self.covariance
-
-        return s_new, Sigma_new
-
-    
     #Se hace callback en el que se calcula la posición en x, y y theta
     def timer_callback(self):
 
@@ -174,8 +137,43 @@ class Odometry_Node(Node):
         # Publish the Odometry message
         self.pub_odometry.publish(odom_msg)
 
-        
+    #Lee los datos del nodo de la llanta izquierda
+    def signal_callback_left(self, msg):
+        if msg is not None:
+            self.vel_left = msg.data
 
+    #Lee los datos del nodo de la llanta derecha
+    def signal_callback_right(self, msg):
+        if msg is not None:
+            self.vel_right = msg.data
+
+    # utils.py or top of your main file
+    def normalize_angle(self, theta):
+        return (theta + math.pi) % (2 * math.pi) - math.pi
+    
+    def linearized_state_update(self, s, u):
+        # Linearization: Compute A_k and B_k
+        A_k = np.array([
+            [1, 0, -u[0] * math.sin(self.theta) * self.timer_period],
+            [0, 1,  u[0] * math.cos(self.theta) * self.timer_period],
+            [0, 0, 1]
+        ])
+
+        B_k = np.array([
+            [math.cos(self.theta) * self.timer_period, 0],
+            [math.sin(self.theta) * self.timer_period, 0],
+            [0, self.timer_period]
+        ])
+
+        # State update using linearized model
+        s_new = A_k @ s + B_k @ u
+
+        # Propagate covariance using affine transform
+        Sigma_new = A_k @ self.Sigma @ A_k.T + self.covariance
+
+        return s_new, Sigma_new
+
+        
 #La función que será llamada según nuestro setup
 def main(args=None):
     #Se inicializa el entorno de ros

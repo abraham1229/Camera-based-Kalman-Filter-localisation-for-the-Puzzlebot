@@ -86,8 +86,6 @@ class Controller(Node):
         self.trayectoria_finalizda = True
 
     def timer_callback(self):
-
-        # Se verifica que se haya terminado la trayectoria y no existe una nueva
         
         if self.waiting_new_trajectory():
             return
@@ -99,15 +97,10 @@ class Controller(Node):
             return
         
         self.compute_errors()
-
         self.apply_control()
-
         self.limit_velocities()
-
         self.check_point_reached()
-
         self.update_trajectory_state()
-
         self.publish_velocity_command()
         
 
@@ -175,12 +168,7 @@ class Controller(Node):
         return False
     
     def normalize_angle(self):
-        # De -pi a pi
-        if self.errorTheta >= math.pi:
-            self.errorTheta -= 2 * math.pi
-        elif self.errorTheta <= -math.pi:
-            self.errorTheta += 2 * math.pi
-
+        self.errorTheta = (self.errorTheta + math.pi) % (2 * math.pi) - math.pi
 
     def compute_errors(self):
         # Coordenadas destino
@@ -196,7 +184,6 @@ class Controller(Node):
         self.angulo_objetivo = math.atan2(target_y-target_y_ant, target_x-target_x_ant)
         self.errorTheta = self.angulo_objetivo - self.Postheta
         self.normalize_angle()
-
 
     def apply_control(self):
         # Angular
