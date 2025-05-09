@@ -90,6 +90,8 @@ class Controller(Node):
         self.tipo_trayectoria_prev = 0
         self.trayectoria_finalizda = True
 
+    def normalize_angle(self, theta):
+        return (theta + math.pi) % (2 * math.pi) - math.pi
 
     def timer_callback(self):
 
@@ -141,12 +143,7 @@ class Controller(Node):
         self.angulo_objetivo = math.atan2(target_y-target_y_ant, target_x-target_x_ant)
         self.errorTheta = self.angulo_objetivo - self.Postheta
 
-        # Se deja en angulos de menos pi a pi
-        if self.errorTheta >= math.pi:
-            self.errorTheta -= 2 * math.pi
-        elif self.errorTheta <= -math.pi:
-            self.errorTheta += 2 * math.pi
-
+        self.errorTheta = self.normalize_angle(self.errorTheta)
         #Se aplica el control
 
         #Angular
