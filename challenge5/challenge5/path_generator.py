@@ -1,9 +1,6 @@
 import rclpy
 from rclpy.node import Node
-from std_msgs.msg import Float32
 from msgs_clase.msg import Path   # type: ignore
-from scipy import signal
-import math
 import numpy as np
 
 class Path_generator(Node):
