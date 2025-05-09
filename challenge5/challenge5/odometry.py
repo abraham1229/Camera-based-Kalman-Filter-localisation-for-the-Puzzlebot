@@ -84,6 +84,33 @@ class Odometry_Node(Node):
         if msg is not None:
             self.vel_right = msg.data
 
+    # utils.py or top of your main file
+    def normalize_angle(self, theta):
+        return (theta + math.pi) % (2 * math.pi) - math.pi
+    
+    def linearized_state_update(self, s, u):
+        # Linearization: Compute A_k and B_k
+        A_k = np.array([
+            [1, 0, -u[0] * math.sin(self.theta) * self.timer_period],
+            [0, 1,  u[0] * math.cos(self.theta) * self.timer_period],
+            [0, 0, 1]
+        ])
+
+        B_k = np.array([
+            [math.cos(self.theta) * self.timer_period, 0],
+            [math.sin(self.theta) * self.timer_period, 0],
+            [0, self.timer_period]
+        ])
+
+        # State update using linearized model
+        s_new = A_k @ s + B_k @ u
+
+        # Propagate covariance using affine transform
+        Sigma_new = A_k @ self.Sigma @ A_k.T + self.covariance
+
+        return s_new, Sigma_new
+
+
     
     #Se hace callback en el que se calcula la posición en x, y y theta
     def timer_callback(self):
@@ -107,6 +134,9 @@ class Odometry_Node(Node):
             s = np.array([self.posX, self.posY, self.theta])
             u = np.array([self.velLineal, self.velocidadTheta])
 
+            ## Call the linearized state update function
+            s_new, self.Sigma = self.linearized_state_update(s, u)
+
             # Linearization: Compute A_k and B_k
             A_k = np.array([
                 [1, 0, -self.velLineal * math.sin(self.theta) * self.timer_period],
@@ -127,6 +157,7 @@ class Odometry_Node(Node):
             # Propagate covariance using affine transform
             self.Sigma = A_k @ self.Sigma @ A_k.T + self.covariance
 
+            # Update the covariance in the odometry message
             odom_msg.pose.covariance = [
             self.Sigma[0, 0], self.Sigma[0, 1], 0.0, 0.0, 0.0, self.Sigma[0, 2], # Row 1
             self.Sigma[1, 0], self.Sigma[1, 1], 0.0, 0.0, 0.0, self.Sigma[1, 2], # Row 2
@@ -136,11 +167,8 @@ class Odometry_Node(Node):
             self.Sigma[2, 0], self.Sigma[2, 1], 0.0, 0.0, 0.0, self.Sigma[2, 2]  # Row 6 (yaw)
             ]
 
-        # Se hace cambio de signo del ángulo si es necesario.
-        if self.theta >= math.pi:
-            self.theta -= 2 * math.pi
-        elif self.theta <= -math.pi:
-            self.theta += 2 * math.pi
+        #Normalize theta
+        self.theta = self.normalize_angle(self.theta)
 
         #Odom message
         odom_msg.header.stamp = self.get_clock().now().to_msg()
