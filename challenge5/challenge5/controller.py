@@ -85,9 +85,6 @@ class Controller(Node):
         self.tipo_trayectoria_prev = 0
         self.trayectoria_finalizda = True
 
-    def normalize_angle(self, theta):
-        return (theta + math.pi) % (2 * math.pi) - math.pi
-
     def timer_callback(self):
 
         # Se verifica que se haya terminado la trayectoria y no existe una nueva
