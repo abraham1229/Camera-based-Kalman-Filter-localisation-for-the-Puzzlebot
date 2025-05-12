@@ -1,6 +1,7 @@
 import os
 from launch import LaunchDescription
 from launch_ros.actions import Node
+from launch.actions import ExecuteProcess
 from ament_index_python.packages import get_package_share_directory
 
 def generate_robot_group(robot_index, robot_desc, init_x, init_y, init_yaw, linear_model):

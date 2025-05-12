@@ -2,9 +2,12 @@ import rclpy
 from rclpy.node import Node
 from std_msgs.msg import Float32
 from nav_msgs.msg import Odometry
+from tf2_ros import TransformBroadcaster
+from geometry_msgs.msg import TransformStamped
 import transforms3d
 import math
 import numpy as np
+import signal
 
 #Se crea el nodo My_Talker_Params tomando objeto de Node.
 class Odometry_Node(Node):   
@@ -14,12 +17,19 @@ class Odometry_Node(Node):
         #Se crear el nodo que será encargado de publicar la señal
         super().__init__('Odometria')
 
+        #self.declare_parameter('use_sim_time', False)
+        #self.use_sim_time = self.get_parameter('use_sim_time').value
+        #self.get_clock().set_ros_time_is_active(self.use_sim_time)
+
         # Declare the parameter with a default value
         self.declare_parameter('init_pose_x', 0.0)
         self.declare_parameter('init_pose_y', 0.0)
         self.declare_parameter('init_pose_yaw', np.pi/2)
         self.declare_parameter('odom_frame', 'odom')
-        self.declare_parameter("use_linear_model", True)
+        if not self.declare_parameter("use_linear_model"):
+            self.declare_parameter('use_linear_model', False)
+        if not self.has_parameter('use_sim_time'):
+            self.declare_parameter('use_sim_time', False)
 
         #Se hacen las suscripciones pertinentes
         self.subscription_velocity_left = self.create_subscription(
@@ -69,6 +79,21 @@ class Odometry_Node(Node):
         self.posY = self.get_parameter('init_pose_y').value
         self.theta = self.get_parameter('init_pose_yaw').value
         self.use_linear_model = self.get_parameter("use_linear_model").get_parameter_value().bool_value
+        self.use_sim = self.get_parameter('use_sim_time').value
+        self.odom_frame = self.get_parameter('odom_frame').get_parameter_value().string_value.strip('/')
+        self.namespace = self.get_namespace().strip('/')
+
+        # Tf namespaces
+        self.header_frame = f'{self.namespace}/{self.odom_frame}' if self.namespace else 'odom'
+        self.child_frame = f'{self.namespace}/base_footprint' if self.namespace else 'base_footprint'
+
+        
+
+        #Transform broadcaster
+        self.tf_broadcaster = TransformBroadcaster(self)
+
+
+        self.last_time = self.get_clock().now()
 
         #Se despliega en pantalla que se ha inicializado el nodo
         self.get_logger().info('Odometry node initialized')
@@ -134,6 +159,7 @@ class Odometry_Node(Node):
         odom_msg.twist.twist.linear.x  = self.velLineal # linear velocity (forward)
         odom_msg.twist.twist.angular.z = self.velocidadTheta # angular velocity (around Z)
 
+        self.transforms()
         # Publish the Odometry message
         self.pub_odometry.publish(odom_msg)
 
@@ -151,18 +177,38 @@ class Odometry_Node(Node):
     def normalize_angle(self, theta):
         return (theta + math.pi) % (2 * math.pi) - math.pi
     
+    def transforms(self):
+        # Create a TransformStamped message
+        t = TransformStamped()
+        t.header.stamp = self.get_clock().now().to_msg()
+        t.header.frame_id = self.header_frame
+        t.child_frame_id = self.child_frame
+        t.transform.translation.x = self.posX
+        t.transform.translation.y = self.posY
+        t.transform.translation.z = 0.0
+
+        # Convert theta (yaw) to quaternion
+        quat = transforms3d.euler.euler2quat(0, 0, self.theta)
+        t.transform.rotation.x = quat[1]
+        t.transform.rotation.y = quat[2]
+        t.transform.rotation.z = quat[3]
+        t.transform.rotation.w = quat[0]
+
+        # Send the transform
+        self.tf_broadcaster.sendTransform(t)
+    
     def linearized_state_update(self, s, u):
         # Linearization: Compute A_k and B_k
         A_k = np.array([
-            [1, 0, -u[0] * math.sin(self.theta) * self.timer_period],
-            [0, 1,  u[0] * math.cos(self.theta) * self.timer_period],
+            [1, 0, -u[0] * math.sin(self.theta) * self.dt],
+            [0, 1,  u[0] * math.cos(self.theta) * self.dt],
             [0, 0, 1]
         ])
 
         B_k = np.array([
-            [math.cos(self.theta) * self.timer_period, 0],
-            [math.sin(self.theta) * self.timer_period, 0],
-            [0, self.timer_period]
+            [math.cos(self.theta) * self.dt, 0],
+            [math.sin(self.theta) * self.dt, 0],
+            [0, self.dt]
         ])
 
         # State update using linearized model
@@ -172,6 +218,20 @@ class Odometry_Node(Node):
         Sigma_new = A_k @ self.Sigma @ A_k.T + self.covariance
 
         return s_new, Sigma_new
+    
+    def wait_for_ros_time(self):
+        self.get_logger().info('Waiting for ROS time to become active...')
+        while rclpy.ok():
+            now = self.get_clock().now()
+            if now.nanoseconds > 0:
+                break
+            rclpy.spin_once(self, timeout_sec=0.1)
+        self.get_logger().info(f'ROS time is active! Start time: {now.nanoseconds * 1e-9:.2f}s')
+
+    def stop_handler(self, signum, frame):
+        """Handles Ctrl+C (SIGINT)."""
+        self.get_logger().info("Interrupt received! Stopping node...")
+        raise SystemExit
 
         
 #La función que será llamada según nuestro setup
@@ -180,6 +240,8 @@ def main(args=None):
     rclpy.init(args=args)
     #Se crea una instancia de la clase creada previamente.
     m_t_p = Odometry_Node()
+
+    signal.signal(signal.SIGINT, m_t_p.stop_handler)
     #Creación del bucle de eventos
     rclpy.spin(m_t_p)
     #Se liberan recursos

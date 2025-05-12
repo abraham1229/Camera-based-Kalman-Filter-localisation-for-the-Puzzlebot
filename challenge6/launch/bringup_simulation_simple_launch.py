@@ -2,6 +2,7 @@ import os
 from launch import LaunchDescription
 from launch.actions import IncludeLaunchDescription
 from launch.substitutions import TextSubstitution
+from launch_ros.actions import Node
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from ament_index_python.packages import get_package_share_directory
 
@@ -89,7 +90,62 @@ def generate_launch_description():
             }.items()
         )
 
-        robot_launches.append(robot_launch)
+        odometry_node = Node(
+            name='odometry',
+            package='challenge6',
+            executable='odometry',
+            namespace=robot['name'],
+            parameters=[{
+                'init_pose_x': robot.get('x', 0.0),
+                'init_pose_y': robot.get('y', 0.0),
+                'init_pose_yaw': robot.get('yaw', 0.0),
+                'odom_frame': 'odom',
+                'use_linear_model': False,
+                'use_sim_time': True,
+            }]
+        )
+
+        controller_node = Node(name="controller",
+            package='challenge6',
+            executable='controller',
+            namespace=robot['name'],
+            parameters=[{
+                'init_pose_x': robot.get('x', 0.0),
+                'init_pose_y': robot.get('y', 0.0),
+                'init_pose_yaw': robot.get('yaw', 0.0),
+                'goal_x': 0.0,
+                'goal_y': -2.5,
+                'use_sim_time': True,
+            }]
+            )
+        
+        path_generator_node = Node(
+        name='path_generator',
+        package='challenge5',
+        executable='path_generator',
+        namespace=robot['name'],
+        parameters=[{
+            'init_pose_x': robot.get('x', 0.0),
+            'init_pose_y': robot.get('y', 0.0),
+            'init_pose_yaw': robot.get('yaw', 0.0),
+            'type': 0,
+        }]
+        )
+
+            # Launch the obstacle avoidance node with parameters
+        obstacle_avoidance_node = Node(
+            package='challenge6',
+            executable='obstacle_avoidance',
+            name='obstacle_avoidance_node',
+            output='screen',
+            namespace=robot['name'],
+            parameters=[{'use_sim_time': True}]
+        )
+
+        robot_launches.extend([robot_launch, odometry_node, controller_node,])
+        #robot_launches.append(robot_launch)
+
+    
 
     # -----------------------------------------------------------------------------
     #                          BUILD FINAL LAUNCH DESCRIPTION
@@ -97,5 +153,5 @@ def generate_launch_description():
 
     return LaunchDescription([
         gazebo_launch,
-        *robot_launches
+        *robot_launches,
     ])
