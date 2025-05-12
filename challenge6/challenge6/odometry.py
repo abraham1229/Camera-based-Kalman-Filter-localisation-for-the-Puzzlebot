@@ -4,6 +4,7 @@ from std_msgs.msg import Float32
 from nav_msgs.msg import Odometry
 from tf2_ros import TransformBroadcaster
 from geometry_msgs.msg import TransformStamped
+from rclpy.qos import QoSProfile, ReliabilityPolicy
 import transforms3d
 import math
 import numpy as np
@@ -31,21 +32,24 @@ class Odometry_Node(Node):
         if not self.has_parameter('use_sim_time'):
             self.declare_parameter('use_sim_time', False)
 
+        q = QoSProfile(depth=10)
+        q.reliability = ReliabilityPolicy.RELIABLE
+
         #Se hacen las suscripciones pertinentes
         self.subscription_velocity_left = self.create_subscription(
             Float32,
             'VelocityEncL',
             self.signal_callback_left,
-            rclpy.qos.qos_profile_sensor_data ) #Se debe de incluir la lectura de datos
+            q) #Se debe de incluir la lectura de datos
         
         self.subscription_velocity_right = self.create_subscription(
             Float32,
             'VelocityEncR',
             self.signal_callback_right,
-            rclpy.qos.qos_profile_sensor_data)
+            q)
         
         #Se crea el publicador que mandará mensaje personalizado
-        self.pub_odometry = self.create_publisher(Odometry, 'odometria', 1000)
+        self.pub_odometry = self.create_publisher(Odometry, 'odometria', q)
         # Período de temporizador para 10Hz
         self.timer_period = 0.01 
         #Se declara el timer que llamará al callback
@@ -79,7 +83,7 @@ class Odometry_Node(Node):
         self.posY = self.get_parameter('init_pose_y').value
         self.theta = self.get_parameter('init_pose_yaw').value
         self.use_linear_model = self.get_parameter("use_linear_model").get_parameter_value().bool_value
-        self.use_sim = self.get_parameter('use_sim_time').value
+        self.use_sim_time = self.get_parameter('use_sim_time').value
         self.odom_frame = self.get_parameter('odom_frame').get_parameter_value().string_value.strip('/')
         self.namespace = self.get_namespace().strip('/')
 

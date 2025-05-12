@@ -7,6 +7,7 @@ from rclpy.node import Node
 from sensor_msgs.msg import LaserScan
 from geometry_msgs.msg import Twist
 from nav_msgs.msg import Odometry
+from rclpy.qos import QoSProfile, ReliabilityPolicy
 
 
 class Controller(Node):
@@ -34,19 +35,29 @@ class Controller(Node):
         # Publishers
         self.pub_cmd_vel = self.create_publisher(Twist, 'cmd_vel', 1000)
 
+        q = QoSProfile(depth=10)
+        q.reliability = ReliabilityPolicy.RELIABLE
+
         # Subscriptions
-        self.subscription_odometry = self.create_subscription(
+        #self.subscription_odometry = self.create_subscription(
+        #    Odometry,
+        #    'odometria',
+        #    self.callback_odometry,
+        #    rclpy.qos.qos_profile_sensor_data
+        #)
+
+        self.ground_truth_sub = self.create_subscription(
             Odometry,
-            'odometria',
-            self.callback_odometry,
-            rclpy.qos.qos_profile_sensor_data
+            'ground_truth',
+            self.ground_truth_callback,
+            q
         )
 
         self.subscription = self.create_subscription(
             LaserScan, 
             'scan', 
             self.update_scan, 
-            10
+            rclpy.qos.qos_profile_sensor_data,
         )
 
         # Timer
@@ -57,6 +68,8 @@ class Controller(Node):
         self.latest_scan = None
         self.obstacle_threshold = 0.5  # Obstacle detection distance threshold (meters)
         self.forward_angle_width = 30  # Degrees to check directly ahead (±15 degrees)
+        self.left_width    = 60    # ±30° around +90°
+        self.right_width   = 60    # ±30° around -90°
 
         # Control variables
         self.velL = 0.0
@@ -87,6 +100,12 @@ class Controller(Node):
     def update_scan(self, msg: LaserScan):
         self.latest_scan = msg
 
+    def angle_to_index(angle_rad, angle_increment, num_points):
+        # Raw index offset from forward
+        raw_idx = int(round(angle_rad / angle_increment))
+        # Wrap into [0, num_points)
+        return raw_idx % num_points
+
     def lidar_scan(self):
         if self.latest_scan is None:
             self.get_logger().warn('No LaserScan data received yet.')
@@ -97,34 +116,40 @@ class Controller(Node):
         if msg is not None:
             ranges = np.array(msg.ranges)
 
-            # Convert forward angle width to radians and calculate half-angle
-            half_angle = np.radians(self.forward_angle_width / 2)
-
-            # Center index for the scan array (angle 0 rad is directly forward)
-            idx_center = 0
-
             # Angle between each LiDAR measurement
             angle_increment = msg.angle_increment
 
             # Total number of points in one full 360-degree LiDAR scan
             num_points = len(ranges)
 
-            # Determine how many indices correspond to half the angle width ahead
-            idx_offset = int(half_angle / angle_increment)
+            # Centers
+            idx_forward = self.angle_to_index(0.0, angle_increment, num_points)
+            idx_left    = self.angle_to_index( math.pi/2, angle_increment, num_points)
+            idx_right   = self.angle_to_index(-math.pi/2, angle_increment, num_points)
 
-            # Generate a list of indices around the front of the robot
-            # E.g., [-15, -14, ..., -1, 0, 1, ..., 14, 15] for ±15 degrees
-            indices = list(range(-idx_offset, idx_offset + 1))
+            # Half‐widths in indices
+            fw = int(round((math.radians(self.forward_angle_width) / 2) / angle_increment))
+            lw = int(round((math.radians(self.left_width)    / 2) / angle_increment))
+            rw = int(round((math.radians(self.right_width)   / 2) / angle_increment))
 
-            # Wrap-around indices using modulo to handle negative indices properly
-            front_indices = [(idx_center + idx) % num_points for idx in indices]
+            # Build windows
+            front_idxs = [(idx_forward + i) % num_points for i in range(-fw, fw+1)]
+            left_idxs  = [(idx_left    + i) % num_points for i in range(-lw, lw+1)]
+            right_idxs = [(idx_right   + i) % num_points for i in range(-rw, rw+1)]
 
-            # Select the distance measurements directly in front of the robot
-            front_ranges = ranges[front_indices]
+            # Extract distances
+            front_ranges = ranges[front_idxs]
+            left_ranges  = ranges[left_idxs]
+            right_ranges = ranges[right_idxs]
+
+            # Check thresholds
+            hit_front = np.any(front_ranges < self.obstacle_threshold)
+            hit_left  = np.any(left_ranges  < self.obstacle_threshold)
+            hit_right = np.any(right_ranges < self.obstacle_threshold)
 
             # Check if any obstacles are within the threshold distance in front
-            if np.any(front_ranges < self.obstacle_threshold):
-                self.get_logger().info('Obstacle detected! Stoping...')
+            if hit_front:
+                self.get_logger().info('Obstacle front detected! Stoping...')
                 self.stop()
                 return True
             else:
@@ -144,23 +169,35 @@ class Controller(Node):
             _, _, yaw = transforms3d.euler.quat2euler([qw, qx, qy, qz])  # Order: w, x, y, z
             self.Postheta = yaw
 
+    def ground_truth_callback(self, msg: Odometry):
+        if msg is not None:
+            self.Posx = msg.pose.pose.position.x
+            self.Posy = msg.pose.pose.position.y
+            qx = msg.pose.pose.orientation.x
+            qy = msg.pose.pose.orientation.y
+            qz = msg.pose.pose.orientation.z
+            qw = msg.pose.pose.orientation.w
+
+            _, _, yaw = transforms3d.euler.quat2euler([qw, qx, qy, qz])
+            self.Postheta = yaw
+
     def normalize_angle(self):
         self.errorTheta = (self.errorTheta + math.pi) % (2 * math.pi) - math.pi
 
     def compute_errors(self):
 
-        # Log current position and goal
+        ## Log current position and goal
         self.get_logger().info(f'Current Position: x={self.Posx}, y={self.Posy}, theta={self.Postheta}')
         self.get_logger().info(f'Goal Position: x={self.goal_x}, y={self.goal_y}')
         # Calculate distance and angle errors to the goal
         self.error_distancia = math.sqrt((self.goal_x - self.Posx)**2 + (self.goal_y - self.Posy)**2)
         self.angulo_objetivo = math.atan2(self.goal_y - self.Posy, self.goal_x - self.Posx)
         self.errorTheta = self.angulo_objetivo - self.Postheta
+        self.normalize_angle()
 
-        # Log calculated errors
+        ## Log calculated errors
         self.get_logger().info(f'Error Distance: {self.error_distancia}')
         self.get_logger().info(f'Objective Angle: {self.angulo_objetivo}')
-        self.normalize_angle()
         self.get_logger().info(f'Error Theta (after normalization): {self.errorTheta}')
 
     def apply_control(self):
