@@ -42,7 +42,7 @@ class Controller(Node):
         self.Postheta = 0.0
 
         # Lista para almacenar los puntos de trayectoria
-        self.trayectoria = []
+        self.coordenadasMeta = []
 
         # Índice del punto actual en la trayectoria
         self.indice_punto_actual = 0
@@ -83,7 +83,7 @@ class Controller(Node):
         # Variables para distinguir trayectoria
         self.tipo_trayectoria_actual = 0
         self.tipo_trayectoria_prev = 0
-        self.trayectoria_finalizda = True
+        self.trayectoria_finalizda = False
 
     def timer_callback(self):
         
@@ -92,24 +92,24 @@ class Controller(Node):
         
         # if self.check_empty_trajectory():
         #     return
-        self.trayectoria = [(self.initial_point_x,self.initial_point_y),
-                                (1.0, 1.0), 
-                                (self.initial_point_x,self.initial_point_y),
-                                (self.initial_point_x,self.initial_point_y), 
-                                (self.initial_point_x,self.initial_point_y),
-                                (self.initial_point_x,self.initial_point_y), 
-                                (self.initial_point_x,self.initial_point_y),
-                                (self.initial_point_x,self.initial_point_y),
-                                (self.initial_point_x,self.initial_point_y)]
-        
-        if self.check_trajectory_completed():
+
+        if self.trayectoria_finalizda:
+            self.velL = 0.0
+            self.velA = 0.0
+            # Se crea mensaje a publicar
+            twist_msg = Twist()
+            twist_msg.linear.x = self.velL
+            twist_msg.angular.z = self.velA
+            self.pub_cmd_vel.publish(twist_msg)
+            self.get_logger().warn('Se ha encontrado el punto')
             return
-        
+
+        self.coordenadasMeta = [1.0,1.0]
+    
         self.compute_errors()
         self.apply_control()
         self.limit_velocities()
         self.check_point_reached()
-        self.update_trajectory_state()
         self.publish_velocity_command()
         
 
@@ -127,17 +127,8 @@ class Controller(Node):
 
     # Callback para recibir los puntos de la trayectoria
     def callback_path(self, msg):
-        if msg is not None and self.trayectoria_finalizda:
-            self.trayectoria = [(self.initial_point_x,self.initial_point_y),
-                                (1.0, 0.0), 
-                                (self.initial_point_x,self.initial_point_y),
-                                (self.initial_point_x,self.initial_point_y), 
-                                (self.initial_point_x,self.initial_point_y),
-                                (self.initial_point_x,self.initial_point_y), 
-                                (self.initial_point_x,self.initial_point_y),
-                                (self.initial_point_x,self.initial_point_y),
-                                (self.initial_point_x,self.initial_point_y)]
-            self.tipo_trayectoria_actual = msg.type
+        if msg is not None:
+            self.coordenadasMeta = [1.0,1.0]
     
     def waiting_new_trajectory(self):
         if self.trayectoria_finalizda:
@@ -149,7 +140,7 @@ class Controller(Node):
             return False
 
     def check_empty_trajectory(self):
-        if not self.trayectoria:
+        if not self.coordenadasMeta:
             self.get_logger().warn('No hay puntos en la trayectoria')
             self.velL = 0.0
             self.velA = 0.0
@@ -160,22 +151,7 @@ class Controller(Node):
             self.pub_cmd_vel.publish(twist_msg)
             return True
         return False
-
-    def check_trajectory_completed(self):
-        if self.trayectoria[self.indice_punto_actual] == (1.0,1.0) and self.indice_punto_actual != 0:
-            self.get_logger().warn('Trayectoria terminada')
-            self.trayectoria_finalizda = True
-            self.velL = 0.0
-            self.velA = 0.0
-            # Se crea mensaje a publicar
-            twist_msg = Twist()
-            twist_msg.linear.x = self.velL
-            twist_msg.angular.z = self.velA
-            self.pub_cmd_vel.publish(twist_msg)
-            self.indice_punto_actual = 0
-            return True
-        return False
-    
+        
     def normalize_angle(self):
         if self.errorTheta >= math.pi:
             self.errorTheta -= 2 * math.pi
@@ -184,9 +160,12 @@ class Controller(Node):
 
     def compute_errors(self):
         # Coordenadas destino
-        target_x, target_y = self.trayectoria[self.indice_punto_actual+1]
+        target_x = self.coordenadasMeta[0]
+        target_y = self.coordenadasMeta[1]
+
         # Coordenadas previas
-        target_x_ant, target_y_ant = self.trayectoria[self.indice_punto_actual]
+        target_x_ant = self.initial_point_x
+        target_y_ant = self.initial_point_y
 
         # Calculo de coordenadas polares
         # Se calcula el error lineal
@@ -194,7 +173,7 @@ class Controller(Node):
 
         #Se calcula el error angular
         self.angulo_objetivo = math.atan2(target_y-target_y_ant, target_x-target_x_ant)
-        self.errorTheta = self.angulo_objetivo - self.Postheta
+        self.errorTheta = self.angulo_objetivo - self.Postheta * 0.97
         self.normalize_angle()
 
     def apply_control(self):
@@ -221,11 +200,7 @@ class Controller(Node):
 
     def check_point_reached(self):
         if self.errorTheta < 0.05 and self.errorTheta > -0.05 and self.error_distancia < 0.05:
-            self.indice_punto_actual += 1
-
-    def update_trajectory_state(self):
-        self.tipo_trayectoria_prev = self.tipo_trayectoria_actual
-        self.trayectoria_finalizda = False
+            self.trayectoria_finalizda = True
     
     def publish_velocity_command(self):
         twist_msg = Twist()
