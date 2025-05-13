@@ -1,6 +1,6 @@
 import rclpy
 from rclpy.node import Node
-from msgs_clase.msg import Path   # type: ignore
+from msgs_clase.msg import Goal   # type: ignore
 from geometry_msgs.msg import Twist
 from nav_msgs.msg import Odometry
 import math
@@ -31,7 +31,7 @@ class Controller(Node):
             rclpy.qos.qos_profile_sensor_data )
         
         self.subscription_path = self.create_subscription(
-            Path,
+            Goal,
             'path_generator',
             self.callback_path,
             rclpy.qos.qos_profile_sensor_data )
@@ -90,8 +90,8 @@ class Controller(Node):
         # if self.waiting_new_trajectory():
         #     return
         
-        # if self.check_empty_trajectory():
-        #     return
+        if self.check_empty_trajectory():
+            return
 
         if self.trayectoria_finalizda:
             self.velL = 0.0
@@ -104,8 +104,6 @@ class Controller(Node):
             self.get_logger().warn('Se ha encontrado el punto')
             return
 
-        self.coordenadasMeta = [1.0,1.0]
-    
         self.compute_errors()
         self.apply_control()
         self.limit_velocities()
@@ -128,7 +126,7 @@ class Controller(Node):
     # Callback para recibir los puntos de la trayectoria
     def callback_path(self, msg):
         if msg is not None:
-            self.coordenadasMeta = [0.0,1.0]
+            self.coordenadasMeta = [msg.x_goal,msg.y_goal]
     
     def waiting_new_trajectory(self):
         if self.trayectoria_finalizda:
@@ -173,7 +171,7 @@ class Controller(Node):
 
         #Se calcula el error angular
         self.angulo_objetivo = math.atan2(target_y-target_y_ant, target_x-target_x_ant)
-        self.errorTheta = self.angulo_objetivo - self.Postheta * 0.97
+        self.errorTheta = self.angulo_objetivo - self.Postheta * 0.99
         self.normalize_angle()
 
     def apply_control(self):
