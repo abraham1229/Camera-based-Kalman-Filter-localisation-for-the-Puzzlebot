@@ -13,7 +13,7 @@ class Controller(Node):
 
         self.declare_parameter('init_pose_x', 0.0)
         self.declare_parameter('init_pose_y', 0.0)
-        self.declare_parameter('init_pose_yaw', np.pi/2)
+        self.declare_parameter('init_pose_yaw', 0.0)
 
         self.initial_point_x = self.get_parameter('init_pose_x').value
         self.initial_point_y = self.get_parameter('init_pose_y').value
@@ -87,12 +87,21 @@ class Controller(Node):
 
     def timer_callback(self):
         
-        if self.waiting_new_trajectory():
-            return
+        # if self.waiting_new_trajectory():
+        #     return
         
-        if self.check_empty_trajectory():
-            return
-
+        # if self.check_empty_trajectory():
+        #     return
+        self.trayectoria = [(self.initial_point_x,self.initial_point_y),
+                                (1.0, 1.0), 
+                                (self.initial_point_x,self.initial_point_y),
+                                (self.initial_point_x,self.initial_point_y), 
+                                (self.initial_point_x,self.initial_point_y),
+                                (self.initial_point_x,self.initial_point_y), 
+                                (self.initial_point_x,self.initial_point_y),
+                                (self.initial_point_x,self.initial_point_y),
+                                (self.initial_point_x,self.initial_point_y)]
+        
         if self.check_trajectory_completed():
             return
         
@@ -120,14 +129,14 @@ class Controller(Node):
     def callback_path(self, msg):
         if msg is not None and self.trayectoria_finalizda:
             self.trayectoria = [(self.initial_point_x,self.initial_point_y),
-                                (msg.x1, msg.y1), 
-                                (msg.x2, msg.y2),
-                                (msg.x3, msg.y3), 
-                                (msg.x4, msg.y4),
-                                (msg.x5, msg.y5), 
-                                (msg.x6, msg.y6),
-                                (msg.x7, msg.y7),
-                                (msg.x8, msg.y8)]
+                                (1.0, 0.0), 
+                                (self.initial_point_x,self.initial_point_y),
+                                (self.initial_point_x,self.initial_point_y), 
+                                (self.initial_point_x,self.initial_point_y),
+                                (self.initial_point_x,self.initial_point_y), 
+                                (self.initial_point_x,self.initial_point_y),
+                                (self.initial_point_x,self.initial_point_y),
+                                (self.initial_point_x,self.initial_point_y)]
             self.tipo_trayectoria_actual = msg.type
     
     def waiting_new_trajectory(self):
@@ -153,7 +162,7 @@ class Controller(Node):
         return False
 
     def check_trajectory_completed(self):
-        if self.trayectoria[self.indice_punto_actual] == (self.initial_point_x,self.initial_point_y) and self.indice_punto_actual != 0:
+        if self.trayectoria[self.indice_punto_actual] == (1.0,1.0) and self.indice_punto_actual != 0:
             self.get_logger().warn('Trayectoria terminada')
             self.trayectoria_finalizda = True
             self.velL = 0.0
@@ -168,7 +177,10 @@ class Controller(Node):
         return False
     
     def normalize_angle(self):
-        self.errorTheta = (self.errorTheta + math.pi) % (2 * math.pi) - math.pi
+        if self.errorTheta >= math.pi:
+            self.errorTheta -= 2 * math.pi
+        elif self.errorTheta <= -math.pi:
+            self.errorTheta += 2 * math.pi
 
     def compute_errors(self):
         # Coordenadas destino

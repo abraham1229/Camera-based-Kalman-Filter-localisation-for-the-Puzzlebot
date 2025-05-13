@@ -14,19 +14,19 @@ def generate_launch_description():
   init_y = 0.0
   init_yaw = 0.0
 
-  # Parameters
-  config = os.path.join(
-      get_package_share_directory('challenge6'),
-      'config',
-      'params.yaml'
-      )
+#   # Parameters
+#   config = os.path.join(
+#       get_package_share_directory('challenge6'),
+#       'config',
+#       'params.yaml'
+#       )
   
-  path_generator_node = Node(
-      package='challenge6',
-      executable='path_generator',
-      output='screen',
-      parameters = [config]
-  )
+#   path_generator_node = Node(
+#       package='challenge6',
+#       executable='path_generator',
+#       output='screen',
+#       parameters = [config]
+#   )
     
   controller_node = Node(name="controller",
                           package='challenge6',
@@ -63,7 +63,7 @@ def generate_launch_description():
   l_d = LaunchDescription([
       controller_node,
       odometry_node,
-      path_generator_node,
+    #   path_generator_node,
       shutdown_log,
       ])
 
