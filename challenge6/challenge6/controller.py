@@ -128,7 +128,7 @@ class Controller(Node):
     # Callback para recibir los puntos de la trayectoria
     def callback_path(self, msg):
         if msg is not None:
-            self.coordenadasMeta = [1.0,1.0]
+            self.coordenadasMeta = [0.0,1.0]
     
     def waiting_new_trajectory(self):
         if self.trayectoria_finalizda:
@@ -160,8 +160,8 @@ class Controller(Node):
 
     def compute_errors(self):
         # Coordenadas destino
-        target_x = self.coordenadasMeta[0]
-        target_y = self.coordenadasMeta[1]
+        target_x = self.coordenadasMeta[0] * 1.1
+        target_y = self.coordenadasMeta[1] * 1.1
 
         # Coordenadas previas
         target_x_ant = self.initial_point_x
