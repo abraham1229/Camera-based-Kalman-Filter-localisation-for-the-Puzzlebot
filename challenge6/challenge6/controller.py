@@ -71,6 +71,10 @@ class Controller(Node):
         self.left_width    = 60    # ±30° around +90°
         self.right_width   = 60    # ±30° around -90°
 
+        self.hit_front = 0
+        self.hit_left  = 0
+        self.hit_right = 0
+
         # Control variables
         self.velL = 0.0
         self.velA = 0.0
@@ -82,8 +86,7 @@ class Controller(Node):
 
     def timer_callback(self):
         
-        if self.lidar_scan():
-            return
+        self.lidar_scan()
               
         if self.trayectoria_finalizda:
             return
@@ -143,11 +146,9 @@ class Controller(Node):
             right_ranges = ranges[right_idxs]
 
             # Check thresholds
-            hit_front = np.any(front_ranges < self.obstacle_threshold)
-            hit_left  = np.any(left_ranges  < self.obstacle_threshold)
-            hit_right = np.any(right_ranges < self.obstacle_threshold)
-
-            return hit_front, hit_left, hit_right
+            self.hit_front = np.any(front_ranges < self.obstacle_threshold)
+            self.hit_left  = np.any(left_ranges  < self.obstacle_threshold)
+            self.hit_right = np.any(right_ranges < self.obstacle_threshold)
                 
 
     def callback_odometry(self, msg: Odometry):
