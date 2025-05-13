@@ -100,12 +100,6 @@ class Controller(Node):
     def update_scan(self, msg: LaserScan):
         self.latest_scan = msg
 
-    def angle_to_index(angle_rad, angle_increment, num_points):
-        # Raw index offset from forward
-        raw_idx = int(round(angle_rad / angle_increment))
-        # Wrap into [0, num_points)
-        return raw_idx % num_points
-
     def lidar_scan(self):
         if self.latest_scan is None:
             self.get_logger().warn('No LaserScan data received yet.')
@@ -122,10 +116,16 @@ class Controller(Node):
             # Total number of points in one full 360-degree LiDAR scan
             num_points = len(ranges)
 
+            def angle_to_index(angle_rad, angle_increment, num_points):
+                # Raw index offset from forward
+                raw_idx = int(round(angle_rad / angle_increment))
+                # Wrap into [0, num_points)
+                return raw_idx % num_points
+
             # Centers
-            idx_forward = self.angle_to_index(0.0, angle_increment, num_points)
-            idx_left    = self.angle_to_index( math.pi/2, angle_increment, num_points)
-            idx_right   = self.angle_to_index(-math.pi/2, angle_increment, num_points)
+            idx_forward = angle_to_index(0.0, angle_increment, num_points)
+            idx_left    = angle_to_index( math.pi/2, angle_increment, num_points)
+            idx_right   = angle_to_index(-math.pi/2, angle_increment, num_points)
 
             # Half‐widths in indices
             fw = int(round((math.radians(self.forward_angle_width) / 2) / angle_increment))
@@ -147,14 +147,7 @@ class Controller(Node):
             hit_left  = np.any(left_ranges  < self.obstacle_threshold)
             hit_right = np.any(right_ranges < self.obstacle_threshold)
 
-            # Check if any obstacles are within the threshold distance in front
-            if hit_front:
-                self.get_logger().info('Obstacle front detected! Stoping...')
-                self.stop()
-                return True
-            else:
-                self.get_logger().info('No obstacles detected! Moving...')
-                return False
+            return hit_front, hit_left, hit_right
                 
 
     def callback_odometry(self, msg: Odometry):
