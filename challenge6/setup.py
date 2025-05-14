@@ -29,6 +29,7 @@ setup(
     entry_points={
         'console_scripts': [
             'obstacle_avoidance = challenge6.obstacle_avoidance:main',
+            'wall_follower = challenge6.wall_follower:main',
             'odometry = challenge6.odometry:main',
             'puzzlebot = challenge6.puzzlebot:main',
             'controller = challenge6.controller:main',
