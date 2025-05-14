@@ -1,4 +1,8 @@
 import rclpy
+from rclpy.node import Node
+from msgs_clase.msg import Goal   # type: ignore
+from geometry_msgs.msg import Twist
+from nav_msgs.msg import Odometry
 import math
 import numpy as np
 import transforms3d
@@ -20,10 +24,6 @@ class Controller(Node):
         self.declare_parameter('init_pose_x', 0.0)
         self.declare_parameter('init_pose_y', 0.0)
         self.declare_parameter('init_pose_yaw', 0.0)
-        self.declare_parameter('goal_x', 0.0)  # Default goal x-coordinate
-        self.declare_parameter('goal_y', 0.0)  # Default goal y-coordinate
-        if not self.has_parameter('use_sim_time'):
-            self.declare_parameter('use_sim_time', False)
 
         self.Posx = self.get_parameter('init_pose_x').value
         self.Posy = self.get_parameter('init_pose_y').value
@@ -63,13 +63,27 @@ class Controller(Node):
         # Timer
         self.timer_period = 0.1
         self.timer = self.create_timer(self.timer_period, self.timer_callback)
+        
+        # Subscriptions
+        self.subscription_odometry = self.create_subscription(
+            Odometry,
+            'odometria',
+            self.callback_odometry,
+            rclpy.qos.qos_profile_sensor_data )
+        
+        self.subscription_path = self.create_subscription(
+            Goal,
+            'path_generator',
+            self.callback_path,
+            rclpy.qos.qos_profile_sensor_data )
+        
+        # Variables para almacenar la posicoin actual del robot
+        self.Posx = 0.0
+        self.Posy = 0.0
+        self.Postheta = 0.0
 
-        # Initialize Lidar variables
-        self.latest_scan = None
-        self.obstacle_threshold = 0.5  # Obstacle detection distance threshold (meters)
-        self.forward_angle_width = 30  # Degrees to check directly ahead (±15 degrees)
-        self.left_width    = 60    # ±30° around +90°
-        self.right_width   = 60    # ±30° around -90°
+        # Lista para almacenar los puntos de trayectoria
+        self.coordenadasMeta = []
 
         self.hit_front = 0
         self.hit_left  = 0
@@ -82,13 +96,37 @@ class Controller(Node):
         self.errorTheta = 0.0
         self.kpTheta = 0.8
         self.kpLineal = 0.4
+        self.kiLineal = 0.0
+        self.kdLineal = 0.0
+        #Resultados operaciones
+        self.PLineal = 0.0
+        self.ILineal = 0.0
+        self.DLineal = 0.0
+        #Control
+        self.Ulineal = 0.0
+
+        # Variables para distinguir trayectoria
+        self.tipo_trayectoria_actual = 0
+        self.tipo_trayectoria_prev = 0
         self.trayectoria_finalizda = False
 
     def timer_callback(self):
         
-        self.lidar_scan()
-              
+        # if self.waiting_new_trajectory():
+        #     return
+        
+        if self.check_empty_trajectory():
+            return
+
         if self.trayectoria_finalizda:
+            self.velL = 0.0
+            self.velA = 0.0
+            # Se crea mensaje a publicar
+            twist_msg = Twist()
+            twist_msg.linear.x = self.velL
+            twist_msg.angular.z = self.velA
+            self.pub_cmd_vel.publish(twist_msg)
+            self.get_logger().warn('Se ha encontrado el punto')
             return
 
         self.compute_errors()
@@ -98,6 +136,7 @@ class Controller(Node):
 
         self.apply_control()
         self.limit_velocities()
+        self.check_point_reached()
         self.publish_velocity_command()
 
     def update_scan(self, msg: LaserScan):
@@ -163,30 +202,55 @@ class Controller(Node):
             _, _, yaw = transforms3d.euler.quat2euler([qw, qx, qy, qz])  # Order: w, x, y, z
             self.Postheta = yaw
 
-    def ground_truth_callback(self, msg: Odometry):
+    # Callback para recibir los puntos de la trayectoria
+    def callback_path(self, msg):
         if msg is not None:
-            self.Posx = msg.pose.pose.position.x
-            self.Posy = msg.pose.pose.position.y
-            qx = msg.pose.pose.orientation.x
-            qy = msg.pose.pose.orientation.y
-            qz = msg.pose.pose.orientation.z
-            qw = msg.pose.pose.orientation.w
+            self.coordenadasMeta = [msg.x_goal,msg.y_goal]
+    
+    def waiting_new_trajectory(self):
+        if self.trayectoria_finalizda:
+            if self.tipo_trayectoria_actual == self.tipo_trayectoria_prev:
+                self.get_logger().warn('Esperado nueva trayectoria')
+                return True
+            else:
+                self.trayectoria_finalizda = False
+            return False
 
-            _, _, yaw = transforms3d.euler.quat2euler([qw, qx, qy, qz])
-            self.Postheta = yaw
-
+    def check_empty_trajectory(self):
+        if not self.coordenadasMeta:
+            self.get_logger().warn('No hay puntos en la trayectoria')
+            self.velL = 0.0
+            self.velA = 0.0
+            # Se crea mensaje a publicar
+            twist_msg = Twist()
+            twist_msg.linear.x = self.velL
+            twist_msg.angular.z = self.velA
+            self.pub_cmd_vel.publish(twist_msg)
+            return True
+        return False
+        
     def normalize_angle(self):
-        self.errorTheta = (self.errorTheta + math.pi) % (2 * math.pi) - math.pi
+        if self.errorTheta >= math.pi:
+            self.errorTheta -= 2 * math.pi
+        elif self.errorTheta <= -math.pi:
+            self.errorTheta += 2 * math.pi
 
     def compute_errors(self):
+        # Coordenadas destino
+        target_x = self.coordenadasMeta[0] * 1.1
+        target_y = self.coordenadasMeta[1] * 1.1
 
-        ## Log current position and goal
-        self.get_logger().info(f'Current Position: x={self.Posx}, y={self.Posy}, theta={self.Postheta}')
-        self.get_logger().info(f'Goal Position: x={self.goal_x}, y={self.goal_y}')
-        # Calculate distance and angle errors to the goal
-        self.error_distancia = math.sqrt((self.goal_x - self.Posx)**2 + (self.goal_y - self.Posy)**2)
-        self.angulo_objetivo = math.atan2(self.goal_y - self.Posy, self.goal_x - self.Posx)
-        self.errorTheta = self.angulo_objetivo - self.Postheta
+        # Coordenadas previas
+        target_x_ant = self.initial_point_x
+        target_y_ant = self.initial_point_y
+
+        # Calculo de coordenadas polares
+        # Se calcula el error lineal
+        self.error_distancia = math.sqrt((target_x - self.Posx)**2 + (target_y - self.Posy)**2)
+
+        #Se calcula el error angular
+        self.angulo_objetivo = math.atan2(target_y-target_y_ant, target_x-target_x_ant)
+        self.errorTheta = self.angulo_objetivo - self.Postheta * 0.99
         self.normalize_angle()
 
         ## Log calculated errors
@@ -224,6 +288,10 @@ class Controller(Node):
         if abs(self.errorTheta) > 0.05:
             self.velL = 0.0
 
+    def check_point_reached(self):
+        if self.errorTheta < 0.05 and self.errorTheta > -0.05 and self.error_distancia < 0.05:
+            self.trayectoria_finalizda = True
+    
     def publish_velocity_command(self):
         twist_msg = Twist()
         twist_msg.linear.x = self.velL

@@ -25,7 +25,7 @@ class Odometry_Node(Node):
         # Declare the parameter with a default value
         self.declare_parameter('init_pose_x', 0.0)
         self.declare_parameter('init_pose_y', 0.0)
-        self.declare_parameter('init_pose_yaw', np.pi/2)
+        self.declare_parameter('init_pose_yaw', 0.0)
         self.declare_parameter('odom_frame', 'odom')
         if not self.declare_parameter("use_linear_model"):
             self.declare_parameter('use_linear_model', False)
@@ -106,12 +106,15 @@ class Odometry_Node(Node):
     #Se hace callback en el que se calcula la posición en x, y y theta
     def timer_callback(self):
 
+        # if abs(self.vel_right) < 1e-3 and abs(self.vel_right) < 1e-3:
+        #     return
+
         #Se calcula theta punto
         self.velocidadTheta = self.radius*((self.vel_right-self.vel_left)/self.lenght)
         #Se calcula argumento velocidad
         self.velLineal = self.radius*((self.vel_right+self.vel_left)/2) * 1.09
         #Se calcula theta
-        self.theta += self.velocidadTheta * self.timer_period * 1.1722
+        self.theta += self.velocidadTheta * self.timer_period
                 
         #Se calcula posición en x y y
         self.posX += self.velLineal*math.cos(self.theta) *self.timer_period
@@ -139,7 +142,7 @@ class Odometry_Node(Node):
             ]
 
         #Normalize theta
-        self.theta = self.normalize_angle(self.theta)
+        self.normalize_angle()
 
         #Odom message
         odom_msg.header.stamp = self.get_clock().now().to_msg()
@@ -152,6 +155,9 @@ class Odometry_Node(Node):
         odom_msg.pose.pose.position.y = self.posY
         odom_msg.pose.pose.position.z = 0.0
 
+        # self.get_logger().info(f'X:{self.posX}')
+        # self.get_logger().info(f'Y:{self.posY}')
+        # print(f"Ángulo theta actual (grados): {math.degrees(self.theta)}, {self.theta}")
         # Convert theta (yaw) to quaternion
         quat = transforms3d.euler.euler2quat(0, 0, self.theta)
         odom_msg.pose.pose.orientation.x = quat[1]
@@ -170,16 +176,19 @@ class Odometry_Node(Node):
     #Lee los datos del nodo de la llanta izquierda
     def signal_callback_left(self, msg):
         if msg is not None:
-            self.vel_left = msg.data
+            self.vel_left = msg.data if abs(msg.data) > 1e-3 else 0.0
 
     #Lee los datos del nodo de la llanta derecha
     def signal_callback_right(self, msg):
         if msg is not None:
-            self.vel_right = msg.data
+            self.vel_right = msg.data if abs(msg.data) > 1e-3 else 0.0
 
     # utils.py or top of your main file
-    def normalize_angle(self, theta):
-        return (theta + math.pi) % (2 * math.pi) - math.pi
+    def normalize_angle(self):
+        if self.theta >= math.pi:
+            self.theta -= 2 * math.pi
+        elif self.theta <= -math.pi:
+            self.theta += 2 * math.pi
     
     def transforms(self):
         # Create a TransformStamped message
