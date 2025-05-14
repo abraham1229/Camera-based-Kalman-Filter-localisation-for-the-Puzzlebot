@@ -12,7 +12,7 @@ def generate_launch_description():
     # -----------------------------------------------------------------------------
     
     # Name of the Gazebo world to load
-    world = 'empty.world'
+    world = 'obstacle_avoidance_1.world'
 
     # General Gazebo settings
     pause = 'true'           # Start Gazebo in paused state
