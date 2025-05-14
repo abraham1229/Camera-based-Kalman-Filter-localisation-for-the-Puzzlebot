@@ -6,6 +6,7 @@ from nav_msgs.msg import Odometry
 import math
 import numpy as np
 import transforms3d
+from sensor_msgs.msg import LaserScan
 
 class Controller(Node):
     def __init__(self):
@@ -85,6 +86,12 @@ class Controller(Node):
         self.tipo_trayectoria_prev = 0
         self.trayectoria_finalizda = False
 
+
+        # Variables para bug0
+        self.state = 'GO_TO_GOAL'
+
+        self.subscription_lidar = self.create_subscription(LaserScan, 'scan', self.callback_lidar, 10)
+
     def timer_callback(self):
         
         # if self.waiting_new_trajectory():
@@ -103,12 +110,59 @@ class Controller(Node):
             self.pub_cmd_vel.publish(twist_msg)
             self.get_logger().warn('Se ha encontrado el punto')
             return
+        
 
-        self.compute_errors()
-        self.apply_control()
-        self.limit_velocities()
-        self.check_point_reached()
-        self.publish_velocity_command()
+        if self.state == 'GO_TO_GOAL':
+            self.compute_errors()
+            self.apply_control()
+            self.limit_velocities()
+            self.check_point_reached()
+            self.publish_velocity_command()
+
+        elif self.state == 'FOLLOW_WALL':
+            # Comportamiento similar al de wall_follower.py pero adaptado aquí mismo
+            self.wall_follow_logic()
+
+    def is_path_clear_to_goal(self):
+        front = self.get_range_from_lidar(0)
+        return front > 0.6
+
+    def get_range_from_lidar(self, angle_deg):
+        if not hasattr(self, 'lidar_msg'):
+            return float('inf')
+        msg = self.lidar_msg
+        ranges = np.array(self.latest_ranges)
+        angle_rad = np.radians(angle_deg)
+        index = int((angle_rad - msg.angle_min) / msg.angle_increment)
+        if 0 <= index < len(ranges):
+            val = ranges[index]
+            return val if not (np.isnan(val) or np.isinf(val)) else float('inf')
+        return float('inf')
+
+    def callback_lidar(self, msg: LaserScan):
+        self.latest_ranges = msg.ranges
+        self.lidar_msg = msg
+
+        ranges = np.array(msg.ranges)
+
+        def get_range(angle_deg):
+            angle_rad = np.radians(angle_deg)
+            index = int((angle_rad - msg.angle_min) / msg.angle_increment)
+            if 0 <= index < len(ranges):
+                value = ranges[index]
+                return value if not (np.isnan(value) or np.isinf(value)) else float('inf')
+            return float('inf')
+
+        front = get_range(0)
+
+        if self.state == 'GO_TO_GOAL' and front < 0.5:
+            self.state = 'FOLLOW_WALL'
+            self.get_logger().info('Cambio a modo FOLLOW_WALL')
+        elif self.state == 'FOLLOW_WALL' and self.is_path_clear_to_goal():
+            self.state = 'GO_TO_GOAL'
+            self.get_logger().info('Regreso a modo GO_TO_GOAL')
+
+
         
 
     def callback_odometry(self, msg: Odometry):
@@ -199,6 +253,60 @@ class Controller(Node):
     def check_point_reached(self):
         if self.errorTheta < 0.05 and self.errorTheta > -0.05 and self.error_distancia < 0.05:
             self.trayectoria_finalizda = True
+
+
+    def wall_follow_logic(self):
+        # Parámetros
+        desired_distance = 0.5  # distancia ideal a la pared (izquierda)
+        max_linear = 0.2
+        max_angular = 1.0
+        kp = 1.0
+
+        # Usa las últimas lecturas del lidar
+        # Asegúrate de haber guardado las últimas ranges en el callback
+        if not hasattr(self, 'latest_ranges') or not hasattr(self, 'lidar_msg'):
+            self.get_logger().warn("Esperando datos de LiDAR...")
+            return
+
+        ranges = np.array(self.latest_ranges)
+        msg = self.lidar_msg
+
+        def get_range(angle_deg):
+            angle_rad = np.radians(angle_deg)
+            index = int((angle_rad - msg.angle_min) / msg.angle_increment)
+            if 0 <= index < len(ranges):
+                val = ranges[index]
+                return val if not (np.isnan(val) or np.isinf(val)) else float('inf')
+            return float('inf')
+
+        # Simulación de sensores virtuales
+        front = get_range(0)
+        left = get_range(90)
+        left_corner = get_range(45)
+
+        twist = Twist()
+
+        if front < 0.4:
+            # Giro a la derecha si hay pared de frente
+            self.get_logger().info("Pared al frente. Giro a la derecha.")
+            twist.linear.x = 0.0
+            twist.angular.z = -max_angular
+        elif left < desired_distance:
+            if left_corner < desired_distance / 2:
+                self.get_logger().info("Demasiado cerca de la pared izquierda. Corrección derecha.")
+                twist.linear.x = max_linear
+                twist.angular.z = -max_angular / 2
+            else:
+                self.get_logger().info("Siguiendo la pared.")
+                twist.linear.x = max_linear
+                twist.angular.z = 0.0
+        else:
+            self.get_logger().info("Pared lejos. Giro a la izquierda.")
+            twist.linear.x = max_linear / 2
+            twist.angular.z = max_angular / 2
+
+        self.pub_cmd_vel.publish(twist)
+
     
     def publish_velocity_command(self):
         twist_msg = Twist()
