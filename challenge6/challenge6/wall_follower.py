@@ -1,54 +1,69 @@
 import rclpy
 from rclpy.node import Node
-from sensor_msgs.msg import LaserScan
 from geometry_msgs.msg import Twist
+from sensor_msgs.msg import LaserScan
 import numpy as np
 
-class RightObjectSeeker(Node):
-    def __init__(self):
-        super().__init__('right_object_seeker')
-        self.scan_sub = self.create_subscription(LaserScan, 'scan', self.scan_callback, 10)
-        self.cmd_pub = self.create_publisher(Twist, 'cmd_vel', 10)
-        self.get_logger().info("Right Object Seeker Node Started.")
 
-        # Parámetros
-        self.angle_range_deg = (-100, -80)  # Búsqueda en esta ventana
-        self.distance_threshold = 1.0       # Umbral para considerar "objeto detectado"
+class WallFollowerLidar(Node):
+    def __init__(self):
+        super().__init__('wall_follower_lidar')
+
+        self.publisher_ = self.create_publisher(Twist, 'cmd_vel', 10)
+        self.subscription = self.create_subscription(LaserScan, 'scan', self.scan_callback, 10)
+
+        self.wall_threshold = 0.5  # metros
+        self.get_logger().info("Wall Follower with LiDAR node started")
 
     def scan_callback(self, msg: LaserScan):
-        angles_deg = np.degrees(np.arange(msg.angle_min, msg.angle_max, msg.angle_increment))
         ranges = np.array(msg.ranges)
 
-        # Filtrar ángulos entre -100° y -80°
-        indices = np.where((angles_deg >= self.angle_range_deg[0]) & (angles_deg <= self.angle_range_deg[1]))[0]
+        def get_range(angle_deg):
+            angle_rad = np.radians(angle_deg)
+            index = int((angle_rad - msg.angle_min) / msg.angle_increment)
+            if 0 <= index < len(ranges):
+                value = ranges[index]
+                return value if not (np.isnan(value) or np.isinf(value)) else float('inf')
+            return float('inf')
 
-        if len(indices) == 0:
-            self.get_logger().warn("No hay datos en el rango buscado.")
-            return
+        # Sensores simulados
+        front = get_range(0)
+        left = get_range(90)
+        left_corner = get_range(45)
 
-        region_ranges = ranges[indices]
-        min_distance = np.nanmin(region_ranges)
-
+        # Comportamiento tipo Webots
         twist = Twist()
+        max_linear = 0.3
+        max_angular = 1.0
 
-        if np.isfinite(min_distance) and min_distance < self.distance_threshold:
-            self.get_logger().info(f"¡Objeto detectado a la derecha a {min_distance:.2f}m! Acercando...")
-            twist.linear.x = 0.1
-            twist.angular.z = -0.3  # gira a la derecha mientras se mueve
-        else:
-            self.get_logger().info("Buscando objeto a la derecha...")
+        if front < self.wall_threshold:
+            self.get_logger().info("Pared al frente. Giro a la derecha.")
             twist.linear.x = 0.0
-            twist.angular.z = -0.2  # gira lentamente a la derecha
+            twist.angular.z = -max_angular
+        elif left < self.wall_threshold:
+            if left_corner < self.wall_threshold / 2:
+                self.get_logger().info("Muy cerca de la pared izquierda. Corrigiendo derecha.")
+                twist.linear.x = max_linear
+                twist.angular.z = -max_angular / 2
+            else:
+                self.get_logger().info("Pared a la izquierda. Avanzando recto.")
+                twist.linear.x = max_linear
+                twist.angular.z = 0.0
+        else:
+            self.get_logger().info("Sin pared. Giro a la izquierda.")
+            twist.linear.x = max_linear / 2
+            twist.angular.z = max_angular / 2
 
-        self.cmd_pub.publish(twist)
+        self.publisher_.publish(twist)
 
 
 def main(args=None):
     rclpy.init(args=args)
-    node = RightObjectSeeker()
+    node = WallFollowerLidar()
     rclpy.spin(node)
     node.destroy_node()
     rclpy.shutdown()
+
 
 if __name__ == '__main__':
     main()
