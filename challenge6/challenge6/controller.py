@@ -89,14 +89,14 @@ class Controller(Node):
                 return val if not (np.isnan(val) or np.isinf(val)) else float('inf')
             return float('inf')
 
-        obstacle_in_front = any(get_range(angle) < self.obstacle_threshold_enter for angle in range(-5, 40))
-        front_clear = all(get_range(angle) > self.obstacle_threshold_exit for angle in range(-5, 40))
+        obstacle_in_front = any(get_range(angle) < self.obstacle_threshold_enter for angle in range(-5, 90))
+        front_clear = all(get_range(angle) > self.obstacle_threshold_exit for angle in range(-5, 90))
 
         if self.state == 'GO_TO_GOAL' and obstacle_in_front:
             self.state = 'FOLLOW_WALL'
             self.last_follow_wall_time = time.time()
             self.get_logger().info('Cambio a FOLLOW_WALL')
-        elif self.state == 'FOLLOW_WALL' and front_clear and (time.time() - self.last_follow_wall_time > 2.0):
+        elif self.state == 'FOLLOW_WALL' and front_clear and (time.time() - self.last_follow_wall_time > 1.0):
             self.state = 'GO_TO_GOAL'
             self.get_logger().info('Regreso a GO_TO_GOAL')
 
@@ -130,7 +130,7 @@ class Controller(Node):
         self.pub_cmd_vel.publish(twist)
 
     def wall_follow_logic(self):
-        desired_distance = 0.5
+        desired_distance = 0.7
         max_linear = 0.2
         max_angular = 1.0
         msg = self.lidar_msg
@@ -150,7 +150,7 @@ class Controller(Node):
 
         twist = Twist()
 
-        if front < 0.6:
+        if front < 0.8:
             self.get_logger().info("Obstáculo al frente. Girando a la derecha")
             twist.linear.x = 0.0
             twist.angular.z = -max_angular
