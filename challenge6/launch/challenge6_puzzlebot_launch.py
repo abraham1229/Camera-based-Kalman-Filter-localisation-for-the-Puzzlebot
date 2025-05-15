@@ -34,7 +34,8 @@ def generate_launch_description():
                           parameters=[{
                               'init_pose_x': init_x,
                               'init_pose_y': init_y,
-                              'init_pose_yaw': init_yaw
+                              'init_pose_yaw': init_yaw,
+                              'algorithm': 'bug2'
                           }]
                           )
   
