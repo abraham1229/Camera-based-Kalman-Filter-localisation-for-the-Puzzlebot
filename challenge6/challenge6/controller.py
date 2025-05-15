@@ -151,20 +151,20 @@ class Controller(Node):
         twist = Twist()
 
         if front < 0.8:
-            self.get_logger().info("Obstáculo al frente. Girando a la derecha")
+            self.get_logger().info("Girando a la derecha")
             twist.linear.x = 0.0
             twist.angular.z = -max_angular
         elif left < desired_distance:
             if left_corner < desired_distance / 2:
-                self.get_logger().info("Muy cerca de la pared. Corrigiendo a la derecha")
+                self.get_logger().info("Corrigiendo a la derecha")
                 twist.linear.x = max_linear
                 twist.angular.z = -max_angular / 2
             else:
-                self.get_logger().info("Pared detectada a la izquierda. Avanzando recto")
+                self.get_logger().info("Avanzando recto")
                 twist.linear.x = max_linear
                 twist.angular.z = 0.0
         else:
-            self.get_logger().info("Sin pared. Girando a la izquierda")
+            self.get_logger().info("Girando a la izquierda")
             twist.linear.x = max_linear / 2
             twist.angular.z = max_angular / 2
 
