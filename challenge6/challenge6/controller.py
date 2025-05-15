@@ -45,22 +45,25 @@ class Controller(Node):
         self.last_follow_wall_time = 0.0
 
     def timer_callback(self):
-        if not self.coordenadasMeta:
-            return
+        try:
+            if not self.coordenadasMeta:
+                return
 
-        if self.trayectoria_finalizda:
-            self.stop_robot()
-            return
+            if self.trayectoria_finalizda:
+                self.stop_robot()
+                return
 
-        if self.state == 'GO_TO_GOAL':
-            self.compute_errors()
-            self.apply_control()
-            self.limit_velocities()
-            self.check_point_reached()
-            self.publish_velocity_command()
+            if self.state == 'GO_TO_GOAL':
+                self.compute_errors()
+                self.apply_control()
+                self.limit_velocities()
+                self.check_point_reached()
+                self.publish_velocity_command()
 
-        elif self.state == 'FOLLOW_WALL':
-            self.wall_follow_logic()
+            elif self.state == 'FOLLOW_WALL':
+                self.wall_follow_logic()
+        except Exception as e:
+            self.get_logger().error(f"Error en timer_callback: {e}")
 
     def stop_robot(self):
         twist = Twist()
@@ -92,6 +95,7 @@ class Controller(Node):
         obstacle_in_front = any(get_range(angle) < self.obstacle_threshold_enter for angle in range(-5, 90))
         front_clear = all(get_range(angle) > self.obstacle_threshold_exit for angle in range(-5, 90))
 
+        # Transición más robusta entre estados
         if self.state == 'GO_TO_GOAL' and obstacle_in_front:
             self.state = 'FOLLOW_WALL'
             self.last_follow_wall_time = time.time()
@@ -108,9 +112,20 @@ class Controller(Node):
         self.errorTheta = target_theta - self.Postheta
         self.errorTheta = (self.errorTheta + math.pi) % (2 * math.pi) - math.pi
 
+        # Introducir un umbral para evitar oscilaciones
+        if abs(self.errorTheta) < 0.01:
+            self.errorTheta = 0.0
+
     def apply_control(self):
         self.velA = self.kpTheta * self.errorTheta
         self.velL = self.kpLineal * self.error_distancia
+
+        # Escalar velocidades proporcionalmente
+        self.velA = max(min(self.velA, 0.25), -0.25)
+        if abs(self.errorTheta) > 0.1:
+            self.velL = 0.0  # Detener avance si el error angular es grande
+        else:
+            self.velL = min(self.velL, 0.2)
 
     def limit_velocities(self):
         self.velA = max(min(self.velA, 0.25), -0.25)
@@ -145,8 +160,8 @@ class Controller(Node):
             return float('inf')
 
         front = get_range(0)
-        left = get_range(90)
-        left_corner = get_range(45)
+        left = np.mean([get_range(angle) for angle in range(85, 95)])  # Promedio en lugar de un solo valor
+        left_corner = np.mean([get_range(angle) for angle in range(40, 50)])
 
         twist = Twist()
 
