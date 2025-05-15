@@ -18,12 +18,11 @@ class Controller(Node):
         # Declare and get parameters
         self.declare_parameter('init_pose_x', 0.0)
         self.declare_parameter('init_pose_y', 0.0)
+        self.declare_parameter('init_pose_yaw', 0.0)
 
         self.Posx = self.get_parameter('init_pose_x').value
         self.Posy = self.get_parameter('init_pose_y').value
         self.Postheta = self.get_parameter('init_pose_yaw').value
-        self.goal_x = self.get_parameter('goal_x').value
-        self.goal_y = self.get_parameter('goal_y').value
         self.use_sim = self.get_parameter('use_sim_time').value
 
         self.pub_cmd_vel = self.create_publisher(Twist, 'cmd_vel', 1000)
@@ -44,6 +43,8 @@ class Controller(Node):
         self.kpLineal = 0.4
         self.error_distancia = 0.0
         self.errorTheta = 0.0
+
+        self.k_wall = 0.5
 
         self.trayectoria_finalizda = False
         self.state = 'GO_TO_GOAL'
@@ -68,6 +69,10 @@ class Controller(Node):
 
         elif self.state == 'FOLLOW_WALL':
             self.wall_follow_logic()
+            # Check if path to goal is clear
+            if self.is_path_to_goal_clear() and (time.time() - self.last_follow_wall_time > 1.0):
+                self.state = 'GO_TO_GOAL'
+                self.get_logger().info('Path to goal clear, switching to GO_TO_GOAL')
 
     def stop_robot(self):
         twist = Twist()
@@ -88,16 +93,8 @@ class Controller(Node):
         self.latest_ranges = msg.ranges
         self.lidar_msg = msg
 
-        def get_range(angle_deg):
-            angle_rad = np.radians(angle_deg)
-            index = int((angle_rad - msg.angle_min) / msg.angle_increment)
-            if 0 <= index < len(msg.ranges):
-                val = msg.ranges[index]
-                return val if not (np.isnan(val) or np.isinf(val)) else float('inf')
-            return float('inf')
-
-        obstacle_in_front = any(get_range(angle) < self.obstacle_threshold_enter for angle in range(-5, 90))
-        front_clear = all(get_range(angle) > self.obstacle_threshold_exit for angle in range(-5, 90))
+        obstacle_in_front = any(self.get_range_from_lidar(angle) < self.obstacle_threshold_enter for angle in range(-15, 16))
+        front_clear = all(self.get_range_from_lidar(angle) > self.obstacle_threshold_exit for angle in range(-15, 16))
 
         if self.state == 'GO_TO_GOAL' and obstacle_in_front:
             self.state = 'FOLLOW_WALL'
@@ -140,20 +137,10 @@ class Controller(Node):
         desired_distance = 0.7
         max_linear = 0.2
         max_angular = 1.0
-        msg = self.lidar_msg
-        ranges = np.array(self.latest_ranges)
 
-        def get_range(angle_deg):
-            angle_rad = np.radians(angle_deg)
-            index = int((angle_rad - msg.angle_min) / msg.angle_increment)
-            if 0 <= index < len(ranges):
-                val = ranges[index]
-                return val if not (np.isnan(val) or np.isinf(val)) else float('inf')
-            return float('inf')
-
-        front = get_range(0)
-        left = get_range(90)
-        left_corner = get_range(45)
+        front = self.get_range_from_lidar(0)
+        left = self.get_range_from_lidar(90)
+        left_corner = self.get_range_from_lidar(45)
 
         twist = Twist()
 
@@ -164,8 +151,11 @@ class Controller(Node):
         elif left < desired_distance:
             if left_corner < desired_distance / 2:
                 self.get_logger().info("Muy cerca de la pared. Corrigiendo a la derecha")
+                #twist.linear.x = max_linear
+                #twist.angular.z = -max_angular / 2
+                error = desired_distance - left
                 twist.linear.x = max_linear
-                twist.angular.z = -max_angular / 2
+                twist.angular.z = np.clip(error * self.k_wall, -max_angular, max_angular)
             else:
                 self.get_logger().info("Pared detectada a la izquierda. Avanzando recto")
                 twist.linear.x = max_linear
@@ -176,6 +166,34 @@ class Controller(Node):
             twist.angular.z = max_angular / 2
 
         self.pub_cmd_vel.publish(twist)
+    
+    def is_path_to_goal_clear(self):
+        if not hasattr(self, 'lidar_msg'):
+            return False
+        goal_x, goal_y = self.coordenadasMeta
+        dx, dy = goal_x - self.Posx, goal_y - self.Posy
+        current_dist = math.hypot(dx, dy)
+        goal_angle = math.atan2(dy, dx)
+        robot_angle = self.Postheta
+        rel_angle = (goal_angle - robot_angle + math.pi) % (2 * math.pi) - math.pi
+        rel_angle_deg = np.degrees(rel_angle)
+        # Check a small window around the goal direction
+        for offset in range(-5, 6):
+            angle = rel_angle_deg + offset
+            dist = self.get_range_from_lidar(angle)
+            if dist < self.error_distancia:  # Obstacle between robot and goal
+                return False
+        return True
+
+    def get_range_from_lidar(self, angle_deg):
+        msg = self.lidar_msg
+        ranges = np.array(self.latest_ranges)
+        angle_rad = np.radians(angle_deg)
+        index = int((angle_rad - msg.angle_min) / msg.angle_increment)
+        if 0 <= index < len(ranges):
+            val = ranges[index]
+            return val if not (np.isnan(val) or np.isinf(val)) else float('inf')
+        return float('inf')
 
     def stop(self):
         twist_msg = Twist()
