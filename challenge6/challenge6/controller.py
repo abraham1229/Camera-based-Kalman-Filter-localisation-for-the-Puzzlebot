@@ -38,13 +38,11 @@ class Controller(Node):
         q = QoSProfile(depth=10)
         q.reliability = ReliabilityPolicy.RELIABLE
 
+        # Timer
+        self.timer_period = 0.1
+        self.timer = self.create_timer(self.timer_period, self.timer_callback)
+
         # Subscriptions
-        #self.subscription_odometry = self.create_subscription(
-        #    Odometry,
-        #    'odometria',
-        #    self.callback_odometry,
-        #    rclpy.qos.qos_profile_sensor_data
-        #)
 
         self.ground_truth_sub = self.create_subscription(
             Odometry,
@@ -59,10 +57,6 @@ class Controller(Node):
             self.update_scan, 
             rclpy.qos.qos_profile_sensor_data,
         )
-
-        # Timer
-        self.timer_period = 0.1
-        self.timer = self.create_timer(self.timer_period, self.timer_callback)
         
         # Subscriptions
         self.subscription_odometry = self.create_subscription(
@@ -88,6 +82,13 @@ class Controller(Node):
         self.hit_front = 0
         self.hit_left  = 0
         self.hit_right = 0
+
+        # Initialize Lidar variables
+        self.latest_scan = None
+        self.obstacle_threshold = 0.3  # Obstacle detection distance threshold (meters)
+        self.forward_angle_width = 30  # Degrees to check directly ahead (±15 degrees)
+        self.left_width    = 60    # ±30° around +90°
+        self.right_width   = 60    # ±30° around -90°
 
         # Control variables
         self.velL = 0.0
