@@ -21,7 +21,7 @@ class Controller(Node):
         # --------- parámetros de lanzamiento --------------------------------
         self.declare_parameter('init_pose_x', 0.0)
         self.declare_parameter('init_pose_y', 0.0)
-        self.declare_parameter('algorithm',  'bug2')   # 'bug0'  o  'bug2'
+        self.declare_parameter('algorithm',  'bug0')   # 'bug0'  o  'bug2'
 
         self.initial_point_x = self.get_parameter('init_pose_x').value
         self.initial_point_y = self.get_parameter('init_pose_y').value
@@ -112,11 +112,17 @@ class Controller(Node):
 
         # Verificar si el robot está en la línea M-line con un rango de tolerancia
         def is_on_mline():
-            tolerance = 0.2  # Rango de tolerancia para considerar que está en la línea imaginaria
+            tolerance = 0.3  # Incrementar el rango de tolerancia para mayor robustez
             if self.mline_slope == float('inf'):
+                # Línea vertical: verificar si la posición X está dentro del rango
                 return abs(self.Posx - self.mline_intercept) < tolerance
-            expected_y = self.mline_slope * self.Posx + self.mline_intercept
-            return abs(self.Posy - expected_y) < tolerance
+            elif self.mline_slope == 0:
+                # Línea horizontal: verificar si la posición Y está dentro del rango
+                return abs(self.Posy - self.mline_intercept) < tolerance
+            else:
+                # Línea inclinada: verificar si la posición está cerca de la línea
+                expected_y = self.mline_slope * self.Posx + self.mline_intercept
+                return abs(self.Posy - expected_y) < tolerance
 
         # ------------ transiciones de estado --------------------------------
         if self.state == 'GO_TO_GOAL':
@@ -279,11 +285,17 @@ class Controller(Node):
 
         # Verificar si el robot está en la línea M-line con un rango de tolerancia
         def is_on_mline():
-            tolerance = 0.2  # Rango de tolerancia para considerar que está en la línea imaginaria
+            tolerance = 0.3  # Incrementar el rango de tolerancia para mayor robustez
             if self.mline_slope == float('inf'):
+                # Línea vertical: verificar si la posición X está dentro del rango
                 return abs(self.Posx - self.mline_intercept) < tolerance
-            expected_y = self.mline_slope * self.Posx + self.mline_intercept
-            return abs(self.Posy - expected_y) < tolerance
+            elif self.mline_slope == 0:
+                # Línea horizontal: verificar si la posición Y está dentro del rango
+                return abs(self.Posy - self.mline_intercept) < tolerance
+            else:
+                # Línea inclinada: verificar si la posición está cerca de la línea
+                expected_y = self.mline_slope * self.Posx + self.mline_intercept
+                return abs(self.Posy - expected_y) < tolerance
 
         goal_angle_deg = math.degrees(
             math.atan2(self.coordenadasMeta[1] - self.Posy,
