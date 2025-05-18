@@ -24,6 +24,7 @@ class SimplePDController(Node):
         self.prev_error_theta = 0.0
         self.goal_idx = 0
         self.final_goal_reached = False
+        self.last_goal_time = self.get_clock().now()
 
         # Publicador y suscriptores
         qos = rclpy.qos.qos_profile_sensor_data
@@ -50,10 +51,7 @@ class SimplePDController(Node):
             self.final_goal_reached = True
             self.get_logger().warn('¡Meta final alcanzada!')
             return
-        new_goal = (msg.x_goal, msg.y_goal)
-        if self.goal != new_goal:
-            self.goal_idx += 1
-        self.goal = new_goal
+        self.goal = (msg.x_goal, msg.y_goal)
         self.prev_error_dist = 0.0
         self.prev_error_theta = 0.0
 
@@ -80,15 +78,19 @@ class SimplePDController(Node):
         w = max(min(w, 1.0), -1.0)
 
         # Detener si está cerca del objetivo
-        if error_dist < 0.05:
+        now = self.get_clock().now()
+        time_since_last_goal = (now - self.last_goal_time).nanoseconds / 1e9
+        if error_dist < 0.05 and time_since_last_goal > 0.5:
             v = 0.0
             w = 0.0
+            self.goal_idx += 1
             self.get_logger().info(f'Punto {self.goal_idx} alcanzado')
             # Publicar señal para avanzar al siguiente objetivo
             msg = Bool()
             msg.data = True
             self.pub_next_goal.publish(msg)
             self.goal = None  # Esperar siguiente objetivo
+            self.last_goal_time = now
 
         # Publicar comando
         twist = Twist()

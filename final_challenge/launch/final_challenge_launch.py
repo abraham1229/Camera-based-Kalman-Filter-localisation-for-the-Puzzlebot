@@ -102,7 +102,7 @@ def generate_launch_description():
 
     # Definir posiciones iniciales manualmente (x, y, yaw)
     robots_positions = [
-        (-2.0, 2.0, 1.57),  # Robot 1
+        (0.0, 0.0, 1.57),  # Robot 1
     ]
 
     robot_nodes = []
