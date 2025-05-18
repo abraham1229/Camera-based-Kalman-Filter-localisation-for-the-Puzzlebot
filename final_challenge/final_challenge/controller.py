@@ -30,6 +30,8 @@ class SimplePDController(Node):
         self.timer_period = 0.1
         self.timer = self.create_timer(self.timer_period, self.timer_callback)
 
+        self.get_logger().info('Controller node initialized')
+
     def callback_odometry(self, msg: Odometry):
         self.Posx = msg.pose.pose.position.x
         self.Posy = msg.pose.pose.position.y
