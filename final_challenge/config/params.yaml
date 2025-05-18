@@ -1,0 +1,4 @@
+Path_generator:
+  ros__parameters:
+    x_goal: 0.0
+    y_goal: -2.0
