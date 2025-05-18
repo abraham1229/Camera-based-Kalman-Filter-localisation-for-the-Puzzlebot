@@ -21,6 +21,7 @@ class Path_generator(Node):
         self.get_logger().info('Path generator node initialized')
         self.init_offset_x = self.get_parameter('init_pose_x').value
         self.init_offset_y = self.get_parameter('init_pose_y').value
+        self.finished = False
         self.prepare_goal_list()
 
     def prepare_goal_list(self):
@@ -35,13 +36,27 @@ class Path_generator(Node):
         self.current_goal_idx = 0
 
     def timer_callback(self):
-        if not self.goal_list:
+        if not self.goal_list or self.finished:
             return
         # Publica el objetivo actual
         self.pub.publish(self.goal_list[self.current_goal_idx])
-        # Aquí podrías avanzar al siguiente objetivo según una señal externa
-        # o lógica adicional (por ejemplo, feedback del controller)
-
+        # Cambia de objetivo cada 3 segundos
+        if not hasattr(self, 'last_switch_time'):
+            self.last_switch_time = self.get_clock().now()
+        now = self.get_clock().now()
+        if (now - self.last_switch_time).nanoseconds > 3e9:
+            self.last_switch_time = now
+            if self.current_goal_idx < len(self.goal_list) - 1:
+                self.current_goal_idx += 1
+                self.get_logger().info(f'Enviando objetivo {self.current_goal_idx + 1} de {len(self.goal_list)}')
+            else:
+                # Enviar un mensaje especial con NaN para indicar que terminó
+                nan_goal = Goal()
+                nan_goal.x_goal = float('inf')
+                nan_goal.y_goal = float('inf')
+                self.pub.publish(nan_goal)
+                self.get_logger().warn('¡Todos los objetivos han sido enviados! (Enviado NaN)')
+                self.finished = True
 
 def main(args=None):
     rclpy.init(args=args)
