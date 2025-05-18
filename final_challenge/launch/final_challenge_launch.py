@@ -6,6 +6,13 @@ from ament_index_python.packages import get_package_share_directory
 def generate_robot_group(robot_index, robot_desc, init_x, init_y, init_yaw, linear_model):
     namespace = f'group{robot_index}'
 
+    # Parameters
+    config = os.path.join(
+        get_package_share_directory('challenge6'),
+        'config',
+        'params.yaml'
+        )
+
     robot_state_pub = Node(
         package='robot_state_publisher',
         executable='robot_state_publisher',
@@ -62,7 +69,13 @@ def generate_robot_group(robot_index, robot_desc, init_x, init_y, init_yaw, line
             'init_pose_x': init_x,
             'init_pose_y': init_y,
             'init_pose_yaw': init_yaw,
-            'type': 0,
+            'num_goals': 3,
+            'x_goal_1': 1.0,
+            'y_goal_1': 1.0,
+            'x_goal_2': 2.0,
+            'y_goal_2': 0.0,
+            'x_goal_3': 0.0,
+            'y_goal_3': -1.0,
         }]
     )
 
@@ -89,7 +102,7 @@ def generate_launch_description():
 
     # Definir posiciones iniciales manualmente (x, y, yaw)
     robots_positions = [
-        (-2.0, 2.0, 1.57),  # Robot 1
+        (0.0, 0.0, 1.57),  # Robot 1
     ]
 
     robot_nodes = []
