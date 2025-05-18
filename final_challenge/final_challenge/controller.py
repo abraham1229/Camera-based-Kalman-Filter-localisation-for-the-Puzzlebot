@@ -22,6 +22,7 @@ class Controller(Node):
         self.Posx = self.Posy = self.Postheta = 0.0
         self.prev_error_dist = 0.0
         self.prev_error_theta = 0.0
+        self.prev_Posx = self.prev_Posy = 0.0
         self.goal_idx = 0
         self.final_goal_reached = False
         self.last_goal_time = self.get_clock().now()
@@ -56,8 +57,6 @@ class Controller(Node):
             self.get_logger().warn('¡Meta final alcanzada!')
             return
         self.goal = (msg.x_goal, msg.y_goal)
-        self.prev_error_dist = 0.0
-        self.prev_error_theta = 0.0
 
     def timer_callback(self):
         if self.final_goal_reached or self.goal is None:
@@ -68,6 +67,9 @@ class Controller(Node):
         error_dist = math.hypot(dx, dy)
         target_theta = math.atan2(dy, dx)
         error_theta = (target_theta - self.Postheta + math.pi) % (2 * math.pi) - math.pi
+
+        self.get_logger().info(f'Error lineal {self.prev_error_dist}')
+        self.get_logger().info(f'Error angular {self.prev_error_theta}')
 
         # Derivadas
         d_error_dist = (error_dist - self.prev_error_dist) / self.timer_period
@@ -81,13 +83,28 @@ class Controller(Node):
         v = max(min(v, 0.3), -0.3)
         w = max(min(w, 1.0), -1.0)
 
-        # Detener si está cerca del objetivo
+        # --- Producto escalar para detectar cruce del objetivo ---
+    
+        dx_prev = gx - self.prev_Posx
+        dy_prev = gy - self.prev_Posy
+        dx_now = gx - self.Posx
+        dy_now = gy - self.Posy
+        dot_product = dx_prev * dx_now + dy_prev * dy_now
+
         now = self.get_clock().now()
         time_since_last_goal = (now - self.last_goal_time).nanoseconds / 1e9
+        reached = False
         if error_dist < 0.05 and time_since_last_goal > 0.5:
+            reached = True
+        elif dot_product < 0 and time_since_last_goal > 0.5:
+            reached = True
+            self.get_logger().info('Objetivo cruzado por producto escalar')
+        if reached:
             v = 0.0
             w = 0.0
             self.goal_idx += 1
+            self.prev_error_dist = 0.0
+            self.prev_error_theta = 0.0
             self.get_logger().info(f'Punto {self.goal_idx} alcanzado')
             # Publicar señal para avanzar al siguiente objetivo
             msg = Bool()
@@ -105,6 +122,8 @@ class Controller(Node):
         # Guardar errores previos
         self.prev_error_dist = error_dist
         self.prev_error_theta = error_theta
+        self.prev_Posx = self.Posx
+        self.prev_Posy = self.Posy
 
 def main(args=None):
     rclpy.init(args=args)
