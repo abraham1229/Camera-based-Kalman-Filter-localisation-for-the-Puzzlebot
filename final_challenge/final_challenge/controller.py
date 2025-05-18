@@ -54,7 +54,7 @@ class Controller(Node):
         # Detectar mensaje especial de fin (inf)
         if math.isinf(msg.x_goal) or math.isinf(msg.y_goal):
             self.final_goal_reached = True
-            self.get_logger().warn('¡Meta final alcanzada!')
+            self.print_success('¡Meta final alcanzada!')
             return
         self.goal = (msg.x_goal, msg.y_goal)
 
@@ -67,9 +67,6 @@ class Controller(Node):
         error_dist = math.hypot(dx, dy)
         target_theta = math.atan2(dy, dx)
         error_theta = (target_theta - self.Postheta + math.pi) % (2 * math.pi) - math.pi
-
-        self.get_logger().info(f'Error lineal {self.prev_error_dist}')
-        self.get_logger().info(f'Error angular {self.prev_error_theta}')
 
         # Derivadas
         d_error_dist = (error_dist - self.prev_error_dist) / self.timer_period
@@ -125,6 +122,12 @@ class Controller(Node):
         self.prev_Posx = self.Posx
         self.prev_Posy = self.Posy
 
+    def print_success(self, msg):
+        GREEN = '\033[92m'
+        RESET = '\033[0m'
+        self.get_logger().info(f'{GREEN}{msg}{RESET}')
+
+        
 def main(args=None):
     rclpy.init(args=args)
     node = Controller()

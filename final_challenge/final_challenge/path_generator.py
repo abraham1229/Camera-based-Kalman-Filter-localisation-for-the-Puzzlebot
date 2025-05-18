@@ -59,8 +59,14 @@ class Path_generator(Node):
                 nan_goal.x_goal = float('inf')
                 nan_goal.y_goal = float('inf')
                 self.pub.publish(nan_goal)
-                self.get_logger().warn('¡Todos los objetivos han sido enviados! (Enviado INF)')
+                self.print_success('¡Todos los objetivos han sido enviados!')
                 self.finished = True
+
+
+    def print_success(self, msg):
+        GREEN = '\033[92m'
+        RESET = '\033[0m'
+        self.get_logger().info(f'{GREEN}{msg}{RESET}')
 
 def main(args=None):
     rclpy.init(args=args)
