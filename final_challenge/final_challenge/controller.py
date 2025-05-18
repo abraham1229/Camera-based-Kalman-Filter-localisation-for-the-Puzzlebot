@@ -3,6 +3,7 @@ from rclpy.node import Node
 from msgs_clase.msg import Goal          # type: ignore
 from geometry_msgs.msg import Twist
 from nav_msgs.msg import Odometry
+from std_msgs.msg import Bool
 import math
 import transforms3d
 
@@ -21,10 +22,13 @@ class SimplePDController(Node):
         self.Posx = self.Posy = self.Postheta = 0.0
         self.prev_error_dist = 0.0
         self.prev_error_theta = 0.0
+        self.goal_idx = 0
+        self.final_goal_reached = False
 
         # Publicador y suscriptores
         qos = rclpy.qos.qos_profile_sensor_data
         self.pub_cmd_vel = self.create_publisher(Twist, 'cmd_vel', qos)
+        self.pub_next_goal = self.create_publisher(Bool, 'next_goal', 10)
         self.create_subscription(Odometry, 'odometria', self.callback_odometry, qos)
         self.create_subscription(Goal, 'path_generator', self.callback_goal, qos)
         self.timer_period = 0.1
@@ -41,12 +45,20 @@ class SimplePDController(Node):
         self.Postheta = yaw
 
     def callback_goal(self, msg: Goal):
-        self.goal = (msg.x_goal, msg.y_goal)
+        # Detectar mensaje especial de fin (inf)
+        if math.isinf(msg.x_goal) or math.isinf(msg.y_goal):
+            self.final_goal_reached = True
+            self.get_logger().warn('¡Meta final alcanzada!')
+            return
+        new_goal = (msg.x_goal, msg.y_goal)
+        if self.goal != new_goal:
+            self.goal_idx += 1
+        self.goal = new_goal
         self.prev_error_dist = 0.0
         self.prev_error_theta = 0.0
 
     def timer_callback(self):
-        if self.goal is None:
+        if self.final_goal_reached or self.goal is None:
             return
         gx, gy = self.goal
         dx = gx - self.Posx
@@ -71,7 +83,12 @@ class SimplePDController(Node):
         if error_dist < 0.05:
             v = 0.0
             w = 0.0
-            self.get_logger().info('Meta alcanzada')
+            self.get_logger().info(f'Punto {self.goal_idx} alcanzado')
+            # Publicar señal para avanzar al siguiente objetivo
+            msg = Bool()
+            msg.data = True
+            self.pub_next_goal.publish(msg)
+            self.goal = None  # Esperar siguiente objetivo
 
         # Publicar comando
         twist = Twist()

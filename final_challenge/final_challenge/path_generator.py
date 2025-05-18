@@ -1,6 +1,7 @@
 import rclpy
 from rclpy.node import Node
 from msgs_clase.msg import Goal   # type: ignore
+from std_msgs.msg import Bool
 import numpy as np
 
 class Path_generator(Node):
@@ -22,6 +23,8 @@ class Path_generator(Node):
         self.init_offset_x = self.get_parameter('init_pose_x').value
         self.init_offset_y = self.get_parameter('init_pose_y').value
         self.finished = False
+        self.next_goal_flag = False
+        self.create_subscription(Bool, 'next_goal', self.next_goal_callback, 10)
         self.prepare_goal_list()
 
     def prepare_goal_list(self):
@@ -35,17 +38,18 @@ class Path_generator(Node):
             self.goal_list.append(goal)
         self.current_goal_idx = 0
 
+    def next_goal_callback(self, msg: Bool):
+        if msg.data and not self.finished:
+            self.next_goal_flag = True
+
     def timer_callback(self):
         if not self.goal_list or self.finished:
             return
         # Publica el objetivo actual
         self.pub.publish(self.goal_list[self.current_goal_idx])
-        # Cambia de objetivo cada 3 segundos
-        if not hasattr(self, 'last_switch_time'):
-            self.last_switch_time = self.get_clock().now()
-        now = self.get_clock().now()
-        if (now - self.last_switch_time).nanoseconds > 3e9:
-            self.last_switch_time = now
+        # Cambia de objetivo solo si recibió la señal next_goal
+        if self.next_goal_flag:
+            self.next_goal_flag = False
             if self.current_goal_idx < len(self.goal_list) - 1:
                 self.current_goal_idx += 1
                 self.get_logger().info(f'Enviando objetivo {self.current_goal_idx + 1} de {len(self.goal_list)}')
