@@ -10,7 +10,7 @@ class ArucoDetectorNode(Node):
         super().__init__('aruco_detector_node')
         self.subscription = self.create_subscription(
             Image,
-            '/image_raw',
+            '/image_raw', #'/video_source/raw'
             self.listener_callback,
             10)
         self.bridge = CvBridge()
