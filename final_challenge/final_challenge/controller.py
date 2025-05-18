@@ -7,9 +7,9 @@ from std_msgs.msg import Bool
 import math
 import transforms3d
 
-class SimplePDController(Node):
+class Controller(Node):
     def __init__(self):
-        super().__init__('simple_pd_controller')
+        super().__init__('controller')
 
         # Parámetros de control PD
         self.kp_linear = 0.8
@@ -38,6 +38,8 @@ class SimplePDController(Node):
         self.get_logger().info('Controller node initialized')
 
     def callback_odometry(self, msg: Odometry):
+        if msg is None:
+            return
         self.Posx = msg.pose.pose.position.x
         self.Posy = msg.pose.pose.position.y
         qx, qy, qz, qw = (msg.pose.pose.orientation.x, msg.pose.pose.orientation.y,
@@ -46,6 +48,8 @@ class SimplePDController(Node):
         self.Postheta = yaw
 
     def callback_goal(self, msg: Goal):
+        if msg is None:
+            return
         # Detectar mensaje especial de fin (inf)
         if math.isinf(msg.x_goal) or math.isinf(msg.y_goal):
             self.final_goal_reached = True
@@ -104,7 +108,7 @@ class SimplePDController(Node):
 
 def main(args=None):
     rclpy.init(args=args)
-    node = SimplePDController()
+    node = Controller()
     rclpy.spin(node)
     node.destroy_node()
     rclpy.shutdown()
