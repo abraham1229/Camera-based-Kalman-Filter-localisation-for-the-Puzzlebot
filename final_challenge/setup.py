@@ -34,6 +34,7 @@ setup(
             'puzzlebot = final_challenge.puzzlebot:main',
             'controller = final_challenge.controller:main',
             'path_generator = final_challenge.path_generator:main',
+            'aruco_first = final_challenge.aruco_first:main',
         ],
     },
 )
