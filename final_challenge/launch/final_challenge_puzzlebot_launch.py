@@ -25,7 +25,18 @@ def generate_launch_description():
       package='final_challenge',
       executable='path_generator',
       output='screen',
-      parameters = [config]
+      parameters=[{
+            'init_pose_x': init_x,
+            'init_pose_y': init_y,
+            'init_pose_yaw': init_yaw,
+            'num_goals': 3,
+            'x_goal_1': 1.0,
+            'y_goal_1': 1.0,
+            'x_goal_2': 2.0,
+            'y_goal_2': 0.0,
+            'x_goal_3': 0.0,
+            'y_goal_3': -1.0,
+        }]
   )
     
   controller_node = Node(name="controller",
@@ -34,8 +45,7 @@ def generate_launch_description():
                           parameters=[{
                               'init_pose_x': init_x,
                               'init_pose_y': init_y,
-                              'init_pose_yaw': init_yaw,
-                              'algorithm': 'bug2'
+                              'init_pose_yaw': init_yaw
                           }]
                           )
   

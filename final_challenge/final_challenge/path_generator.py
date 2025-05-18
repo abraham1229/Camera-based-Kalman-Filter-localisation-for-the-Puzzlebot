@@ -59,7 +59,7 @@ class Path_generator(Node):
                 nan_goal.x_goal = float('inf')
                 nan_goal.y_goal = float('inf')
                 self.pub.publish(nan_goal)
-                self.get_logger().warn('¡Todos los objetivos han sido enviados! (Enviado NaN)')
+                self.get_logger().warn('¡Todos los objetivos han sido enviados! (Enviado INF)')
                 self.finished = True
 
 def main(args=None):

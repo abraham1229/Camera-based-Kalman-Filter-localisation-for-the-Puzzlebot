@@ -29,7 +29,7 @@ class Controller(Node):
 
         # Publicador y suscriptores
         qos = rclpy.qos.qos_profile_sensor_data
-        self.pub_cmd_vel = self.create_publisher(Twist, 'cmd_vel', qos)
+        self.pub_cmd_vel = self.create_publisher(Twist, 'cmd_vel', 10)
         self.pub_next_goal = self.create_publisher(Bool, 'next_goal', 10)
         self.create_subscription(Odometry, 'odometria', self.callback_odometry, qos)
         self.create_subscription(Goal, 'path_generator', self.callback_goal, qos)
