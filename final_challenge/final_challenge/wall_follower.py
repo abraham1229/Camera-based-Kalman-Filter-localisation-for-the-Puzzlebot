@@ -9,51 +9,51 @@ class WallFollowerLidar(Node):
     def __init__(self):
         super().__init__('wall_follower_lidar')
 
-        self.publisher_ = self.create_publisher(Twist, 'cmd_vel', 10)
         self.subscription = self.create_subscription(LaserScan, 'scan', self.scan_callback, 10)
+        self.publisher_ = self.create_publisher(Twist, 'cmd_vel', 10)
 
-        self.wall_threshold = 0.5  # metros
-        self.get_logger().info("Wall Follower with LiDAR node started")
+        # Parámetros de control
+        self.kp = 1.0
+        self.wall_desired = 0.4      # distancia deseada a la pared derecha
+        self.linear_velocity = 0.3
+        self.max_angular = 2.0
+        self.threshold_front = 0.4   # si algo está más cerca, se considera obstáculo
+
+        self.get_logger().info("🚗 Wall Follower with LiDAR node started")
+
+    def get_distance_at_angle(self, msg, angle_deg):
+        angle_rad = np.radians(angle_deg) % (2 * np.pi)
+        index = int((angle_rad - msg.angle_min) / msg.angle_increment)
+
+        if 0 <= index < len(msg.ranges):
+            value = msg.ranges[index]
+            if not np.isnan(value) and not np.isinf(value):
+                return value
+        return 2.0
 
     def scan_callback(self, msg: LaserScan):
-        ranges = np.array(msg.ranges)
+        dist_right = self.get_distance_at_angle(msg, -90)
+        dist_right_45 = self.get_distance_at_angle(msg, -45)
+        dist_right_side = np.mean([dist_right, dist_right_45])
+        dist_front = self.get_distance_at_angle(msg, 0)
 
-        def get_range(angle_deg):
-            angle_rad = np.radians(angle_deg)
-            index = int((angle_rad - msg.angle_min) / msg.angle_increment)
-            if 0 <= index < len(ranges):
-                value = ranges[index]
-                return value if not (np.isnan(value) or np.isinf(value)) else float('inf')
-            return float('inf')
-
-        # Sensores simulados
-        front = get_range(0)
-        left = get_range(90)
-        left_corner = get_range(45)
-
-        # Comportamiento tipo Webots
         twist = Twist()
-        max_linear = 0.3
-        max_angular = 1.0
 
-        if front < self.wall_threshold:
-            self.get_logger().info("Pared al frente. Giro a la derecha.")
-            twist.linear.x = 0.0
-            twist.angular.z = -max_angular
-        elif left < self.wall_threshold:
-            if left_corner < self.wall_threshold / 2:
-                self.get_logger().info("Muy cerca de la pared izquierda. Corrigiendo derecha.")
-                twist.linear.x = max_linear
-                twist.angular.z = -max_angular / 2
-            else:
-                self.get_logger().info("Pared a la izquierda. Avanzando recto.")
-                twist.linear.x = max_linear
-                twist.angular.z = 0.0
+        if dist_front > self.threshold_front:
+            error = dist_right_side - self.wall_desired
+            turn_rate = -error * self.kp
+            twist.linear.x = self.linear_velocity
+            twist.angular.z = turn_rate
+
+            # Diagnóstico de giro
+            self.get_logger().info(f"Error: {error}")
         else:
-            self.get_logger().info("Sin pared. Giro a la izquierda.")
-            twist.linear.x = max_linear / 2
-            twist.angular.z = max_angular / 2
+            # Obstáculo al frente, detener avance y girar a la izquierda
+            twist.linear.x = 0.0
+            twist.angular.z = self.max_angular
+            self.get_logger().info("⛔ Obstáculo al frente → Giro a la izquierda")
 
+        # Publicar comando final
         self.publisher_.publish(twist)
 
 
