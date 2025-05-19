@@ -3,12 +3,12 @@ from launch import LaunchDescription
 from launch_ros.actions import Node
 from ament_index_python.packages import get_package_share_directory
 
-def generate_robot_group(robot_index, robot_desc, init_x, init_y, init_yaw, linear_model):
+def generate_robot_group(robot_index, robot_desc, init_x, init_y, init_yaw, linear_model, noise_model):
     namespace = f'group{robot_index}'
 
     # Parameters
     config = os.path.join(
-        get_package_share_directory('challenge6'),
+        get_package_share_directory('final_challenge'),
         'config',
         'params.yaml'
         )
@@ -56,7 +56,8 @@ def generate_robot_group(robot_index, robot_desc, init_x, init_y, init_yaw, line
             'init_pose_x': init_x,
             'init_pose_y': init_y,
             'init_pose_yaw': init_yaw,
-            'use_linear_model': linear_model
+            'use_linear_model': linear_model,
+            'motion_model_noise': noise_model
         }]
     )
 
@@ -107,8 +108,9 @@ def generate_launch_description():
 
     robot_nodes = []
     robot_linear_model = True
+    robot_noise_model = False
     for idx, (x, y, yaw) in enumerate(robots_positions, start=1):
-        robot_nodes.extend(generate_robot_group(idx, robot_desc, x, y, yaw, robot_linear_model))
+        robot_nodes.extend(generate_robot_group(idx, robot_desc, x, y, yaw, robot_linear_model, robot_noise_model))
 
     # Agregar RViz
     rviz_config = os.path.join(
