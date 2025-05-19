@@ -19,7 +19,7 @@ class WallFollowerLidar(Node):
         self.max_angular = 2.0
         self.threshold_front = 0.4   # si algo está más cerca, se considera obstáculo
 
-        self.get_logger().info("🚗 Wall Follower with LiDAR node started")
+        self.get_logger().info("Wall Follower with LiDAR node started")
 
     def get_distance_at_angle(self, msg, angle_deg):
         angle_rad = np.radians(angle_deg) % (2 * np.pi)
@@ -36,10 +36,12 @@ class WallFollowerLidar(Node):
         dist_right_45 = self.get_distance_at_angle(msg, -45)
         dist_right_side = np.mean([dist_right, dist_right_45])
         dist_front = self.get_distance_at_angle(msg, 0)
+        dist_front_5 = self.get_distance_at_angle(msg, -15)
+        dist_front_mean = np.mean([dist_front, dist_front_5])
 
         twist = Twist()
 
-        if dist_front > self.threshold_front:
+        if dist_front_mean > self.threshold_front:
             error = dist_right_side - self.wall_desired
             turn_rate = -error * self.kp
             twist.linear.x = self.linear_velocity
@@ -51,7 +53,7 @@ class WallFollowerLidar(Node):
             # Obstáculo al frente, detener avance y girar a la izquierda
             twist.linear.x = 0.0
             twist.angular.z = self.max_angular
-            self.get_logger().info("⛔ Obstáculo al frente → Giro a la izquierda")
+            self.get_logger().info("Obstáculo al frente → Giro a la izquierda")
 
         # Publicar comando final
         self.publisher_.publish(twist)
