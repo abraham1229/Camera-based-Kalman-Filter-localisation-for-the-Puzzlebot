@@ -1,6 +1,6 @@
 import rclpy
 from rclpy.node import Node
-from std_msgs.msg import Float32
+from std_msgs.msg import Float32, Float32MultiArray
 from nav_msgs.msg import Odometry
 import transforms3d
 import math
@@ -34,6 +34,13 @@ class Odometry_Node(Node):
             'VelocityEncR',
             self.signal_callback_right,
             rclpy.qos.qos_profile_sensor_data)
+        
+        # Subscribe to ArUco marker range and bearing data
+        self.subscription_aruco = self.create_subscription(
+            Float32MultiArray,
+            'aruco_range_bearing',
+            self.aruco_callback,
+            10)
         
         #Se crea el publicador que mandará mensaje personalizado
         self.pub_odometry = self.create_publisher(Odometry, 'odometria', 1000)
@@ -71,6 +78,10 @@ class Odometry_Node(Node):
         ])
         # Variables for Kalman filter
         self.have_new_aruco = False
+        self.latest_aruco_measurement = np.zeros(2)  # [range, bearing]
+        self.latest_landmark_pos = np.zeros(2)       # [x, y]
+        self.latest_aruco_id = -1
+
         #linear_v -> lv, lv -> rotation, angular_v -> l_motion, av -> rotation, l_noise -> a_nosie
         self.alpha = [0.05, 0.001, 0.05, 0.01, 0.01]
         # NIS monitoring
@@ -186,6 +197,35 @@ class Odometry_Node(Node):
             [0, var_v, var_vw],
             [var_vw, var_vw, var_w]
         ])
+    
+    # New callback for ArUco marker data
+    def aruco_callback(self, msg):
+        """
+        Process ArUco marker data from the ArUco detector node
+        Format: [marker_id, range, bearing, marker_x, marker_y]
+        """
+        if len(msg.data) != 5:
+            self.get_logger().error(f"Received invalid ArUco data format. Expected 5 values, got {len(msg.data)}")
+            return
+            
+        # Extract data from message
+        marker_id = int(msg.data[0])
+        range_to_marker = msg.data[1]
+        bearing_to_marker = msg.data[2]
+        marker_x = msg.data[3]
+        marker_y = msg.data[4]
+        
+        # Store the measurement for use in the Kalman filter
+        self.latest_aruco_measurement = np.array([range_to_marker, bearing_to_marker])
+        self.latest_landmark_pos = np.array([marker_x, marker_y])
+        self.latest_aruco_id = marker_id
+        self.have_new_aruco = True
+        
+        self.get_logger().info(
+            f"Received ArUco marker {marker_id}: range={range_to_marker:.2f}m, "
+            f"bearing={math.degrees(bearing_to_marker):.1f}°, "
+            f"position=({marker_x}, {marker_y})"
+        )
     
     def linearized_state_update(self, s, u):
         # Linearization: Compute A_k and B_k
