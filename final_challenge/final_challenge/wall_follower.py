@@ -14,10 +14,10 @@ class WallFollowerLidar(Node):
 
         # Parámetros de control
         self.kp = 1.0
-        self.wall_desired = 0.4      # distancia deseada a la pared derecha
-        self.linear_velocity = 0.3
+        self.wall_desired = 0.5      # distancia deseada a la pared derecha
+        self.linear_velocity = 0.4
         self.max_angular = 2.0
-        self.threshold_front = 0.4   # si algo está más cerca, se considera obstáculo
+        self.threshold_front = 0.6   # si algo está más cerca, se considera obstáculo
 
         self.get_logger().info("Wall Follower with LiDAR node started")
 
