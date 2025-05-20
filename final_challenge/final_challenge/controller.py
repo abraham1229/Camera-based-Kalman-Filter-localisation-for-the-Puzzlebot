@@ -6,9 +6,8 @@ from nav_msgs.msg import Odometry
 from sensor_msgs.msg import LaserScan
 from std_msgs.msg import Bool
 import math
-import numpy as np
 import transforms3d
-import time
+import numpy as np
 
 class Controller(Node):
     def __init__(self):
@@ -20,7 +19,7 @@ class Controller(Node):
         self.kp_angular = 1.5
         self.kd_angular = 0.3
 
-        # Estado
+        # Estado del path follower
         self.goal = None
         self.Posx = self.Posy = self.Postheta = 0.0
         self.prev_error_dist = 0.0
@@ -30,21 +29,26 @@ class Controller(Node):
         self.final_goal_reached = False
         self.last_goal_time = self.get_clock().now()
 
-        # Bug2 state
-        self.state = 'GO_TO_GOAL'  # GO_TO_GOAL | FOLLOW_WALL
-        self.obstacle_threshold_enter = 0.5
-        self.obstacle_threshold_exit  = 0.6
-        self.last_follow_wall_time = 0.0
-        self.mline_slope = None
-        self.mline_intercept = None
+        # Variables para Bug algorithm
+        self.lidar_msg = None
+        self.kp = 1.0
+        self.wall_desired = 0.5      # distancia deseada a la pared derecha
+        self.linear_velocity = 0.4
+        self.max_angular = 2.0
+        self.threshold_front = 0.6   # si algo está más cerca, se considera obstáculo
+        # Bug 2
         self.initial_point_x = 0.0
         self.initial_point_y = 0.0
+        self.mline_slope = None
+        self.mline_intercept = None
+        self.last_state_change_time = self.get_clock().now()
+        self.min_state_duration = 0.3  # segundos
 
-        # Lidar
-        self.lidar_msg = None
-        self.latest_ranges = []
+        # Estado de la trayectoria
+        self.state = 'GO_TO_GOAL'
 
-        # Publicador y suscriptores
+
+        # Publicadores y suscriptores
         qos = rclpy.qos.qos_profile_sensor_data
         self.pub_cmd_vel = self.create_publisher(Twist, 'cmd_vel', 10)
         self.pub_next_goal = self.create_publisher(Bool, 'next_goal', 10)
@@ -67,77 +71,76 @@ class Controller(Node):
         self.Postheta = yaw
 
     def callback_goal(self, msg: Goal):
-        if msg is None:
-            return
         # Detectar mensaje especial de fin (inf)
         if math.isinf(msg.x_goal) or math.isinf(msg.y_goal):
             self.final_goal_reached = True
             self.print_success('¡Meta final alcanzada!')
             return
-        self.goal = (msg.x_goal, msg.y_goal)
-        # Guardar punto inicial para la M-line
+        
+        new_goal = (msg.x_goal, msg.y_goal)
+        if new_goal == self.goal:
+            return
+
+        # Asignar nuevo goal
+        self.goal = new_goal
+        self.print_success(f'x {msg.x_goal}  y {msg.y_goal} ')
+        self.print_success('¡Meta siguiente!')
+
+        # Evitar recalcular M-line si el nuevo goal está demasiado cerca del robot
+        dist_to_goal = math.hypot(self.goal[0] - self.Posx, self.goal[1] - self.Posy)
+        if dist_to_goal < 0.1:
+            self.get_logger().info("Meta demasiado cercana, no se recalcula M-line")
+            return
+
+        # Guardar punto inicial y M-line
         self.initial_point_x = self.Posx
         self.initial_point_y = self.Posy
         x1, y1 = self.initial_point_x, self.initial_point_y
         x2, y2 = self.goal
+
         if abs(x2 - x1) > 1e-6:
             self.mline_slope = (y2 - y1) / (x2 - x1)
             self.mline_intercept = y1 - self.mline_slope * x1
         else:
             self.mline_slope = float('inf')
-            self.mline_intercept = x1
-        self.state = 'GO_TO_GOAL'
+            self.mline_intercept = x1  
 
     def callback_lidar(self, msg: LaserScan):
         self.lidar_msg = msg
-        self.latest_ranges = msg.ranges
 
-        def r(angle_deg: int) -> float:
-            ang = math.radians(angle_deg)
-            idx = int((ang - msg.angle_min) / msg.angle_increment)
-            if 0 <= idx < len(msg.ranges):
-                v = msg.ranges[idx]
-                return v if not (math.isnan(v) or math.isinf(v)) else float('inf')
-            return float('inf')
+        dist_front = self.get_distance_at_angle(0)
+        dist_45 = self.get_distance_at_angle(-45)
 
-        obstacle_in_front = any(r(a) < self.obstacle_threshold_enter for a in range(-5, 90))
-        front_clear       = all(r(a) > self.obstacle_threshold_exit  for a in range(-5, 90))
+        dist_wall = min(dist_front,dist_45)
 
-        def is_on_mline():
-            tolerance = 0.3
-            if self.mline_slope is None:
-                return False
-            if self.mline_slope == float('inf'):
-                return abs(self.Posx - self.mline_intercept) < tolerance
-            elif self.mline_slope == 0:
-                return abs(self.Posy - self.mline_intercept) < tolerance
-            else:
-                expected_y = self.mline_slope * self.Posx + self.mline_intercept
-                return abs(self.Posy - expected_y) < tolerance
-
-        # Transiciones de estado
-        if self.state == 'GO_TO_GOAL':
-            if obstacle_in_front:
-                self.state = 'FOLLOW_WALL'
-                self.last_follow_wall_time = time.time()
-                self.get_logger().info('Cambio a FOLLOW_WALL (Bug2)')
-        elif self.state == 'FOLLOW_WALL':
-            cond_time = time.time() - self.last_follow_wall_time > 2.0
-            if front_clear and is_on_mline() and cond_time:
-                self.state = 'GO_TO_GOAL'
-                self.get_logger().info('Regreso a GO_TO_GOAL (Bug2)')
-
-    def timer_callback(self):
-        if self.final_goal_reached or self.goal is None:
-            self.stop_robot()
+        if not self.can_change_state:
             return
 
         if self.state == 'GO_TO_GOAL':
-            self.go_to_goal_pd()
-        elif self.state == 'FOLLOW_WALL':
-            self.basic_wall_follow_step()
+            if dist_wall < 0.5:
+                self.state = 'FOLLOW_WALL'
+                self.last_state_change_time = self.get_clock().now()
 
-    def go_to_goal_pd(self):
+                self.get_logger().info("estado: FOLLOW_WALL")
+        elif self.state == 'FOLLOW_WALL':
+            if self.is_on_mline():
+                self.state = 'GO_TO_GOAL'
+                self.last_state_change_time = self.get_clock().now()
+                self.get_logger().info("estado: GO_TO_GOAL")
+
+
+
+    def timer_callback(self):
+        if self.final_goal_reached or self.goal is None:
+            return
+        if self.state == 'GO_TO_GOAL':
+            self.go_to_goal()
+        elif self.state == 'FOLLOW_WALL':
+            self.wall_follower()
+        
+    
+
+    def go_to_goal(self):
         gx, gy = self.goal
         dx = gx - self.Posx
         dy = gy - self.Posy
@@ -158,6 +161,7 @@ class Controller(Node):
         w = max(min(w, 1.0), -1.0)
 
         # --- Producto escalar para detectar cruce del objetivo ---
+    
         dx_prev = gx - self.prev_Posx
         dy_prev = gy - self.prev_Posy
         dx_now = gx - self.Posx
@@ -183,7 +187,6 @@ class Controller(Node):
             msg = Bool()
             msg.data = True
             self.pub_next_goal.publish(msg)
-            self.goal = None  # Esperar siguiente objetivo
             self.last_goal_time = now
 
         # Publicar comando
@@ -198,54 +201,72 @@ class Controller(Node):
         self.prev_Posx = self.Posx
         self.prev_Posy = self.Posy
 
-    def basic_wall_follow_step(self):
-        desired_distance = 0.7
-        max_linear  = 0.2
-        max_angular = 2.0
-
-        msg = self.lidar_msg
-        if msg is None or not self.latest_ranges:
-            self.stop_robot()
-            return
-        ranges = np.array(self.latest_ranges)
-
-        def r(angle_deg):
-            ang = math.radians(angle_deg)
-            idx = int((ang - msg.angle_min) / msg.angle_increment)
-            if 0 <= idx < len(ranges):
-                v = ranges[idx]
-                return v if not (math.isnan(v) or math.isinf(v)) else float('inf')
-            return float('inf')
-
-        front       = r(0)
-        left        = np.mean([r(a) for a in range(85, 95)])
-        left_corner = np.mean([r(a) for a in range(40, 45)])
+    
+    def wall_follower(self):
+        dist_right = self.get_distance_at_angle(-90)
+        dist_right_45 = self.get_distance_at_angle(-45)
+        dist_right_side = np.mean([dist_right, dist_right_45])
+        dist_front = self.get_distance_at_angle(0)
+        dist_front_5 = self.get_distance_at_angle(-15)
+        dist_front_mean = np.mean([dist_front, dist_front_5])
 
         twist = Twist()
-        if front < 0.8:
-            twist.linear.x  = 0.0
-            twist.angular.z = -max_angular
-        elif left < desired_distance:
-            if left_corner < desired_distance / 2:
-                twist.linear.x  = max_linear
-                twist.angular.z = -max_angular / 2
-            else:
-                twist.linear.x  = max_linear
-                twist.angular.z = 0.0
-        else:
-            twist.linear.x  = max_linear / 2
-            twist.angular.z = max_angular / 2
 
+        if dist_front_mean > self.threshold_front:
+            error = dist_right_side - self.wall_desired
+            turn_rate = -error * self.kp
+            twist.linear.x = self.linear_velocity
+            twist.angular.z = turn_rate
+
+            # Diagnóstico de giro
+            # self.get_logger().info(f"Error: {error}")
+        else:
+            # Obstáculo al frente, detener avance y girar a la izquierda
+            twist.linear.x = 0.0
+            twist.angular.z = self.max_angular
+            self.get_logger().info("Frente")
+
+        # Publicar comando final
         self.pub_cmd_vel.publish(twist)
 
-    def stop_robot(self):
-        self.pub_cmd_vel.publish(Twist())
+    def get_distance_at_angle(self, angle_deg):
+        angle_rad = math.radians(angle_deg) % (2 * math.pi)
+        index = int((angle_rad - self.lidar_msg.angle_min) / self.lidar_msg.angle_increment)
+        if 0 <= index < len(self.lidar_msg.ranges):
+            value = self.lidar_msg.ranges[index]
+            if not math.isnan(value) and not math.isinf(value):
+                return value
+        return 2.0
+    
+    def is_on_mline(self, tolerance=0.4):
+        if self.mline_slope is None:
+            return False
+
+        if self.mline_slope == float('inf'):
+            error = abs(self.Posx - self.mline_intercept)
+        elif self.mline_slope == 0:
+            error = abs(self.Posy - self.mline_intercept)
+        else:
+            expected_y = self.mline_slope * self.Posx + self.mline_intercept
+            error = abs(self.Posy - expected_y)
+
+        # Imprimir el error actual con respecto a la línea
+        self.get_logger().info(f"M-line error: {error:.3f}")
+
+        return error < tolerance
+    
+    def can_change_state(self):
+        now = self.get_clock().now()
+        elapsed = (now - self.last_state_change_time).nanoseconds / 1e9
+        return elapsed > self.min_state_duration
+
+
 
     def print_success(self, msg):
         GREEN = '\033[92m'
         RESET = '\033[0m'
         self.get_logger().info(f'{GREEN}{msg}{RESET}')
-
+        
 def main(args=None):
     rclpy.init(args=args)
     node = Controller()

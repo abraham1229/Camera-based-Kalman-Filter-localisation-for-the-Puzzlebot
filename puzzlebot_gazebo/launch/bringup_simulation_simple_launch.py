@@ -16,7 +16,7 @@ def generate_launch_description():
 
     # General Gazebo settings
     pause = 'false'           # Start Gazebo in paused state
-    verbosity = '4'           # Gazebo log verbosity level
+    verbosity = '0'           # Gazebo log verbosity level
     use_sim_time = 'true'     # Enable use of simulated clock (for ROS time sync)
 
     # Robot configurations (can be extended or loaded from a JSON file in future)
@@ -24,7 +24,7 @@ def generate_launch_description():
         {
             'name': '',
             'type': 'puzzlebot_jetson_lidar_ed',
-            'x': 0.0, 'y': -0.4, 'yaw': 0.0,
+            'x': 0.0, 'y': 0.0, 'yaw': 0.0,
             'lidar_frame': 'laser_frame',
             'camera_frame': 'camera_link_optical',
             'tof_frame': 'tof_link'

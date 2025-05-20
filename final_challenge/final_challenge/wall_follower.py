@@ -53,7 +53,7 @@ class WallFollowerLidar(Node):
             # Obstáculo al frente, detener avance y girar a la izquierda
             twist.linear.x = 0.0
             twist.angular.z = self.max_angular
-            self.get_logger().info("Obstáculo al frente → Giro a la izquierda")
+            self.get_logger().info("Frente")
 
         # Publicar comando final
         self.publisher_.publish(twist)
