@@ -7,6 +7,7 @@ from sensor_msgs.msg import LaserScan
 from std_msgs.msg import Bool
 import math
 import transforms3d
+import numpy as np
 
 class Controller(Node):
     def __init__(self):
@@ -30,7 +31,15 @@ class Controller(Node):
 
         # Variables para Bug algorithm
         self.lidar_msg = None
+        self.kp = 1.0
+        self.wall_desired = 0.5      # distancia deseada a la pared derecha
+        self.linear_velocity = 0.4
+        self.max_angular = 2.0
+        self.threshold_front = 0.6   # si algo está más cerca, se considera obstáculo
+
+        # Estado de la trayectoria
         self.state = 'GO_TO_GOAL'
+
 
         # Publicadores y suscriptores
         qos = rclpy.qos.qos_profile_sensor_data
@@ -80,6 +89,8 @@ class Controller(Node):
             return
         if self.state == 'GO_TO_GOAL':
             self.go_to_goal()
+        elif self.state == 'FOLLOW_WALL':
+            self.wall_follower()
         
     
 
@@ -144,6 +155,34 @@ class Controller(Node):
         self.prev_error_theta = error_theta
         self.prev_Posx = self.Posx
         self.prev_Posy = self.Posy
+
+    
+    def wall_follower(self):
+        dist_right = self.get_distance_at_angle(-90)
+        dist_right_45 = self.get_distance_at_angle(-45)
+        dist_right_side = np.mean([dist_right, dist_right_45])
+        dist_front = self.get_distance_at_angle(0)
+        dist_front_5 = self.get_distance_at_angle(-15)
+        dist_front_mean = np.mean([dist_front, dist_front_5])
+
+        twist = Twist()
+
+        if dist_front_mean > self.threshold_front:
+            error = dist_right_side - self.wall_desired
+            turn_rate = -error * self.kp
+            twist.linear.x = self.linear_velocity
+            twist.angular.z = turn_rate
+
+            # Diagnóstico de giro
+            self.get_logger().info(f"Error: {error}")
+        else:
+            # Obstáculo al frente, detener avance y girar a la izquierda
+            twist.linear.x = 0.0
+            twist.angular.z = self.max_angular
+            self.get_logger().info("Frente")
+
+        # Publicar comando final
+        self.pub_cmd_vel.publish(twist)
 
     def get_distance_at_angle(self, angle_deg):
         angle_rad = math.radians(angle_deg) % (2 * math.pi)
