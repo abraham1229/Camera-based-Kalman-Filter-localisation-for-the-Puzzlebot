@@ -78,6 +78,12 @@ class Controller(Node):
     def timer_callback(self):
         if self.final_goal_reached or self.goal is None:
             return
+        if self.state == 'GO_TO_GOAL':
+            self.go_to_goal()
+        
+    
+
+    def go_to_goal(self):
         gx, gy = self.goal
         dx = gx - self.Posx
         dy = gy - self.Posy
