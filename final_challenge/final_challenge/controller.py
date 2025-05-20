@@ -36,11 +36,13 @@ class Controller(Node):
         self.linear_velocity = 0.4
         self.max_angular = 2.0
         self.threshold_front = 0.6   # si algo está más cerca, se considera obstáculo
-        # Bug 0
+        # Bug 2
         self.initial_point_x = 0.0
         self.initial_point_y = 0.0
         self.mline_slope = None
         self.mline_intercept = None
+        self.last_state_change_time = self.get_clock().now()
+        self.min_state_duration = 0.3  # segundos
 
         # Estado de la trayectoria
         self.state = 'GO_TO_GOAL'
@@ -75,8 +77,6 @@ class Controller(Node):
             self.print_success('¡Meta final alcanzada!')
             return
         
-        
-        self.print_success(f'Goal: {self.goal}')
         new_goal = (msg.x_goal, msg.y_goal)
         if new_goal == self.goal:
             return
@@ -113,13 +113,19 @@ class Controller(Node):
 
         dist_wall = min(dist_front,dist_45)
 
+        if not self.can_change_state:
+            return
+
         if self.state == 'GO_TO_GOAL':
             if dist_wall < 0.5:
                 self.state = 'FOLLOW_WALL'
+                self.last_state_change_time = self.get_clock().now()
+
                 self.get_logger().info("estado: FOLLOW_WALL")
         elif self.state == 'FOLLOW_WALL':
             if self.is_on_mline():
                 self.state = 'GO_TO_GOAL'
+                self.last_state_change_time = self.get_clock().now()
                 self.get_logger().info("estado: GO_TO_GOAL")
 
 
@@ -248,6 +254,12 @@ class Controller(Node):
         self.get_logger().info(f"M-line error: {error:.3f}")
 
         return error < tolerance
+    
+    def can_change_state(self):
+        now = self.get_clock().now()
+        elapsed = (now - self.last_state_change_time).nanoseconds / 1e9
+        return elapsed > self.min_state_duration
+
 
 
     def print_success(self, msg):
