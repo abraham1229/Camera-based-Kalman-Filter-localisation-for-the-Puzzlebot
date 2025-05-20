@@ -36,6 +36,11 @@ class Controller(Node):
         self.linear_velocity = 0.4
         self.max_angular = 2.0
         self.threshold_front = 0.6   # si algo está más cerca, se considera obstáculo
+        # Bug 0
+        self.initial_point_x = 0.0
+        self.initial_point_y = 0.0
+        self.mline_slope = None
+        self.mline_intercept = None
 
         # Estado de la trayectoria
         self.state = 'GO_TO_GOAL'
@@ -66,12 +71,31 @@ class Controller(Node):
     def callback_goal(self, msg: Goal):
         if msg is None:
             return
+        
+        if (msg.x_goal, msg.y_goal) == self.goal:
+            return
+        
         # Detectar mensaje especial de fin (inf)
         if math.isinf(msg.x_goal) or math.isinf(msg.y_goal):
             self.final_goal_reached = True
             self.print_success('¡Meta final alcanzada!')
             return
+        
         self.goal = (msg.x_goal, msg.y_goal)
+
+        # Guardar linea para bug2
+        self.initial_point_x = self.Posx
+        self.initial_point_y = self.Posy
+
+        x1, y1 = self.initial_point_x, self.initial_point_y
+        x2, y2 = self.goal
+
+        if abs(x2 - x1) > 1e-6:
+            self.mline_slope = (y2 - y1) / (x2 - x1)
+            self.mline_intercept = y1 - self.mline_slope * x1
+        else:
+            self.mline_slope = float('inf')     # Línea vertical
+            self.mline_intercept = x1   
 
     def callback_lidar(self, msg: LaserScan):
         self.lidar_msg = msg
@@ -81,10 +105,15 @@ class Controller(Node):
 
         dist_wall = min(dist_front,dist_45)
 
-        if dist_wall < 0.5:
-            self.state = 'FOLLOW_WALL'
-        else:
-            self.state = 'GO_TO_GOAL'
+        if self.state == 'GO_TO_GOAL':
+            if dist_wall < 0.5:
+                self.state = 'FOLLOW_WALL'
+                self.get_logger().info("estado: FOLLOW_WALL")
+        elif self.state == 'FOLLOW_WALL':
+            if self.is_on_mline():
+                self.state = 'GO_TO_GOAL'
+                self.get_logger().info("estado: GO_TO_GOAL")
+
 
 
     def timer_callback(self):
@@ -177,7 +206,7 @@ class Controller(Node):
             twist.angular.z = turn_rate
 
             # Diagnóstico de giro
-            self.get_logger().info(f"Error: {error}")
+            # self.get_logger().info(f"Error: {error}")
         else:
             # Obstáculo al frente, detener avance y girar a la izquierda
             twist.linear.x = 0.0
@@ -194,7 +223,25 @@ class Controller(Node):
             value = self.lidar_msg.ranges[index]
             if not math.isnan(value) and not math.isinf(value):
                 return value
-        return float('inf')
+        return 2.0
+    
+    def is_on_mline(self, tolerance=0.4):
+        if self.mline_slope is None:
+            return False
+
+        if self.mline_slope == float('inf'):
+            error = abs(self.Posx - self.mline_intercept)
+        elif self.mline_slope == 0:
+            error = abs(self.Posy - self.mline_intercept)
+        else:
+            expected_y = self.mline_slope * self.Posx + self.mline_intercept
+            error = abs(self.Posy - expected_y)
+
+        # Imprimir el error actual con respecto a la línea
+        self.get_logger().info(f"M-line error: {error:.3f}")
+
+        return error < tolerance
+
 
     def print_success(self, msg):
         GREEN = '\033[92m'
