@@ -15,7 +15,7 @@ def generate_launch_description():
     world = 'obstacle_avoidance_4.world'
 
     # General Gazebo settings
-    pause = 'true'           # Start Gazebo in paused state
+    pause = 'false'           # Start Gazebo in paused state
     verbosity = '4'           # Gazebo log verbosity level
     use_sim_time = 'true'     # Enable use of simulated clock (for ROS time sync)
 
@@ -24,7 +24,7 @@ def generate_launch_description():
         {
             'name': '',
             'type': 'puzzlebot_jetson_lidar_ed',
-            'x': 0.0, 'y': 0.0, 'yaw': 0.0,
+            'x': 0.0, 'y': -0.4, 'yaw': 0.0,
             'lidar_frame': 'laser_frame',
             'camera_frame': 'camera_link_optical',
             'tof_frame': 'tof_link'
