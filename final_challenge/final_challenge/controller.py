@@ -69,24 +69,32 @@ class Controller(Node):
         self.Postheta = yaw
 
     def callback_goal(self, msg: Goal):
-        if msg is None:
-            return
-        
-        if (msg.x_goal, msg.y_goal) == self.goal:
-            return
-        
         # Detectar mensaje especial de fin (inf)
         if math.isinf(msg.x_goal) or math.isinf(msg.y_goal):
             self.final_goal_reached = True
             self.print_success('¡Meta final alcanzada!')
             return
         
-        self.goal = (msg.x_goal, msg.y_goal)
+        
+        self.print_success(f'Goal: {self.goal}')
+        new_goal = (msg.x_goal, msg.y_goal)
+        if new_goal == self.goal:
+            return
 
-        # Guardar linea para bug2
+        # Asignar nuevo goal
+        self.goal = new_goal
+        self.print_success(f'x {msg.x_goal}  y {msg.y_goal} ')
+        self.print_success('¡Meta siguiente!')
+
+        # Evitar recalcular M-line si el nuevo goal está demasiado cerca del robot
+        dist_to_goal = math.hypot(self.goal[0] - self.Posx, self.goal[1] - self.Posy)
+        if dist_to_goal < 0.1:
+            self.get_logger().info("Meta demasiado cercana, no se recalcula M-line")
+            return
+
+        # Guardar punto inicial y M-line
         self.initial_point_x = self.Posx
         self.initial_point_y = self.Posy
-
         x1, y1 = self.initial_point_x, self.initial_point_y
         x2, y2 = self.goal
 
@@ -94,8 +102,8 @@ class Controller(Node):
             self.mline_slope = (y2 - y1) / (x2 - x1)
             self.mline_intercept = y1 - self.mline_slope * x1
         else:
-            self.mline_slope = float('inf')     # Línea vertical
-            self.mline_intercept = x1   
+            self.mline_slope = float('inf')
+            self.mline_intercept = x1  
 
     def callback_lidar(self, msg: LaserScan):
         self.lidar_msg = msg
@@ -173,7 +181,6 @@ class Controller(Node):
             msg = Bool()
             msg.data = True
             self.pub_next_goal.publish(msg)
-            self.goal = None  # Esperar siguiente objetivo
             self.last_goal_time = now
 
         # Publicar comando
