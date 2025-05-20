@@ -3,6 +3,7 @@ from rclpy.node import Node
 from msgs_clase.msg import Goal          # type: ignore
 from geometry_msgs.msg import Twist
 from nav_msgs.msg import Odometry
+from sensor_msgs.msg import LaserScan
 from std_msgs.msg import Bool
 import math
 import transforms3d
@@ -17,7 +18,7 @@ class Controller(Node):
         self.kp_angular = 1.5
         self.kd_angular = 0.3
 
-        # Estado
+        # Estado del path follower
         self.goal = None
         self.Posx = self.Posy = self.Postheta = 0.0
         self.prev_error_dist = 0.0
@@ -27,12 +28,17 @@ class Controller(Node):
         self.final_goal_reached = False
         self.last_goal_time = self.get_clock().now()
 
-        # Publicador y suscriptores
+        # Variables para Bug algorithm
+        self.lidar_msg = None
+        self.state = 'GO_TO_GOAL'
+
+        # Publicadores y suscriptores
         qos = rclpy.qos.qos_profile_sensor_data
         self.pub_cmd_vel = self.create_publisher(Twist, 'cmd_vel', 10)
         self.pub_next_goal = self.create_publisher(Bool, 'next_goal', 10)
         self.create_subscription(Odometry, 'odometria', self.callback_odometry, qos)
         self.create_subscription(Goal, 'path_generator', self.callback_goal, qos)
+        self.create_subscription(LaserScan, 'scan', self.callback_lidar, qos)
         self.timer_period = 0.1
         self.timer = self.create_timer(self.timer_period, self.timer_callback)
 
@@ -57,6 +63,17 @@ class Controller(Node):
             self.print_success('¡Meta final alcanzada!')
             return
         self.goal = (msg.x_goal, msg.y_goal)
+
+    def callback_lidar(self, msg: LaserScan):
+        self.lidar_msg = msg
+
+        dist_front = self.get_distance_at_angle(0)
+
+        if dist_front < 0.5:
+            self.state = 'FOLLOW_WALL'
+        else:
+            self.state = 'GO_TO_GOAL'
+
 
     def timer_callback(self):
         if self.final_goal_reached or self.goal is None:
@@ -121,6 +138,15 @@ class Controller(Node):
         self.prev_error_theta = error_theta
         self.prev_Posx = self.Posx
         self.prev_Posy = self.Posy
+
+    def get_distance_at_angle(self, angle_deg):
+        angle_rad = math.radians(angle_deg) % (2 * math.pi)
+        index = int((angle_rad - self.lidar_msg.angle_min) / self.lidar_msg.angle_increment)
+        if 0 <= index < len(self.lidar_msg.ranges):
+            value = self.lidar_msg.ranges[index]
+            if not math.isnan(value) and not math.isinf(value):
+                return value
+        return float('inf')
 
     def print_success(self, msg):
         GREEN = '\033[92m'
