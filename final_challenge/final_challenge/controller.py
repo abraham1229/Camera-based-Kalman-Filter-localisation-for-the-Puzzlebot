@@ -77,8 +77,11 @@ class Controller(Node):
         self.lidar_msg = msg
 
         dist_front = self.get_distance_at_angle(0)
+        dist_45 = self.get_distance_at_angle(-45)
 
-        if dist_front < 0.5:
+        dist_wall = min(dist_front,dist_45)
+
+        if dist_wall < 0.5:
             self.state = 'FOLLOW_WALL'
         else:
             self.state = 'GO_TO_GOAL'
