@@ -57,6 +57,11 @@ def generate_launch_description():
                               'use_linear_model': False,
                           }]
                           )
+  
+  aruco_node = Node(name="aruco",
+                          package='final_challenge',
+                          executable='aruco_enhanced',
+                          )
 
 
   # Ensure full shutdown when SIGINT (Ctrl+C) is received
@@ -73,6 +78,7 @@ def generate_launch_description():
       controller_node,
       odometry_node,
       path_generator_node,
+      aruco_node,
       shutdown_log,
       ])
 

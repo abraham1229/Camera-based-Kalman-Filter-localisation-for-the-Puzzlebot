@@ -129,9 +129,14 @@ class Odometry_Node(Node):
                 landmark = self.latest_landmark_pos # [x, y]
                 self.kalman_filter(z, landmark)
                 self.have_new_aruco = False
-
-            #Update Robot position
-            self.posX, self.posY, self.theta = self.s
+                self.posX, self.posY, self.theta = self.s
+            else:
+                # Update the robot's position using the linear model
+                self.posX, self.posY, self.theta = self.s
+            
+            self.get_logger().info(
+                    f"After Kalman: posX={self.s[0]:.3f}, posY={self.s[1]:.3f}, theta={math.degrees(self.s[2]):.2f}°"
+                )
             # Update the covariance in the odometry message
             odom_msg.pose.covariance = [
             self.Sigma[0, 0], self.Sigma[0, 1], 0.0, 0.0, 0.0, self.Sigma[0, 2], # Row 1
@@ -221,11 +226,11 @@ class Odometry_Node(Node):
         self.latest_aruco_id = marker_id
         self.have_new_aruco = True
         
-        self.get_logger().info(
-            f"Received ArUco marker {marker_id}: range={range_to_marker:.2f}m, "
-            f"bearing={math.degrees(bearing_to_marker):.1f}°, "
-            f"position=({marker_x}, {marker_y})"
-        )
+        #self.get_logger().info(
+        #    f"Received ArUco marker {marker_id}: range={range_to_marker:.2f}m, "
+        #    f"bearing={math.degrees(bearing_to_marker):.1f}°, "
+        #    f"position=({marker_x}, {marker_y})"
+        #)
     
     def linearized_state_update(self, s, u):
         # Linearization: Compute A_k and B_k

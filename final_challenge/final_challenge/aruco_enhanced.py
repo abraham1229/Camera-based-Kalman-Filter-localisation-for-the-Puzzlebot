@@ -7,9 +7,6 @@ import numpy as np
 import math
 from geometry_msgs.msg import PoseArray, Pose
 from std_msgs.msg import Float32MultiArray
-from geometry_msgs.msg import TransformStamped
-from tf2_ros import TransformBroadcaster
-import tf2_ros
 
 class ArucoDetectorNode(Node):
     def __init__(self):
@@ -18,14 +15,8 @@ class ArucoDetectorNode(Node):
         # Subscribe to camera image
         self.subscription = self.create_subscription(
             Image,
-            '/image_raw',  # '/video_source/raw'
+            '/camera',
             self.listener_callback,
-            10)
-        
-        # Create publishers for ArUco data
-        self.marker_pose_publisher = self.create_publisher(
-            PoseArray,
-            'aruco_poses',
             10)
             
         # Publisher specifically for odometry node
@@ -38,43 +29,31 @@ class ArucoDetectorNode(Node):
         self.bridge = CvBridge()
         
         # ArUco setup
-        self.markerLength = 0.09  # 9cm marker size
+        self.markerLength = 0.14  # 9cm marker size
         self.dictionary = cv.aruco.getPredefinedDictionary(cv.aruco.DICT_4X4_50)
         self.parameters = cv.aruco.DetectorParameters()
         self.detector = cv.aruco.ArucoDetector(self.dictionary, self.parameters)
         
-        # Camera matrix and distortion coefficients
-        # These are placeholder values - for accurate measurements you should calibrate your camera
+        # Camera matrix and distortion coefficients for Gazebo (no distortion)
+        # These values should match your Gazebo camera plugin settings
         self.camera_matrix = np.array([
-            [800.0, 0.0, 320.0],
-            [0.0, 800.0, 240.0],
+            [528.4337, 0.0, 320.0],   # fx, 0, cx
+            [0.0, 528.4338, 240.0],   # 0, fy, cy
             [0.0, 0.0, 1.0]
         ])
-        self.dist_coeffs = np.zeros((5, 1))
+        self.dist_coeffs = np.zeros((5, 1))  # No distortion in Gazebo
         
         # Known ArUco marker positions in the world (x, y coordinates)
         # Fill in the actual positions of your markers in the environment
         self.marker_positions = {
-            0: (1.0, 0.0),    # Marker ID 0 at position (1.0, 0.0)
-            1: (0.0, 1.0),    # Marker ID 1 at position (0.0, 1.0)
-            2: (-1.0, 0.0),   # etc.
-            3: (0.0, -1.0),
+            0: (2.5 ,-0.5),    # Marker ID 0 at position (1.0, 0.0)
+            1: (2.5 , 2.5),    # Marker ID 1 at position (0.0, 1.0)
+            2: (-0.5, 2.5),   # etc.
+            3: (-0.5,-0.5),
+            4: (1.0 , 1.0),
             # Add more markers as needed
         }
-        
-        # Declare parameters for camera settings
-        self.declare_parameter('camera_fx', 800.0)
-        self.declare_parameter('camera_fy', 800.0)
-        self.declare_parameter('camera_cx', 320.0)
-        self.declare_parameter('camera_cy', 240.0)
-        
-        # Update camera matrix from parameters
-        self.camera_matrix[0, 0] = self.get_parameter('camera_fx').value
-        self.camera_matrix[1, 1] = self.get_parameter('camera_fy').value
-        self.camera_matrix[0, 2] = self.get_parameter('camera_cx').value
-        self.camera_matrix[1, 2] = self.get_parameter('camera_cy').value
-        
-        self.get_logger().info('ArucoDetectorNode started, waiting for images on /image_raw')
+        self.get_logger().info('ArucoDetectorNode started')
 
     def listener_callback(self, msg):
         try:
@@ -85,11 +64,6 @@ class ArucoDetectorNode(Node):
 
         # Detect ArUco markers
         markerCorners, markerIds, rejectedCandidates = self.detector.detectMarkers(img)
-
-        # Create pose array message
-        pose_array_msg = PoseArray()
-        pose_array_msg.header.stamp = self.get_clock().now().to_msg()
-        pose_array_msg.header.frame_id = "camera_frame"  # Set appropriate frame
 
         if markerIds is not None and len(markerCorners) > 0:
             # Draw detected markers on image
@@ -167,34 +141,6 @@ class ArucoDetectorNode(Node):
                     )
                 else:
                     self.get_logger().warn(f"Detected marker {marker_id} but its position is unknown")
-                
-                # Create a pose message for this marker and add to array
-                marker_pose = Pose()
-                marker_pose.position.x = tvecs[0][0][0]
-                marker_pose.position.y = tvecs[0][0][1]
-                marker_pose.position.z = tvecs[0][0][2]
-                
-                # Convert rotation vector to quaternion
-                rot_matrix, _ = cv.Rodrigues(rvecs[0])
-                rot_matrix_3x3 = np.eye(4)
-                rot_matrix_3x3[:3, :3] = rot_matrix
-                
-                # Extract quaternion
-                q_x = rot_matrix_3x3[0, 0]
-                q_y = rot_matrix_3x3[1, 1]
-                q_z = rot_matrix_3x3[2, 2]
-                q_w = math.sqrt(1 + q_x + q_y + q_z) / 2
-                
-                marker_pose.orientation.w = q_w
-                marker_pose.orientation.x = (rot_matrix_3x3[2, 1] - rot_matrix_3x3[1, 2]) / (4 * q_w)
-                marker_pose.orientation.y = (rot_matrix_3x3[0, 2] - rot_matrix_3x3[2, 0]) / (4 * q_w)
-                marker_pose.orientation.z = (rot_matrix_3x3[1, 0] - rot_matrix_3x3[0, 1]) / (4 * q_w)
-                
-                pose_array_msg.poses.append(marker_pose)
-
-        # Publish detected marker poses
-        if len(pose_array_msg.poses) > 0:
-            self.marker_pose_publisher.publish(pose_array_msg)
 
         # Display the image with detected markers
         cv.imshow("ArUco Detection", img)

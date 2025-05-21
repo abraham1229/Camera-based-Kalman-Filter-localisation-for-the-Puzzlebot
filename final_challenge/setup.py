@@ -35,6 +35,7 @@ setup(
             'controller = final_challenge.controller:main',
             'path_generator = final_challenge.path_generator:main',
             'aruco_first = final_challenge.aruco_first:main',
+            'aruco_enhanced = final_challenge.aruco_enhanced:main',
         ],
     },
 )
