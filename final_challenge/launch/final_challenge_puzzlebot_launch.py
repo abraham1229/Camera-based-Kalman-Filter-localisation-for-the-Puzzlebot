@@ -29,11 +29,15 @@ def generate_launch_description():
             'init_pose_x': init_x,
             'init_pose_y': init_y,
             'init_pose_yaw': init_yaw,
-            'num_goals': 2,
-            'x_goal_1': 0.0,
-            'y_goal_1': -3.0,
-            'x_goal_2': 1.5,
-            'y_goal_2': 1.0,
+            'num_goals': 4,
+            'x_goal_1': 1.0,
+            'y_goal_1': -2.0,
+            'x_goal_2': 4.0,
+            'y_goal_2': -1.0,
+            'x_goal_3': 2.0,
+            'y_goal_3': 2.0,
+            'x_goal_4': 0.0,
+            'y_goal_4': 0.0
         }]
   )
     

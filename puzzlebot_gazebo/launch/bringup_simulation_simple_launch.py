@@ -12,7 +12,7 @@ def generate_launch_description():
     # -----------------------------------------------------------------------------
     
     # Name of the Gazebo world to load
-    world = 'obstacle_avoidance_4.world'
+    world = 'experiment_wall.sdf'
 
     # General Gazebo settings
     pause = 'false'           # Start Gazebo in paused state
