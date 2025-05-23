@@ -33,8 +33,8 @@ class Controller(Node):
         self.lidar_msg = None
         self.kp = 1.0
         self.wall_desired = 0.5      # distancia deseada a la pared derecha
-        self.linear_velocity = 0.4
-        self.max_angular = 2.0
+        self.linear_velocity = 0.3
+        self.max_angular = 1.0
         self.threshold_front = 0.6   # si algo está más cerca, se considera obstáculo
         # Bug 2
         self.initial_point_x = 0.0
@@ -42,7 +42,8 @@ class Controller(Node):
         self.mline_slope = None
         self.mline_intercept = None
         self.last_state_change_time = self.get_clock().now()
-        self.min_state_duration = 0.3  # segundos
+        self.min_state_duration = 1.0 # segundos
+        self.default_distance = 2.5
 
         # Estado de la trayectoria
         self.state = 'GO_TO_GOAL'
@@ -110,23 +111,21 @@ class Controller(Node):
 
         dist_front = self.get_distance_at_angle(0)
         dist_45 = self.get_distance_at_angle(-45)
+        dist_15 = self.get_distance_at_angle(-15)
 
-        dist_wall = min(dist_front,dist_45)
-
-        if not self.can_change_state:
-            return
+        dist_wall = min(dist_front,dist_45, dist_15)
 
         if self.state == 'GO_TO_GOAL':
-            if dist_wall < 0.5:
+            if dist_wall < self.threshold_front + 0.1:
                 self.state = 'FOLLOW_WALL'
                 self.last_state_change_time = self.get_clock().now()
-
                 self.get_logger().info("estado: FOLLOW_WALL")
         elif self.state == 'FOLLOW_WALL':
-            if self.is_on_mline():
+            if self.can_change_state() and self.is_on_mline():
                 self.state = 'GO_TO_GOAL'
                 self.last_state_change_time = self.get_clock().now()
                 self.get_logger().info("estado: GO_TO_GOAL")
+
 
 
 
@@ -206,9 +205,7 @@ class Controller(Node):
         dist_right = self.get_distance_at_angle(-90)
         dist_right_45 = self.get_distance_at_angle(-45)
         dist_right_side = np.mean([dist_right, dist_right_45])
-        dist_front = self.get_distance_at_angle(0)
-        dist_front_5 = self.get_distance_at_angle(-15)
-        dist_front_mean = np.mean([dist_front, dist_front_5])
+        dist_front_mean = self.get_distance_at_angle_range(-15,15)
 
         twist = Twist()
 
@@ -219,7 +216,7 @@ class Controller(Node):
             twist.angular.z = turn_rate
 
             # Diagnóstico de giro
-            # self.get_logger().info(f"Error: {error}")
+            self.get_logger().info(f"Error: {error}")
         else:
             # Obstáculo al frente, detener avance y girar a la izquierda
             twist.linear.x = 0.0
@@ -236,7 +233,31 @@ class Controller(Node):
             value = self.lidar_msg.ranges[index]
             if not math.isnan(value) and not math.isinf(value):
                 return value
-        return 2.0
+        return self.default_distance
+    
+    def get_distance_at_angle_range(self, angle_start_deg, angle_end_deg):
+        if self.lidar_msg is None:
+            return self.default_distance
+
+        angle_start_rad = math.radians(angle_start_deg) % (2 * math.pi)
+        angle_end_rad = math.radians(angle_end_deg) % (2 * math.pi)
+
+        # Asegurar que el inicio sea menor que el fin en ángulos
+        if angle_end_rad < angle_start_rad:
+            angle_end_rad += 2 * math.pi
+
+        min_dist = float('inf')
+
+        angle = self.lidar_msg.angle_min
+        for i, r in enumerate(self.lidar_msg.ranges):
+            if not math.isnan(r) and not math.isinf(r):
+                current_angle = angle % (2 * math.pi)
+                if angle_start_rad <= current_angle <= angle_end_rad:
+                    min_dist = min(min_dist, r)
+            angle += self.lidar_msg.angle_increment
+
+        return min_dist if min_dist != float('inf') else self.default_distance
+
     
     def is_on_mline(self, tolerance=0.4):
         if self.mline_slope is None:
