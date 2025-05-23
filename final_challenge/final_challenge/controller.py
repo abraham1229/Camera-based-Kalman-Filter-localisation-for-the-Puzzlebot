@@ -32,10 +32,10 @@ class Controller(Node):
         # Variables para Bug algorithm
         self.lidar_msg = None
         self.kp = 1.0
-        self.wall_desired = 0.5      # distancia deseada a la pared derecha
-        self.linear_velocity = 0.4
-        self.max_angular = 2.0
-        self.threshold_front = 0.6   # si algo está más cerca, se considera obstáculo
+        self.wall_desired = 0.6      # distancia deseada a la pared derecha
+        self.linear_velocity = 0.3
+        self.max_angular = 1.0
+        self.threshold_front = 0.8   # si algo está más cerca, se considera obstáculo
         # Bug 2
         self.initial_point_x = 0.0
         self.initial_point_y = 0.0
@@ -114,21 +114,17 @@ class Controller(Node):
 
         dist_wall = min(dist_front,dist_45, dist_15)
 
-        if not self.can_change_state():
-            self.print_success('Tiemp no logrados')
-            return
-
         if self.state == 'GO_TO_GOAL':
-            if dist_wall < 0.7:
+            if dist_wall < self.threshold_front + 0.1:
                 self.state = 'FOLLOW_WALL'
                 self.last_state_change_time = self.get_clock().now()
-
                 self.get_logger().info("estado: FOLLOW_WALL")
         elif self.state == 'FOLLOW_WALL':
-            if self.is_on_mline():
+            if self.can_change_state() and self.is_on_mline():
                 self.state = 'GO_TO_GOAL'
                 self.last_state_change_time = self.get_clock().now()
                 self.get_logger().info("estado: GO_TO_GOAL")
+
 
 
 
