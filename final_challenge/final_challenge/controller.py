@@ -42,7 +42,7 @@ class Controller(Node):
         self.mline_slope = None
         self.mline_intercept = None
         self.last_state_change_time = self.get_clock().now()
-        self.min_state_duration = 0.3  # segundos
+        self.min_state_duration = 1.0 # segundos
 
         # Estado de la trayectoria
         self.state = 'GO_TO_GOAL'
@@ -110,14 +110,16 @@ class Controller(Node):
 
         dist_front = self.get_distance_at_angle(0)
         dist_45 = self.get_distance_at_angle(-45)
+        dist_15 = self.get_distance_at_angle(-15)
 
-        dist_wall = min(dist_front,dist_45)
+        dist_wall = min(dist_front,dist_45, dist_15)
 
-        if not self.can_change_state:
+        if not self.can_change_state():
+            self.print_success('Tiemp no logrados')
             return
 
         if self.state == 'GO_TO_GOAL':
-            if dist_wall < 0.5:
+            if dist_wall < 0.7:
                 self.state = 'FOLLOW_WALL'
                 self.last_state_change_time = self.get_clock().now()
 

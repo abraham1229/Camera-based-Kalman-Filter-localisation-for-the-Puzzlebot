@@ -1,0 +1,836 @@
+<sdf version='1.10'>
+  <world name='empty_world'>
+    <physics name='1ms' type='ignored'>
+      <max_step_size>0.001</max_step_size>
+      <real_time_factor>1</real_time_factor>
+      <real_time_update_rate>1000</real_time_update_rate>
+    </physics>
+    <plugin name='gz::sim::systems::Physics' filename='gz-sim-physics-system'/>
+    <plugin name='gz::sim::systems::UserCommands' filename='gz-sim-user-commands-system'/>
+    <plugin name='gz::sim::systems::SceneBroadcaster' filename='gz-sim-scene-broadcaster-system'/>
+    <plugin name='gz::sim::systems::Sensors' filename='gz-sim-sensors-system'>
+      <render_engine>ogre2</render_engine>
+    </plugin>
+    <gravity>0 0 -9.8000000000000007</gravity>
+    <magnetic_field>5.5644999999999998e-06 2.2875799999999999e-05 -4.2388400000000002e-05</magnetic_field>
+    <atmosphere type='adiabatic'/>
+    <scene>
+      <ambient>0.400000006 0.400000006 0.400000006 1</ambient>
+      <background>0.699999988 0.699999988 0.699999988 1</background>
+      <shadows>true</shadows>
+    </scene>
+    <model name='world_wall'>
+      <static>true</static>
+      <link name='link0'>
+        <pose>0 0 0 0 0 0</pose>
+        <visual name='visual'>
+          <geometry>
+            <mesh>
+              <uri>file:///home/abraham1229/ros2_ws/install/puzzlebot_gazebo/share/puzzlebot_gazebo/models/world_wall/meshes/world_wall1.dae</uri>
+            </mesh>
+          </geometry>
+        </visual>
+        <collision name='collision'>
+          <pose>0 0 -0.025000000000000001 0 0 0</pose>
+          <geometry>
+            <box>
+              <size>5 5 0.050000000000000003</size>
+            </box>
+          </geometry>
+          <surface>
+            <friction>
+              <ode/>
+            </friction>
+            <bounce/>
+            <contact/>
+          </surface>
+        </collision>
+        <inertial>
+          <pose>0 0 0 0 0 0</pose>
+          <mass>1</mass>
+          <inertia>
+            <ixx>1</ixx>
+            <ixy>0</ixy>
+            <ixz>0</ixz>
+            <iyy>1</iyy>
+            <iyz>0</iyz>
+            <izz>1</izz>
+          </inertia>
+        </inertial>
+        <enable_wind>false</enable_wind>
+      </link>
+      <pose>2 0 0 0 0 0</pose>
+      <self_collide>false</self_collide>
+    </model>
+    <model name='Puzzlebot_Jetson_Ed.'>
+      <link name='base_footprint'>
+        <inertial>
+          <pose>0.022271991701244821 -0.00023110904112682429 0.078598693087193403 0 0 0</pose>
+          <mass>0.70853999999999995</mass>
+          <inertia>
+            <ixx>0.0021002196727362291</ixx>
+            <ixy>3.3123363589211619e-06</ixy>
+            <ixz>-0.00056825651366431535</ixz>
+            <iyy>0.0033735950467836929</iyy>
+            <iyz>2.5402650697208109e-07</iyz>
+            <izz>0.00313898682750316</izz>
+          </inertia>
+        </inertial>
+        <collision name='base_footprint_fixed_joint_lump__base_link_collision'>
+          <pose>0 0 0.050000000000000003 0 0 0</pose>
+          <geometry>
+            <box>
+              <size>0.20000000000000001 0.16 0.050299999999999997</size>
+            </box>
+          </geometry>
+          <surface>
+            <friction>
+              <ode/>
+            </friction>
+            <bounce/>
+            <contact/>
+          </surface>
+        </collision>
+        <collision name='base_footprint_fixed_joint_lump__bracket_base_link_collision_1'>
+          <pose>0.122 0 0.076999999999999999 0 0 0</pose>
+          <geometry>
+            <box>
+              <size>0.045999999999999999 0.029999999999999999 0.044999999999999998</size>
+            </box>
+          </geometry>
+          <surface>
+            <friction>
+              <ode/>
+            </friction>
+            <bounce/>
+            <contact/>
+          </surface>
+        </collision>
+        <collision name='base_footprint_fixed_joint_lump__camera_link_collision_2'>
+          <pose>0.1241 0 0.11700000000000001 0 0 0</pose>
+          <geometry>
+            <box>
+              <size>0.0050000000000000001 0.0050000000000000001 0.0050000000000000001</size>
+            </box>
+          </geometry>
+          <surface>
+            <contact>
+              <ode/>
+            </contact>
+            <friction>
+              <ode/>
+            </friction>
+            <bounce/>
+          </surface>
+        </collision>
+        <collision name='base_footprint_fixed_joint_lump__camera_link_optical_collision_3'>
+          <pose>0.1241 0 0.11700000000000001 -1.5707963267948959 -5.5511151231257827e-17 -1.5707963267948959</pose>
+          <geometry>
+            <box>
+              <size>0.0050000000000000001 0.0050000000000000001 0.0050000000000000001</size>
+            </box>
+          </geometry>
+          <surface>
+            <friction>
+              <ode/>
+            </friction>
+            <bounce/>
+            <contact/>
+          </surface>
+        </collision>
+        <collision name='base_footprint_fixed_joint_lump__tof_link_collision_4'>
+          <pose>0.14399999999999999 0 0.072000000000000008 0 0 0</pose>
+          <geometry>
+            <box>
+              <size>0.001 0.001 0.001</size>
+            </box>
+          </geometry>
+          <surface>
+            <contact>
+              <ode/>
+            </contact>
+            <friction>
+              <ode/>
+            </friction>
+            <bounce/>
+          </surface>
+        </collision>
+        <collision name='base_footprint_fixed_joint_lump__caster_holder_link_collision_5'>
+          <pose>-0.095000000000000001 0 0.019275 0 0 0</pose>
+          <geometry>
+            <box>
+              <size>0.017500000000000002 0.023 0.01115</size>
+            </box>
+          </geometry>
+          <surface>
+            <friction>
+              <ode/>
+            </friction>
+            <bounce/>
+            <contact/>
+          </surface>
+        </collision>
+        <collision name='base_footprint_fixed_joint_lump__wheel_caster_link_collision_6'>
+          <pose>-0.095000000000000001 0 0.0067370000000000069 0 0 0</pose>
+          <geometry>
+            <sphere>
+              <radius>0.0064999999999999997</radius>
+            </sphere>
+          </geometry>
+          <surface>
+            <contact>
+              <ode>
+                <kp>700000</kp>
+                <kd>80</kd>
+                <max_vel>0.10000000000000001</max_vel>
+                <min_depth>0.001</min_depth>
+              </ode>
+            </contact>
+            <friction>
+              <ode>
+                <mu>0.080000000000000002</mu>
+                <mu2>0.080000000000000002</mu2>
+                <fdir1>1 0 0</fdir1>
+              </ode>
+            </friction>
+            <bounce/>
+          </surface>
+        </collision>
+        <collision name='base_footprint_fixed_joint_lump__jetson_link_collision_7'>
+          <pose>0.035000000000000003 -0.0030000000000000001 0.075149999999999995 0 0 0</pose>
+          <geometry>
+            <box>
+              <size>0.079000000000000001 0.10000000000000001 0.038270999999999999</size>
+            </box>
+          </geometry>
+          <surface>
+            <friction>
+              <ode/>
+            </friction>
+            <bounce/>
+            <contact/>
+          </surface>
+        </collision>
+        <collision name='base_footprint_fixed_joint_lump__lidar_base_link_collision_8'>
+          <pose>0.042500000000000003 0 0.14099999999999999 0 0 0</pose>
+          <geometry>
+            <box>
+              <size>0.080000000000000002 0.070000000000000007 0.050000000000000003</size>
+            </box>
+          </geometry>
+          <surface>
+            <friction>
+              <ode/>
+            </friction>
+            <bounce/>
+            <contact/>
+          </surface>
+        </collision>
+        <collision name='base_footprint_fixed_joint_lump__laser_frame_collision_9'>
+          <pose>0.042500000000000003 0 0.155 0 0 0</pose>
+          <geometry>
+            <box>
+              <size>0.0050000000000000001 0.0050000000000000001 0.0050000000000000001</size>
+            </box>
+          </geometry>
+          <surface>
+            <contact>
+              <ode/>
+            </contact>
+            <friction>
+              <ode/>
+            </friction>
+            <bounce/>
+          </surface>
+        </collision>
+        <visual name='base_footprint_fixed_joint_lump__base_link_visual'>
+          <pose>0 0 0.050000000000000003 0 0 0</pose>
+          <geometry>
+            <mesh>
+              <scale>1 1 1</scale>
+              <uri>file:///home/abraham1229/ros2_ws/install/puzzlebot_description/share/puzzlebot_description/meshes/bases/Puzzlebot_Jetson_Lidar_Edition_Base.stl</uri>
+            </mesh>
+          </geometry>
+          <material>
+            <diffuse>1 1 0.0625 1</diffuse>
+            <ambient>1 1 0.0625 1</ambient>
+          </material>
+        </visual>
+        <visual name='base_footprint_fixed_joint_lump__bracket_base_link_visual_1'>
+          <pose>0.104 0 0.072000000000000008 0 0 0</pose>
+          <geometry>
+            <mesh>
+              <scale>1 1 1</scale>
+              <uri>file:///home/abraham1229/ros2_ws/install/puzzlebot_description/share/puzzlebot_description/meshes/sensors/Laser_Camera_Bracket.stl</uri>
+            </mesh>
+          </geometry>
+          <material>
+            <diffuse>0.25 0.25 0.25 1</diffuse>
+            <ambient>0.25 0.25 0.25 1</ambient>
+          </material>
+        </visual>
+        <visual name='base_footprint_fixed_joint_lump__caster_holder_link_visual_2'>
+          <pose>-0.095000000000000001 0 0.0072750000000000037 0 0 0</pose>
+          <geometry>
+            <mesh>
+              <scale>1 1 1</scale>
+              <uri>file:///home/abraham1229/ros2_ws/install/puzzlebot_description/share/puzzlebot_description/meshes/wheels/Puzzlebot_Caster_Wheel.stl</uri>
+            </mesh>
+          </geometry>
+          <material>
+            <diffuse>0 0 0 1</diffuse>
+            <ambient>0 0 0 1</ambient>
+          </material>
+        </visual>
+        <visual name='base_footprint_fixed_joint_lump__jetson_link_visual_3'>
+          <pose>0.035000000000000003 -0.0030000000000000001 0.075149999999999995 0 0 0</pose>
+          <geometry>
+            <mesh>
+              <scale>1 1 1</scale>
+              <uri>file:///home/abraham1229/ros2_ws/install/puzzlebot_description/share/puzzlebot_description/meshes/misc/NVIDIA_Jetson.stl</uri>
+            </mesh>
+          </geometry>
+          <material>
+            <diffuse>0.25 0.25 0.25 1</diffuse>
+            <ambient>0.25 0.25 0.25 1</ambient>
+          </material>
+        </visual>
+        <visual name='base_footprint_fixed_joint_lump__lidar_base_link_visual_4'>
+          <pose>0.042500000000000003 0 0.14499999999999999 0 0 0</pose>
+          <geometry>
+            <mesh>
+              <scale>1 1 1</scale>
+              <uri>file:///home/abraham1229/ros2_ws/install/puzzlebot_description/share/puzzlebot_description/meshes/sensors/RPLidar.stl</uri>
+            </mesh>
+          </geometry>
+          <material>
+            <diffuse>0.25 0.25 0.25 1</diffuse>
+            <ambient>0.25 0.25 0.25 1</ambient>
+          </material>
+        </visual>
+        <visual name='base_footprint_fixed_joint_lump__laser_frame_visual_5'>
+          <pose>0.042500000000000003 0 0.155 0 0 0</pose>
+          <geometry>
+            <box>
+              <size>0.0050000000000000001 0.0050000000000000001 0.0050000000000000001</size>
+            </box>
+          </geometry>
+          <material>
+            <diffuse>0.25 0.25 0.25 1</diffuse>
+            <ambient>0.25 0.25 0.25 1</ambient>
+          </material>
+        </visual>
+        <sensor name='camera_sensor' type='camera'>
+          <pose>0.1241 0 0.11700000000000001 0 0 0</pose>
+          <topic>camera</topic>
+          <update_rate>10</update_rate>
+          <enable_metrics>false</enable_metrics>
+          <camera name='__default__'>
+            <pose>0 0 0 0 0 0</pose>
+            <horizontal_fov>1.089</horizontal_fov>
+            <image>
+              <width>640</width>
+              <height>480</height>
+              <format>RGB_INT8</format>
+              <anti_aliasing>4</anti_aliasing>
+            </image>
+            <camera_info_topic>camera_info</camera_info_topic>
+            <trigger_topic></trigger_topic>
+            <triggered>false</triggered>
+            <clip>
+              <near>0.10000000000000001</near>
+              <far>8</far>
+            </clip>
+            <save enabled='false'>
+              <path>__default__</path>
+            </save>
+            <visibility_mask>4294967295</visibility_mask>
+            <noise>
+              <type>gaussian</type>
+              <mean>0</mean>
+              <stddev>0.0070000000000000001</stddev>
+            </noise>
+            <distortion>
+              <k1>0</k1>
+              <k2>0</k2>
+              <k3>0</k3>
+              <p1>0</p1>
+              <p2>0</p2>
+              <center>0.5 0.5</center>
+            </distortion>
+            <lens>
+              <type>stereographic</type>
+              <scale_to_hfov>true</scale_to_hfov>
+              <cutoff_angle>1.5707963267948966</cutoff_angle>
+              <env_texture_size>256</env_texture_size>
+            </lens>
+            <optical_frame_id></optical_frame_id>
+          </camera>
+        </sensor>
+        <sensor name='tof_sensor' type='gpu_lidar'>
+          <pose>0.14399999999999999 0 0.071999999999999995 0 0 0</pose>
+          <topic>tof_scan</topic>
+          <update_rate>10</update_rate>
+          <enable_metrics>false</enable_metrics>
+          <lidar>
+            <scan>
+              <horizontal>
+                <samples>90</samples>
+                <resolution>1</resolution>
+                <min_angle>-0.70699999999999996</min_angle>
+                <max_angle>0.70699999999999996</max_angle>
+              </horizontal>
+              <vertical>
+                <samples>1</samples>
+                <min_angle>0</min_angle>
+                <max_angle>0</max_angle>
+                <resolution>0.01</resolution>
+              </vertical>
+            </scan>
+            <range>
+              <min>0.080000000000000002</min>
+              <max>10</max>
+              <resolution>0.01</resolution>
+            </range>
+            <noise>
+              <type>gaussian</type>
+              <mean>0</mean>
+              <stddev>0.01</stddev>
+            </noise>
+            <visibility_mask>4294967295</visibility_mask>
+          </lidar>
+        </sensor>
+        <sensor name='lidar_sensor' type='gpu_lidar'>
+          <pose>0.042500000000000003 0 0.155 0 0 0</pose>
+          <topic>scan</topic>
+          <update_rate>10</update_rate>
+          <enable_metrics>false</enable_metrics>
+          <lidar>
+            <scan>
+              <horizontal>
+                <samples>360</samples>
+                <resolution>1</resolution>
+                <min_angle>0</min_angle>
+                <max_angle>6.2831849999999996</max_angle>
+              </horizontal>
+              <vertical>
+                <samples>1</samples>
+                <min_angle>0</min_angle>
+                <max_angle>0</max_angle>
+                <resolution>0.01</resolution>
+              </vertical>
+            </scan>
+            <range>
+              <min>0.14999999999999999</min>
+              <max>12</max>
+              <resolution>0.017000000000000001</resolution>
+            </range>
+            <noise>
+              <type>gaussian</type>
+              <mean>0</mean>
+              <stddev>0.01</stddev>
+            </noise>
+            <visibility_mask>4294967295</visibility_mask>
+          </lidar>
+        </sensor>
+        <pose>0 0 0 0 0 0</pose>
+        <enable_wind>false</enable_wind>
+      </link>
+      <joint name='wheel_left_joint' type='revolute'>
+        <pose>0 -5.5511151231257827e-17 1.3877787807814457e-17 0 -5.0224327824122753e-24 0</pose>
+        <parent>base_footprint</parent>
+        <child>wheel_left_link</child>
+        <axis>
+          <xyz>0 1 0</xyz>
+          <limit>
+            <lower>-inf</lower>
+            <upper>inf</upper>
+            <effort>inf</effort>
+            <velocity>inf</velocity>
+            <stiffness>100000000</stiffness>
+            <dissipation>1</dissipation>
+          </limit>
+          <dynamics>
+            <spring_reference>0</spring_reference>
+            <spring_stiffness>0</spring_stiffness>
+            <damping>0</damping>
+            <friction>0</friction>
+          </dynamics>
+        </axis>
+      </joint>
+      <link name='wheel_left_link'>
+        <pose>0.052000023464043095 0.094999999998647708 0.049999999965751191 -1.4446779057660451e-13 -2.8624086619380741e-05 -6.9057688242091468e-11</pose>
+        <inertial>
+          <pose>0 0 0 1.5707963267948959 0 0</pose>
+          <mass>0.027</mass>
+          <inertia>
+            <ixx>1.82536875e-05</ixx>
+            <ixy>0</ixy>
+            <ixz>0</ixz>
+            <iyy>1.82536875e-05</iyy>
+            <iyz>0</iyz>
+            <izz>3.5859375000000009e-05</izz>
+          </inertia>
+        </inertial>
+        <collision name='wheel_left_link_collision'>
+          <pose>0 0 0 1.5707963267948959 0 0</pose>
+          <geometry>
+            <cylinder>
+              <length>0.012</length>
+              <radius>0.050000000000000003</radius>
+            </cylinder>
+          </geometry>
+          <surface>
+            <contact>
+              <ode>
+                <kp>700000</kp>
+                <kd>80</kd>
+                <max_vel>0.10000000000000001</max_vel>
+                <min_depth>0.001</min_depth>
+              </ode>
+            </contact>
+            <friction>
+              <ode>
+                <mu>1</mu>
+                <mu2>1</mu2>
+                <fdir1>1 0 0</fdir1>
+              </ode>
+            </friction>
+            <bounce/>
+          </surface>
+        </collision>
+        <visual name='wheel_left_link_visual'>
+          <pose>0 0 0 1.5707963267948959 0 0</pose>
+          <geometry>
+            <mesh>
+              <scale>1 1 1</scale>
+              <uri>file:///home/abraham1229/ros2_ws/install/puzzlebot_description/share/puzzlebot_description/meshes/wheels/Puzzlebot_Wheel.stl</uri>
+            </mesh>
+          </geometry>
+          <material>
+            <script>
+              <name>Gazebo/Black</name>
+              <uri>file://media/materials/scripts/gazebo.material</uri>
+            </script>
+            <diffuse>0 0 0 1</diffuse>
+            <ambient>0 0 0 1</ambient>
+          </material>
+        </visual>
+        <enable_wind>false</enable_wind>
+      </link>
+      <joint name='wheel_right_joint' type='revolute'>
+        <pose>-1.3877787807814457e-17 -2.7755575615628914e-17 0 0 -5.0336064417576908e-24 0</pose>
+        <parent>base_footprint</parent>
+        <child>wheel_right_link</child>
+        <axis>
+          <xyz>0 1 0</xyz>
+          <limit>
+            <lower>-inf</lower>
+            <upper>inf</upper>
+            <effort>inf</effort>
+            <velocity>inf</velocity>
+            <stiffness>100000000</stiffness>
+            <dissipation>1</dissipation>
+          </limit>
+          <dynamics>
+            <spring_reference>0</spring_reference>
+            <spring_stiffness>0</spring_stiffness>
+            <damping>0</damping>
+            <friction>0</friction>
+          </dynamics>
+        </axis>
+      </joint>
+      <link name='wheel_right_link'>
+        <pose>0.052000023466698145 -0.095000000001354085 0.049999999965753217 -1.4460802027899618e-13 -2.8592999042054182e-05 -6.9144583960572116e-11</pose>
+        <inertial>
+          <pose>0 0 0 -1.5707963267948959 0 0</pose>
+          <mass>0.027</mass>
+          <inertia>
+            <ixx>1.82536875e-05</ixx>
+            <ixy>0</ixy>
+            <ixz>0</ixz>
+            <iyy>1.82536875e-05</iyy>
+            <iyz>0</iyz>
+            <izz>3.5859375000000009e-05</izz>
+          </inertia>
+        </inertial>
+        <collision name='wheel_right_link_collision'>
+          <pose>0 0 0 -1.5707963267948959 0 0</pose>
+          <geometry>
+            <cylinder>
+              <length>0.012</length>
+              <radius>0.050000000000000003</radius>
+            </cylinder>
+          </geometry>
+          <surface>
+            <contact>
+              <ode>
+                <kp>700000</kp>
+                <kd>80</kd>
+                <max_vel>0.10000000000000001</max_vel>
+                <min_depth>0.001</min_depth>
+              </ode>
+            </contact>
+            <friction>
+              <ode>
+                <mu>1</mu>
+                <mu2>1</mu2>
+                <fdir1>1 0 0</fdir1>
+              </ode>
+            </friction>
+            <bounce/>
+          </surface>
+        </collision>
+        <visual name='wheel_right_link_visual'>
+          <pose>0 0 0 -1.5707963267948959 0 0</pose>
+          <geometry>
+            <mesh>
+              <scale>1 1 1</scale>
+              <uri>file:///home/abraham1229/ros2_ws/install/puzzlebot_description/share/puzzlebot_description/meshes/wheels/Puzzlebot_Wheel.stl</uri>
+            </mesh>
+          </geometry>
+          <material>
+            <script>
+              <name>Gazebo/Black</name>
+              <uri>file://media/materials/scripts/gazebo.material</uri>
+            </script>
+            <diffuse>0 0 0 1</diffuse>
+            <ambient>0 0 0 1</ambient>
+          </material>
+        </visual>
+        <enable_wind>false</enable_wind>
+      </link>
+      <plugin name='DiffDynamicPlugin' filename='libDiffDynamicPlugin.so'>
+        <leftJoint>wheel_left_joint</leftJoint>
+        <rightJoint>wheel_right_joint</rightJoint>
+        <cmd_R_topic>VelocitySetR</cmd_R_topic>
+        <cmd_L_topic>VelocitySetL</cmd_L_topic>
+        <cmd_vel_topic>cmd_vel</cmd_vel_topic>
+        <enc_R_topic>VelocityEncR</enc_R_topic>
+        <enc_L_topic>VelocityEncL</enc_L_topic>
+        <robot_vel_topic>robot_vel</robot_vel_topic>
+        <mot_Vmax>5</mot_Vmax>
+        <mot_J>0.0005</mot_J>
+        <mot_R>2</mot_R>
+        <mot_L>0.01</mot_L>
+        <mot_K>0.01</mot_K>
+        <mot_b>0.00001</mot_b>
+        <mot_gear>34</mot_gear>
+        <robot_width>0.19</robot_width>
+        <wheel_radius>0.05</wheel_radius>
+        <pid_Kp>0.1</pid_Kp>
+        <pid_Ti>0.05</pid_Ti>
+        <pid_Td>0</pid_Td>
+        <input_type>1</input_type>
+        <rate>100</rate>
+      </plugin>
+      <plugin name='gz::sim::systems::JointStatePublisher' filename='gz-sim-joint-state-publisher-system'>
+        <topic>joint_states</topic>
+        <update_rate>50</update_rate>
+        <joint_name>wheel_right_joint</joint_name>
+        <joint_name>wheel_left_joint</joint_name>
+      </plugin>
+      <plugin name='gz::sim::systems::OdometryPublisher' filename='gz-sim-odometry-publisher-system'>
+        <odom_frame>world</odom_frame>
+        <robot_base_frame>base_footprint</robot_base_frame>
+        <odom_publish_frequency>50</odom_publish_frequency>
+        <odom_topic>ground_truth</odom_topic>
+        <tf_topic>tf</tf_topic>
+        <dimensions>2</dimensions>
+      </plugin>
+      <frame name='camera_optical_joint' attached_to='camera_link'>
+        <pose>0 0 0 -1.5707963267948959 -5.5511151231257827e-17 -1.5707963267948959</pose>
+      </frame>
+      <frame name='camera_link_optical' attached_to='camera_optical_joint'>
+        <pose>0 0 0 0 0 0</pose>
+      </frame>
+      <frame name='camera_joint' attached_to='bracket_base_link'>
+        <pose>0.0201 0 0.044999999999999998 0 0 0</pose>
+      </frame>
+      <frame name='camera_link' attached_to='camera_joint'>
+        <pose>0 0 0 0 0 0</pose>
+      </frame>
+      <frame name='tof_joint' attached_to='bracket_base_link'>
+        <pose>0.040000000000000001 0 0 0 0 0</pose>
+      </frame>
+      <frame name='tof_link' attached_to='tof_joint'>
+        <pose>0 0 0 0 0 0</pose>
+      </frame>
+      <frame name='camera_base_joint' attached_to='base_link'>
+        <pose>0.104 0 0.021999999999999999 0 0 0</pose>
+      </frame>
+      <frame name='bracket_base_link' attached_to='camera_base_joint'>
+        <pose>0 0 0 0 0 0</pose>
+      </frame>
+      <frame name='wheel_caster_joint' attached_to='caster_holder_link'>
+        <pose>0 0 -0.012538000000000001 0 0 0</pose>
+      </frame>
+      <frame name='wheel_caster_link' attached_to='wheel_caster_joint'>
+        <pose>0 0 0 0 0 0</pose>
+      </frame>
+      <frame name='caster_holder_joint' attached_to='base_link'>
+        <pose>-0.095000000000000001 0 -0.030724999999999999 0 0 0</pose>
+      </frame>
+      <frame name='caster_holder_link' attached_to='caster_holder_joint'>
+        <pose>0 0 0 0 0 0</pose>
+      </frame>
+      <frame name='jetson_joint' attached_to='base_link'>
+        <pose>0.035000000000000003 -0.0030000000000000001 0.025149999999999999 0 0 0</pose>
+      </frame>
+      <frame name='jetson_link' attached_to='jetson_joint'>
+        <pose>0 0 0 0 0 0</pose>
+      </frame>
+      <frame name='lidar_joint' attached_to='lidar_base_link'>
+        <pose>0 0 0.035000000000000003 0 0 0</pose>
+      </frame>
+      <frame name='laser_frame' attached_to='lidar_joint'>
+        <pose>0 0 0 0 0 0</pose>
+      </frame>
+      <frame name='lidar_base_joint' attached_to='base_link'>
+        <pose>0.042500000000000003 0 0.070000000000000007 0 0 0</pose>
+      </frame>
+      <frame name='lidar_base_link' attached_to='lidar_base_joint'>
+        <pose>0 0 0 0 0 0</pose>
+      </frame>
+      <frame name='chassis_joint' attached_to='base_footprint'>
+        <pose>0 0 0.050000000000000003 0 0 0</pose>
+      </frame>
+      <frame name='base_link' attached_to='chassis_joint'>
+        <pose>0 0 0 0 0 0</pose>
+      </frame>
+      <pose>-1.4758049479087054e-06 -4.2484623215376577e-10 -8.3810419428546445e-05 -5.5453180748636124e-11 -0.0016128445464710216 8.1628894115223012e-09</pose>
+      <static>false</static>
+      <self_collide>false</self_collide>
+    </model>
+    <model name='nist_maze_wall_120'>
+      <static>true</static>
+      <link name='nist_maze_wall_120_link'>
+        <pose>0 0 0 0 0 0</pose>
+        <collision name='collision'>
+          <geometry>
+            <mesh>
+              <uri>https://fuel.gazebosim.org/1.0/openrobotics/models/nist maze wall 120/3/files/meshes/nist_maze_wall_120.dae</uri>
+              <scale>1 1 1</scale>
+            </mesh>
+          </geometry>
+        </collision>
+        <visual name='visual'>
+          <geometry>
+            <mesh>
+              <uri>https://fuel.gazebosim.org/1.0/openrobotics/models/nist maze wall 120/3/files/meshes/nist_maze_wall_120.dae</uri>
+              <scale>1 1 1</scale>
+            </mesh>
+          </geometry>
+        </visual>
+        <inertial>
+          <pose>0 0 0 0 0 0</pose>
+          <mass>1</mass>
+          <inertia>
+            <ixx>1</ixx>
+            <ixy>0</ixy>
+            <ixz>0</ixz>
+            <iyy>1</iyy>
+            <iyz>0</iyz>
+            <izz>1</izz>
+          </inertia>
+        </inertial>
+        <enable_wind>false</enable_wind>
+      </link>
+      <pose>0.7146308422088623 -1.1395456790924072 0.081477902829647064 0 0 0.59533801802011455</pose>
+      <self_collide>false</self_collide>
+    </model>
+    <model name='nist_maze_wall_120_0'>
+      <static>true</static>
+      <link name='nist_maze_wall_120_link'>
+        <pose>0 0 0 0 0 0</pose>
+        <collision name='collision'>
+          <geometry>
+            <mesh>
+              <uri>https://fuel.gazebosim.org/1.0/openrobotics/models/nist maze wall 120/3/files/meshes/nist_maze_wall_120.dae</uri>
+              <scale>1 1 1</scale>
+            </mesh>
+          </geometry>
+        </collision>
+        <visual name='visual'>
+          <geometry>
+            <mesh>
+              <uri>https://fuel.gazebosim.org/1.0/openrobotics/models/nist maze wall 120/3/files/meshes/nist_maze_wall_120.dae</uri>
+              <scale>1 1 1</scale>
+            </mesh>
+          </geometry>
+        </visual>
+        <inertial>
+          <pose>0 0 0 0 0 0</pose>
+          <mass>1</mass>
+          <inertia>
+            <ixx>1</ixx>
+            <ixy>0</ixy>
+            <ixz>0</ixz>
+            <iyy>1</iyy>
+            <iyz>0</iyz>
+            <izz>1</izz>
+          </inertia>
+        </inertial>
+        <enable_wind>false</enable_wind>
+      </link>
+      <pose>3.8431150913238525 0.10426313430070877 0 0 0 0.030374501103678321</pose>
+      <self_collide>false</self_collide>
+    </model>
+    <model name='nist_maze_wall_120_1'>
+      <static>true</static>
+      <link name='nist_maze_wall_120_link'>
+        <pose>0 0 0 0 0 0</pose>
+        <collision name='collision'>
+          <geometry>
+            <mesh>
+              <uri>https://fuel.gazebosim.org/1.0/openrobotics/models/nist maze wall 120/3/files/meshes/nist_maze_wall_120.dae</uri>
+              <scale>1 1 1</scale>
+            </mesh>
+          </geometry>
+        </collision>
+        <visual name='visual'>
+          <geometry>
+            <mesh>
+              <uri>https://fuel.gazebosim.org/1.0/openrobotics/models/nist maze wall 120/3/files/meshes/nist_maze_wall_120.dae</uri>
+              <scale>1 1 1</scale>
+            </mesh>
+          </geometry>
+        </visual>
+        <inertial>
+          <pose>0 0 0 0 0 0</pose>
+          <mass>1</mass>
+          <inertia>
+            <ixx>1</ixx>
+            <ixy>0</ixy>
+            <ixz>0</ixz>
+            <iyy>1</iyy>
+            <iyz>0</iyz>
+            <izz>1</izz>
+          </inertia>
+        </inertial>
+        <enable_wind>false</enable_wind>
+      </link>
+      <pose>2.6296594142913818 -1.8098965883255005 0 0 0 1.5621400113711748</pose>
+      <self_collide>false</self_collide>
+    </model>
+    <light name='sun' type='directional'>
+      <pose>0 0 10 0 0 0</pose>
+      <cast_shadows>false</cast_shadows>
+      <intensity>1</intensity>
+      <direction>-0.5 0.10000000000000001 -0.90000000000000002</direction>
+      <diffuse>0.800000012 0.800000012 0.800000012 1</diffuse>
+      <specular>0.200000003 0.200000003 0.200000003 1</specular>
+      <attenuation>
+        <range>1000</range>
+        <linear>0.01</linear>
+        <constant>0.90000000000000002</constant>
+        <quadratic>0.001</quadratic>
+      </attenuation>
+      <spot>
+        <inner_angle>0</inner_angle>
+        <outer_angle>0</outer_angle>
+        <falloff>0</falloff>
+      </spot>
+    </light>
+  </world>
+</sdf>

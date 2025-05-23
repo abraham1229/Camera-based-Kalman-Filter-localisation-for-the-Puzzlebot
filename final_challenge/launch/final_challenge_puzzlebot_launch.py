@@ -33,7 +33,7 @@ def generate_launch_description():
             'x_goal_1': 1.0,
             'y_goal_1': -2.0,
             'x_goal_2': 4.0,
-            'y_goal_2': -1.0,
+            'y_goal_2': -2.0,
             'x_goal_3': 2.0,
             'y_goal_3': 2.0,
             'x_goal_4': 0.0,
