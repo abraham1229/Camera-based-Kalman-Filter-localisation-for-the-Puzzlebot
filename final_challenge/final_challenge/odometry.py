@@ -126,15 +126,6 @@ class Odometry_Node(Node):
     
 
     def timer_callback(self):
-        """
-        Main odometry computation loop.
-        
-        This function:
-        1. Computes robot velocities from wheel encoders
-        2. Updates robot pose using motion model
-        3. Applies Kalman filter corrections from ArUco measurements
-        4. Publishes odometry message and TF transforms
-        """
         # Compute robot velocities from differential drive kinematics
         self.velocidadTheta = self.radius * ((self.vel_right - self.vel_left) / self.lenght)
         self.velLineal = self.radius * ((self.vel_right + self.vel_left) / 2)
@@ -179,7 +170,10 @@ class Odometry_Node(Node):
                     f"Without Kalman correction: x={self.s[0]:.3f}, y={self.s[1]:.3f}, "
                     f"θ={math.degrees(self.s[2]):.2f}°"
                 )
-
+            self.get_logger().info(
+                f"Current: x={self.s[0]:.3f}, y={self.s[1]:.3f}, "
+                f"θ={math.degrees(self.s[2]):.2f}°"
+            )
         # Normalize theta to [-π, π] range
         self.theta = self.normalize_angle(self.theta)
 

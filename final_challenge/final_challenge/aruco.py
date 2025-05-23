@@ -76,12 +76,7 @@ class ArucoDetectorNode(Node):
 
     def transform_detection_to_base_link(self, tvec, rvec):
         """
-        Transform ArUco detection from camera_link_optical frame to base_link frame.
-        
-        This is the key function that solves the coordinate frame mismatch issue.
-        It transforms the marker's pose from the camera's optical frame (where ArUco
-        detection happens) to the robot's base_link frame (where odometry operates).
-        
+        Transform ArUco detection from camera_link_optical frame to base_link frame.        
         Args:
             tvec: Translation vector from ArUco detection (in camera_link_optical frame)
             rvec: Rotation vector from ArUco detection (in camera_link_optical frame)

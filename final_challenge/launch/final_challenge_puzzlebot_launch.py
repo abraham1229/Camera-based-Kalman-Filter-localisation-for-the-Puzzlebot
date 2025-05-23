@@ -60,7 +60,12 @@ def generate_launch_description():
   
   aruco_node = Node(name="aruco",
                           package='final_challenge',
-                          executable='aruco_enhanced',
+                          executable='aruco',
+                          parameters=[{
+                              'init_pose_x': init_x,
+                              'init_pose_y': init_y,
+                              'init_pose_yaw': init_yaw,
+                          }]
                           )
 
 

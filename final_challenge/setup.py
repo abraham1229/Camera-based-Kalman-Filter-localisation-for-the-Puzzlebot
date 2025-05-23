@@ -34,13 +34,7 @@ setup(
             'puzzlebot = final_challenge.puzzlebot:main',
             'controller = final_challenge.controller:main',
             'path_generator = final_challenge.path_generator:main',
-<<<<<<< Updated upstream
-            'aruco_first = final_challenge.aruco_first:main',
-            'aruco_enhanced = final_challenge.aruco_enhanced:main',
-=======
             'aruco= final_challenge.aruco:main',
-            'odometry = final_challenge.odometry:main',
->>>>>>> Stashed changes
         ],
     },
 )
