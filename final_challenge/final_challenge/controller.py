@@ -32,10 +32,10 @@ class Controller(Node):
         # Variables para Bug algorithm
         self.lidar_msg = None
         self.kp = 1.0
-        self.wall_desired = 0.6      # distancia deseada a la pared derecha
+        self.wall_desired = 0.5      # distancia deseada a la pared derecha
         self.linear_velocity = 0.3
         self.max_angular = 1.0
-        self.threshold_front = 0.8   # si algo está más cerca, se considera obstáculo
+        self.threshold_front = 0.6   # si algo está más cerca, se considera obstáculo
         # Bug 2
         self.initial_point_x = 0.0
         self.initial_point_y = 0.0
@@ -43,6 +43,7 @@ class Controller(Node):
         self.mline_intercept = None
         self.last_state_change_time = self.get_clock().now()
         self.min_state_duration = 1.0 # segundos
+        self.default_distance = 2.5
 
         # Estado de la trayectoria
         self.state = 'GO_TO_GOAL'
@@ -215,7 +216,7 @@ class Controller(Node):
             twist.angular.z = turn_rate
 
             # Diagnóstico de giro
-            # self.get_logger().info(f"Error: {error}")
+            self.get_logger().info(f"Error: {error}")
         else:
             # Obstáculo al frente, detener avance y girar a la izquierda
             twist.linear.x = 0.0
@@ -232,11 +233,11 @@ class Controller(Node):
             value = self.lidar_msg.ranges[index]
             if not math.isnan(value) and not math.isinf(value):
                 return value
-        return 2.0
+        return self.default_distance
     
     def get_distance_at_angle_range(self, angle_start_deg, angle_end_deg):
         if self.lidar_msg is None:
-            return 2.0
+            return self.default_distance
 
         angle_start_rad = math.radians(angle_start_deg) % (2 * math.pi)
         angle_end_rad = math.radians(angle_end_deg) % (2 * math.pi)
@@ -255,7 +256,7 @@ class Controller(Node):
                     min_dist = min(min_dist, r)
             angle += self.lidar_msg.angle_increment
 
-        return min_dist if min_dist != float('inf') else 2.0
+        return min_dist if min_dist != float('inf') else self.default_distance
 
     
     def is_on_mline(self, tolerance=0.4):
