@@ -30,11 +30,12 @@ setup(
         'console_scripts': [
             'obstacle_avoidance = final_challenge.obstacle_avoidance:main',
             'wall_follower = final_challenge.wall_follower:main',
-            'odometry = final_challenge.odometry:main',
             'puzzlebot = final_challenge.puzzlebot:main',
             'controller = final_challenge.controller:main',
             'path_generator = final_challenge.path_generator:main',
             'aruco= final_challenge.aruco:main',
+            'odometry = final_challenge.odometry:main',
+            'fixed_odometry = final_challenge.fixed_odometry:main',  
         ],
     },
 )

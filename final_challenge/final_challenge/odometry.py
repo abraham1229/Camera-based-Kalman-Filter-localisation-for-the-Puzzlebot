@@ -71,7 +71,7 @@ class Odometry_Node(Node):
 
         # Process noise covariance matrix for the motion model
         # This represents uncertainty in the robot's motion
-        self.covariance = 0.0001 * np.array([
+        self.covariance = 0.001 * np.array([
             [0.1059, 0.1106, 0.1516],
             [0.1106, 1.7173, 0.6924],
             [0.1516, 0.6924, 1.5237]
@@ -80,8 +80,8 @@ class Odometry_Node(Node):
         # Measurement noise covariance matrix for ArUco observations
         # This represents uncertainty in range and bearing measurements
         self.R = np.array([
-            [0.1, 0],    # Range measurement noise variance
-            [0, 0.1]     # Bearing measurement noise variance
+            [0.001, 0],    # Range measurement noise variance
+            [0, 0.001]     # Bearing measurement noise variance
         ])
         
         # Kalman filter variables for ArUco measurements
@@ -157,7 +157,7 @@ class Odometry_Node(Node):
                 self.have_new_aruco = False
                 
                 # Update robot pose from corrected state
-                self.posX, self.posY, self.theta = self.s
+                self.posX, self.posY, _ = self.s
                 
                 self.get_logger().info(
                     f"After Kalman correction: x={self.s[0]:.3f}, y={self.s[1]:.3f}, "
@@ -165,10 +165,10 @@ class Odometry_Node(Node):
                 )
             else:
                 # Update robot pose from predicted state (no ArUco measurement)
-                self.posX, self.posY, self.theta = self.s
+                #self.posX, self.posY, self.theta = self.s
                 self.get_logger().info(
-                    f"Without Kalman correction: x={self.s[0]:.3f}, y={self.s[1]:.3f}, "
-                    f"θ={math.degrees(self.s[2]):.2f}°"
+                    f"Without Kalman correction: x={self.posX:.3f}, y={self.posY:.3f}, "
+                    f"θ={self.theta:.2f}°"
                 )
             self.get_logger().info(
                 f"Current: x={self.s[0]:.3f}, y={self.s[1]:.3f}, "
@@ -386,9 +386,11 @@ class Odometry_Node(Node):
             landmark_pos (np.array): Landmark position [x, y] in world frame
         """
         # Compute relative position from robot to landmark in world frame
-        dx = landmark_pos[0] - self.s[0]  # Difference in X (world frame)
-        dy = landmark_pos[1] - self.s[1]  # Difference in Y (world frame)
-        theta = self.s[2]                 # Robot's current heading in world frame
+        #dx = landmark_pos[0] - self.s[0]  # Difference in X (world frame)
+        #dy = landmark_pos[1] - self.s[1]  # Difference in Y (world frame)
+        dx = landmark_pos[0] - self.posX  # Difference in X (world frame)
+        dy = landmark_pos[1] - self.posY # Difference in Y (world frame)
+        theta = self.theta                 # Robot's current heading in world frame
         
         # Avoid division by zero in range calculation
         eps = 1e-6
