@@ -204,9 +204,7 @@ class Controller(Node):
         dist_right = self.get_distance_at_angle(-90)
         dist_right_45 = self.get_distance_at_angle(-45)
         dist_right_side = np.mean([dist_right, dist_right_45])
-        dist_front = self.get_distance_at_angle(0)
-        dist_front_5 = self.get_distance_at_angle(-15)
-        dist_front_mean = np.mean([dist_front, dist_front_5])
+        dist_front_mean = self.get_distance_at_angle_range(-15,15)
 
         twist = Twist()
 
@@ -235,6 +233,30 @@ class Controller(Node):
             if not math.isnan(value) and not math.isinf(value):
                 return value
         return 2.0
+    
+    def get_distance_at_angle_range(self, angle_start_deg, angle_end_deg):
+        if self.lidar_msg is None:
+            return 2.0
+
+        angle_start_rad = math.radians(angle_start_deg) % (2 * math.pi)
+        angle_end_rad = math.radians(angle_end_deg) % (2 * math.pi)
+
+        # Asegurar que el inicio sea menor que el fin en ángulos
+        if angle_end_rad < angle_start_rad:
+            angle_end_rad += 2 * math.pi
+
+        min_dist = float('inf')
+
+        angle = self.lidar_msg.angle_min
+        for i, r in enumerate(self.lidar_msg.ranges):
+            if not math.isnan(r) and not math.isinf(r):
+                current_angle = angle % (2 * math.pi)
+                if angle_start_rad <= current_angle <= angle_end_rad:
+                    min_dist = min(min_dist, r)
+            angle += self.lidar_msg.angle_increment
+
+        return min_dist if min_dist != float('inf') else 2.0
+
     
     def is_on_mline(self, tolerance=0.4):
         if self.mline_slope is None:
