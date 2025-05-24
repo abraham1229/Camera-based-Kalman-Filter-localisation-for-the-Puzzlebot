@@ -35,6 +35,7 @@ setup(
             'path_generator = final_challenge.path_generator:main',
             'aruco= final_challenge.aruco:main',
             'odometry = final_challenge.odometry:main',
+            'enhanced_odometry = final_challenge.enhanced_odometry:main',
             'fixed_odometry = final_challenge.fixed_odometry:main',  
         ],
     },
