@@ -28,13 +28,12 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'obstacle_avoidance = final_challenge.obstacle_avoidance:main',
             'wall_follower = final_challenge.wall_follower:main',
             'odometry = final_challenge.odometry:main',
             'puzzlebot = final_challenge.puzzlebot:main',
             'controller = final_challenge.controller:main',
             'path_generator = final_challenge.path_generator:main',
-            'aruco_first = final_challenge.aruco_first:main',
+            'aruco = final_challenge.aruco:main',
         ],
     },
 )
