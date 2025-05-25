@@ -188,7 +188,7 @@ class Controller(Node):
             self.pub_next_goal.publish(msg)
             self.last_goal_time = now
 
-        if abs(error_theta) > 0.6: #to make sure it will reach the point
+        if abs(error_theta) > 0.4: #to make sure it will reach the point
             v = 0.0
 
         # Publicar comando
