@@ -12,17 +12,6 @@ from launch.substitutions import LocalSubstitution
 
 def generate_launch_description():
   
-  # GAZEBO SIM
-  bringup_simple_simulation = IncludeLaunchDescription(
-      PythonLaunchDescriptionSource(
-          os.path.join(
-              get_package_share_directory('puzzlebot_gazebo'),
-              'launch',
-              'bringup_simulation_simple_launch.py'
-          )
-      )
-  )
-
   # Parameters
   config = os.path.join(
       get_package_share_directory('final_challenge'),
@@ -50,22 +39,10 @@ def generate_launch_description():
                           )
 
 
-  # Ensure full shutdown when SIGINT (Ctrl+C) is received
-  shutdown_log = RegisterEventHandler(
-                                  OnShutdown(
-                                      on_shutdown=[LogInfo(
-                                          msg=['Launch was asked to shutdown: ',
-                                              LocalSubstitution('event.reason')]
-                                      )]
-                                  )
-                              )
-
   l_d = LaunchDescription([
-      bringup_simple_simulation,
       controller_node,
       odometry_node,
       path_generator_node,
-      # shutdown_log,
       ])
 
   return l_d
