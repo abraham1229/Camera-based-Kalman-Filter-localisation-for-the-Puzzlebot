@@ -243,8 +243,23 @@ class Controller(Node):
         self.pub_cmd_vel.publish(twist)
 
     def get_distance_at_angle(self, angle_deg):
-        angle_rad = math.radians(angle_deg) % (2 * math.pi)
-        index = int((angle_rad - self.lidar_msg.angle_min) / self.lidar_msg.angle_increment)
+        if self.lidar_msg is None:
+            return self.default_distance
+
+        # Convertir a radianes
+        angle_rad_input = math.radians(angle_deg)
+
+        # Detectar si el LiDAR va de -pi a pi o de 0 a 2pi
+        lidar_min = self.lidar_msg.angle_min
+        lidar_max = self.lidar_msg.angle_max
+
+        if lidar_min < 0 and lidar_max <= math.pi:  # caso real (-π, π)
+            angle_rad = ((angle_rad_input + math.pi) % (2 * math.pi)) - math.pi
+        else:  # caso simulación (0, 2π)
+            angle_rad = angle_rad_input % (2 * math.pi)
+
+        # Calcular el índice correspondiente
+        index = int((angle_rad - lidar_min) / self.lidar_msg.angle_increment)
         if 0 <= index < len(self.lidar_msg.ranges):
             value = self.lidar_msg.ranges[index]
             if not math.isnan(value) and not math.isinf(value):
@@ -254,9 +269,16 @@ class Controller(Node):
     def get_distance_at_angle_range(self, angle_start_deg, angle_end_deg):
         if self.lidar_msg is None:
             return self.default_distance
-
-        angle_start_rad = math.radians(angle_start_deg) % (2 * math.pi)
-        angle_end_rad = math.radians(angle_end_deg) % (2 * math.pi)
+        
+        # Se distingue si es el puzzle o simulacion
+        if self.lidar_msg.angle_min < 0 and self.lidar_msg.angle_max <= math.pi:
+            # Rango tipo (-π, π)
+            angle_start_rad = ((math.radians(angle_start_deg) + math.pi) % (2 * math.pi)) - math.pi
+            angle_end_rad = ((math.radians(angle_end_deg) + math.pi) % (2 * math.pi)) - math.pi
+        else:
+            # Rango tipo (0, 2π)
+            angle_start_rad = math.radians(angle_start_deg) % (2 * math.pi)
+            angle_end_rad = math.radians(angle_end_deg) % (2 * math.pi)
 
         # Asegurar que el inicio sea menor que el fin en ángulos
         if angle_end_rad < angle_start_rad:
