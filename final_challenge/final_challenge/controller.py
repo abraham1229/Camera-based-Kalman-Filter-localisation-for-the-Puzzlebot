@@ -222,14 +222,20 @@ class Controller(Node):
             turn_rate = -error * self.kp
             twist.linear.x = self.max_linear
             twist.angular.z = turn_rate
+            if abs(error) > 0.9: #to make sure it will reach the point
+                twist.linear.x = self.max_linear / 5 
 
             # Diagnóstico de giro
-            # self.get_logger().info(f"Error: {error}")
+            self.get_logger().info(f"Error: {error}")
         else:
             # Obstáculo al frente, detener avance y girar a la izquierda
             twist.linear.x = 0.0
             twist.angular.z = self.max_angular
             self.get_logger().info("Frente")
+
+        # Limitar velocidades
+        twist.linear.x = max(min(twist.linear.x, self.max_linear), -self.max_linear)
+        twist.angular.z = max(min(twist.angular.z, self.max_angular), -self.max_angular)
 
         # Publicar comando final
         self.pub_cmd_vel.publish(twist)
@@ -280,7 +286,7 @@ class Controller(Node):
             error = abs(self.Posy - expected_y)
 
         # Imprimir el error actual con respecto a la línea
-        self.get_logger().info(f"M-line error: {error:.3f}")
+        # self.get_logger().info(f"M-line error: {error:.3f}")
 
         return error < tolerance
     
