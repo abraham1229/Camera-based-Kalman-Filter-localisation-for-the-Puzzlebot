@@ -85,7 +85,6 @@ class Controller(Node):
         # Asignar nuevo goal
         self.goal = new_goal
         self.print_success(f'x {msg.x_goal}  y {msg.y_goal} ')
-        self.print_success('¡Meta siguiente!')
 
         # Evitar recalcular M-line si el nuevo goal está demasiado cerca del robot
         dist_to_goal = math.hypot(self.goal[0] - self.Posx, self.goal[1] - self.Posy)
@@ -181,7 +180,7 @@ class Controller(Node):
             self.goal_idx += 1
             self.prev_error_dist = 0.0
             self.prev_error_theta = 0.0
-            self.get_logger().info(f'Punto {self.goal_idx} alcanzado')
+            self.print_success(f'Punto {self.goal_idx} alcanzado')
             # Publicar señal para avanzar al siguiente objetivo
             msg = Bool()
             msg.data = True
