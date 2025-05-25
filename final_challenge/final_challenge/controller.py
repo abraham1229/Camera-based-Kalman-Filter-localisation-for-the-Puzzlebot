@@ -115,7 +115,7 @@ class Controller(Node):
         dist_wall = min(dist_front,dist_45, dist_15)
 
         if self.state == 'GO_TO_GOAL':
-            if dist_wall < self.threshold_front + 0.1:
+            if dist_wall < self.threshold_front:
                 self.state = 'FOLLOW_WALL'
                 self.last_state_change_time = self.get_clock().now()
                 self.get_logger().info("estado: FOLLOW_WALL")
@@ -155,7 +155,7 @@ class Controller(Node):
         w = self.kp_angular * error_theta + self.kd_angular * d_error_theta
 
         # Limitar velocidades
-        v = max(min(v, 0.2), -0.2)
+        v = max(min(v, 0.15), -0.15)
         w = max(min(w, 0.4), -0.4)
 
         # --- Producto escalar para detectar cruce del objetivo ---
@@ -206,7 +206,6 @@ class Controller(Node):
         dist_right_side = np.mean([dist_right, dist_right_45])
         dist_front_mean = self.get_distance_at_angle_range(-25,25)
         dist_all_front = self.get_distance_at_angle_range(-90,90)
-        self.print_success(dist_all_front)
 
         twist = Twist()
 
