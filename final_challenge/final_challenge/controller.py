@@ -33,7 +33,7 @@ class Controller(Node):
         self.lidar_msg = None
         self.kp = 1.0
         self.wall_desired = 0.5      # distancia deseada a la pared derecha
-        self.linear_velocity = 0.25
+        self.max_linear = 0.25
         self.max_angular = 0.2
         self.threshold_front = 0.4   # si algo está más cerca, se considera obstáculo
         # Bug 2
@@ -44,6 +44,7 @@ class Controller(Node):
         self.last_state_change_time = self.get_clock().now()
         self.min_state_duration = 5.0 # segundos
         self.default_distance = 2.5
+        self.danger_distance = 0.17
 
         # Estado de la trayectoria
         self.state = 'GO_TO_GOAL'
@@ -155,8 +156,8 @@ class Controller(Node):
         w = self.kp_angular * error_theta + self.kd_angular * d_error_theta
 
         # Limitar velocidades
-        v = max(min(v, 0.15), -0.15)
-        w = max(min(w, 0.4), -0.4)
+        v = max(min(v, self.max_linear), -self.max_linear)
+        w = max(min(w, self.max_angular), -self.max_angular)
 
         # --- Producto escalar para detectar cruce del objetivo ---
     
@@ -212,14 +213,14 @@ class Controller(Node):
 
         twist = Twist()
 
-        if dist_all_front < 0.17: # too close
+        if dist_all_front < self.danger_distance: # too close
             twist.linear.x = 0.0
             twist.angular.z = self.max_angular
 
         elif dist_front_mean > self.threshold_front:
             error = dist_right_side - self.wall_desired
             turn_rate = -error * self.kp
-            twist.linear.x = self.linear_velocity
+            twist.linear.x = self.max_linear
             twist.angular.z = turn_rate
 
             # Diagnóstico de giro
