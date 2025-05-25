@@ -12,7 +12,7 @@ def generate_launch_description():
     # -----------------------------------------------------------------------------
     
     # Name of the Gazebo world to load
-    world = 'my_8.sdf'
+    world = 'my_aruco1.sdf'
 
     # General Gazebo settings
     pause = 'false'           # Start Gazebo in paused state

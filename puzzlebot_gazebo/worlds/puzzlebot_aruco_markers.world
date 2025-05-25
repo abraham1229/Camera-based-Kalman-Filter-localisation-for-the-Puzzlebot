@@ -108,19 +108,19 @@
     <include>
       <name>goal_2</name>
       <uri>model://goal_marker_5</uri>
-      <pose>2 0 0.01 0 0 0</pose>
+      <pose>1 -2 0.01 0 0 0</pose>
     </include>
 
     <include>
       <name>goal_3</name>
       <uri>model://goal_marker_5</uri>
-      <pose>2 2 0.01 0 0 0</pose>
+      <pose>4 -3 0.01 0 0 0</pose>
     </include>
 
     <include>
       <name>goal_4</name>
       <uri>model://goal_marker_5</uri>
-      <pose>0 2 0.01 0 0 0</pose>
+      <pose>2 2 0.01 0 0 0</pose>
     </include>
  
 
