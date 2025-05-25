@@ -205,17 +205,23 @@ class Controller(Node):
         dist_right_45 = self.get_distance_at_angle(-45)
         dist_right_side = np.mean([dist_right, dist_right_45])
         dist_front_mean = self.get_distance_at_angle_range(-25,25)
+        dist_all_front = self.get_distance_at_angle_range(-90,90)
+        self.print_success(dist_all_front)
 
         twist = Twist()
 
-        if dist_front_mean > self.threshold_front:
+        if dist_all_front < 0.17: # too close
+            twist.linear.x = 0.0
+            twist.angular.z = self.max_angular
+
+        elif dist_front_mean > self.threshold_front:
             error = dist_right_side - self.wall_desired
             turn_rate = -error * self.kp
             twist.linear.x = self.linear_velocity
             twist.angular.z = turn_rate
 
             # Diagnóstico de giro
-            self.get_logger().info(f"Error: {error}")
+            # self.get_logger().info(f"Error: {error}")
         else:
             # Obstáculo al frente, detener avance y girar a la izquierda
             twist.linear.x = 0.0
@@ -271,7 +277,7 @@ class Controller(Node):
             error = abs(self.Posy - expected_y)
 
         # Imprimir el error actual con respecto a la línea
-        self.get_logger().info(f"M-line error: {error:.3f}")
+        # self.get_logger().info(f"M-line error: {error:.3f}")
 
         return error < tolerance
     
