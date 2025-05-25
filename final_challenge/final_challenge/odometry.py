@@ -12,7 +12,7 @@ class Odometry_Node(Node):
     #Se inicializa el nodo
     def __init__(self):
         #Se crear el nodo que será encargado de publicar la señal
-        super().__init__('Odometria')
+        super().__init__('odometria')
 
         # Declare the parameter with a default value
         self.declare_parameter('init_pose_x', 0.0)

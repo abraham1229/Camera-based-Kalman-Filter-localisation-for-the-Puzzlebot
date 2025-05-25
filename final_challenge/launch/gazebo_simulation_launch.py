@@ -24,10 +24,6 @@ def generate_launch_description():
       )
   )
 
-  init_x = 0.0
-  init_y = 0.0
-  init_yaw = 0.0
-
   # Parameters
   config = os.path.join(
       get_package_share_directory('final_challenge'),
@@ -39,41 +35,19 @@ def generate_launch_description():
       package='final_challenge',
       executable='path_generator',
       output='screen',
-      parameters=[{
-            'init_pose_x': init_x,
-            'init_pose_y': init_y,
-            'init_pose_yaw': init_yaw,
-            'num_goals': 4,
-            'x_goal_1': 2.0,
-            'y_goal_1': 0.0,
-            'x_goal_2': 2.0,
-            'y_goal_2': 2.0,
-            'x_goal_3': 0.0,
-            'y_goal_3': 2.0,
-            'x_goal_4': 0.0,
-            'y_goal_4': 0.0
-        }]
+      parameters=[config]
   )
     
   controller_node = Node(name="controller",
                           package='final_challenge',
                           executable='controller',
-                          parameters=[{
-                              'init_pose_x': init_x,
-                              'init_pose_y': init_y,
-                              'init_pose_yaw': init_yaw
-                          }]
+                          parameters=[config]
                           )
   
   odometry_node = Node(name="odometry",
                           package='final_challenge',
                           executable='odometry',
-                          parameters=[{
-                              'init_pose_x': init_x,
-                              'init_pose_y': init_y,
-                              'init_pose_yaw': init_yaw,
-                              'use_linear_model': False,
-                          }]
+                          parameters=[config]
                           )
 
 
@@ -92,7 +66,7 @@ def generate_launch_description():
       controller_node,
       odometry_node,
       path_generator_node,
-      shutdown_log,
+      # shutdown_log,
       ])
 
   return l_d

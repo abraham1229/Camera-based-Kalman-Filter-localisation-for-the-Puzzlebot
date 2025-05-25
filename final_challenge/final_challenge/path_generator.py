@@ -6,7 +6,7 @@ import numpy as np
 
 class Path_generator(Node):
     def __init__(self):
-        super().__init__('Path_generator')
+        super().__init__('path_generator')
         self.declare_parameter('init_pose_x', 0.0)
         self.declare_parameter('init_pose_y', 0.0)
         self.declare_parameter('init_pose_yaw', np.pi/2)
