@@ -187,6 +187,9 @@ class Controller(Node):
             self.pub_next_goal.publish(msg)
             self.last_goal_time = now
 
+        if abs(error_theta) > 0.6: #to make sure it will reach the point
+            v = 0.0
+
         # Publicar comando
         twist = Twist()
         twist.linear.x = v
@@ -276,7 +279,7 @@ class Controller(Node):
             error = abs(self.Posy - expected_y)
 
         # Imprimir el error actual con respecto a la línea
-        # self.get_logger().info(f"M-line error: {error:.3f}")
+        self.get_logger().info(f"M-line error: {error:.3f}")
 
         return error < tolerance
     
