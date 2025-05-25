@@ -109,11 +109,13 @@ class Controller(Node):
     def callback_lidar(self, msg: LaserScan):
         self.lidar_msg = msg
 
-        dist_front = self.get_distance_at_angle(0)
-        dist_45 = self.get_distance_at_angle(-45)
-        dist_15 = self.get_distance_at_angle(-15)
+        # dist_front = self.get_distance_at_angle(0)
+        # dist_45 = self.get_distance_at_angle(-45)
+        # dist_15 = self.get_distance_at_angle(-15)
 
-        dist_wall = min(dist_front,dist_45, dist_15)
+        # dist_wall = min(dist_front,dist_45, dist_15)
+
+        dist_wall = self.get_distance_at_angle_range(15,-15)
 
         if self.state == 'GO_TO_GOAL':
             if dist_wall < self.threshold_front:
