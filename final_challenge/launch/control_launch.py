@@ -11,6 +11,13 @@ def generate_launch_description():
         'params.yaml'
     )
 
+    path_generator_node = Node(
+        name='path_generator',
+        package='final_challenge',
+        executable='path_generator',
+        parameters=[config]
+    )
+
     controller_node = Node(
         name='controller',
         package='final_challenge',
@@ -25,15 +32,15 @@ def generate_launch_description():
         parameters=[config]
     )
 
-    path_generator_node = Node(
-        name='path_generator',
-        package='final_challenge',
-        executable='path_generator',
-        parameters=[config]
-    )
+    aruco_node = Node(name="aruco",
+      package='final_challenge',
+      executable='aruco',
+      parameters=[config]
+      )
 
     return LaunchDescription([
+        path_generator_node,
         controller_node,
         odometry_node,
-        path_generator_node
+        aruco_node
     ])
