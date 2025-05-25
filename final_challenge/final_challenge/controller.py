@@ -33,17 +33,18 @@ class Controller(Node):
         self.lidar_msg = None
         self.kp = 1.0
         self.wall_desired = 0.5      # distancia deseada a la pared derecha
-        self.linear_velocity = 0.3
-        self.max_angular = 1.0
-        self.threshold_front = 0.6   # si algo está más cerca, se considera obstáculo
+        self.max_linear = 0.25
+        self.max_angular = 0.2
+        self.threshold_front = 0.4   # si algo está más cerca, se considera obstáculo
         # Bug 2
         self.initial_point_x = 0.0
         self.initial_point_y = 0.0
         self.mline_slope = None
         self.mline_intercept = None
         self.last_state_change_time = self.get_clock().now()
-        self.min_state_duration = 1.0 # segundos
+        self.min_state_duration = 5.0 # segundos
         self.default_distance = 2.5
+        self.danger_distance = 0.17
 
         # Estado de la trayectoria
         self.state = 'GO_TO_GOAL'
@@ -85,7 +86,6 @@ class Controller(Node):
         # Asignar nuevo goal
         self.goal = new_goal
         self.print_success(f'x {msg.x_goal}  y {msg.y_goal} ')
-        self.print_success('¡Meta siguiente!')
 
         # Evitar recalcular M-line si el nuevo goal está demasiado cerca del robot
         dist_to_goal = math.hypot(self.goal[0] - self.Posx, self.goal[1] - self.Posy)
@@ -116,7 +116,7 @@ class Controller(Node):
         dist_wall = min(dist_front,dist_45, dist_15)
 
         if self.state == 'GO_TO_GOAL':
-            if dist_wall < self.threshold_front + 0.1:
+            if dist_wall < self.threshold_front:
                 self.state = 'FOLLOW_WALL'
                 self.last_state_change_time = self.get_clock().now()
                 self.get_logger().info("estado: FOLLOW_WALL")
@@ -156,8 +156,8 @@ class Controller(Node):
         w = self.kp_angular * error_theta + self.kd_angular * d_error_theta
 
         # Limitar velocidades
-        v = max(min(v, 0.3), -0.3)
-        w = max(min(w, 1.0), -1.0)
+        v = max(min(v, self.max_linear), -self.max_linear)
+        w = max(min(w, self.max_angular), -self.max_angular)
 
         # --- Producto escalar para detectar cruce del objetivo ---
     
@@ -181,12 +181,15 @@ class Controller(Node):
             self.goal_idx += 1
             self.prev_error_dist = 0.0
             self.prev_error_theta = 0.0
-            self.get_logger().info(f'Punto {self.goal_idx} alcanzado')
+            self.print_success(f'Punto {self.goal_idx} alcanzado')
             # Publicar señal para avanzar al siguiente objetivo
             msg = Bool()
             msg.data = True
             self.pub_next_goal.publish(msg)
             self.last_goal_time = now
+
+        if abs(error_theta) > 0.4: #to make sure it will reach the point
+            v = 0.0
 
         # Publicar comando
         twist = Twist()
@@ -205,15 +208,22 @@ class Controller(Node):
         dist_right = self.get_distance_at_angle(-90)
         dist_right_45 = self.get_distance_at_angle(-45)
         dist_right_side = np.mean([dist_right, dist_right_45])
-        dist_front_mean = self.get_distance_at_angle_range(-15,15)
+        dist_front_mean = self.get_distance_at_angle_range(-25,25)
+        dist_all_front = self.get_distance_at_angle_range(-90,90)
 
         twist = Twist()
 
-        if dist_front_mean > self.threshold_front:
+        if dist_all_front < self.danger_distance: # too close
+            twist.linear.x = 0.0
+            twist.angular.z = self.max_angular
+
+        elif dist_front_mean > self.threshold_front:
             error = dist_right_side - self.wall_desired
             turn_rate = -error * self.kp
-            twist.linear.x = self.linear_velocity
+            twist.linear.x = self.max_linear
             twist.angular.z = turn_rate
+            if abs(error) > 0.9: #to make sure it will reach the point
+                twist.linear.x = self.max_linear / 5 
 
             # Diagnóstico de giro
             self.get_logger().info(f"Error: {error}")
@@ -222,6 +232,10 @@ class Controller(Node):
             twist.linear.x = 0.0
             twist.angular.z = self.max_angular
             self.get_logger().info("Frente")
+
+        # Limitar velocidades
+        twist.linear.x = max(min(twist.linear.x, self.max_linear), -self.max_linear)
+        twist.angular.z = max(min(twist.angular.z, self.max_angular), -self.max_angular)
 
         # Publicar comando final
         self.pub_cmd_vel.publish(twist)
@@ -272,7 +286,7 @@ class Controller(Node):
             error = abs(self.Posy - expected_y)
 
         # Imprimir el error actual con respecto a la línea
-        self.get_logger().info(f"M-line error: {error:.3f}")
+        # self.get_logger().info(f"M-line error: {error:.3f}")
 
         return error < tolerance
     
