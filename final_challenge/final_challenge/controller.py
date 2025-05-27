@@ -71,6 +71,10 @@ class Controller(Node):
                           msg.pose.pose.orientation.z, msg.pose.pose.orientation.w)
         _, _, yaw = transforms3d.euler.quat2euler([qw, qx, qy, qz])
         self.Postheta = yaw
+        self.print_success(f'x:{self.Posx}')
+        self.print_success(f'y:{self.Posy}')
+        self.print_success(f'theta:{self.Postheta}')
+
 
     def callback_goal(self, msg: Goal):
         # Detectar mensaje especial de fin (inf)
@@ -216,8 +220,8 @@ class Controller(Node):
         dist_front_5 = self.get_distance_at_angle(-15)
         dist_front_mean = min([dist_front, dist_front_5])
 
-        self.get_logger().info(f"Distancia frente: {dist_front_mean:.2f}")
-        self.get_logger().info(f"Distancia right: {dist_right_side:.2f}")
+        # self.get_logger().info(f"Distancia frente: {dist_front_mean:.2f}")
+        # self.get_logger().info(f"Distancia right: {dist_right_side:.2f}")
 
         twist = Twist()
 
@@ -231,7 +235,7 @@ class Controller(Node):
                 twist.linear.x = self.max_linear / 5 
 
             # Diagnóstico de giro
-            self.get_logger().info(f"Error: {error}")
+            # self.get_logger().info(f"Error: {error}")
         else:
             # Obstáculo al frente, detener avance y girar a la izquierda
             twist.linear.x = 0.0
