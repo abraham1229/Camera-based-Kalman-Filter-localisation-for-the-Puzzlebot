@@ -53,6 +53,9 @@ class WallFollowerLidar(Node):
         dist_front_5 = self.get_distance_at_angle(msg, -15)
         dist_front_mean = np.mean([dist_front, dist_front_5])
 
+        self.get_logger().info(f"Distancia derecha: {dist_right_side:.2f}")
+        self.get_logger().info(f"Distancia frente: {dist_front_mean:.2f}")
+
         twist = Twist()
 
         if dist_front_mean > self.threshold_front:
