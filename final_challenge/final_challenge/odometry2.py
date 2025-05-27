@@ -149,9 +149,9 @@ class EnhancedOdometry(Node):
         self.prev_stamp = None
         self.dt = self.run_dt  # Default dt
         
-        self.get_logger().info(f'Enhanced Odometry node initialized')
-        self.get_logger().info(f'Using Kalman filter: {self.use_kalman}')
-        self.get_logger().info(f'Initial pose: x={init_x}, y={init_y}, θ={math.degrees(init_theta):.1f}°')
+        #self.get_logger().info(f'Enhanced Odometry node initialized')
+        #self.get_logger().info(f'Using Kalman filter: {self.use_kalman}')
+        #self.get_logger().info(f'Initial pose: x={init_x}, y={init_y}, θ={math.degrees(init_theta):.1f}°')
 
     def encL_callback(self, msg):
         """Left wheel velocity callback (matching kalman.py)"""
@@ -181,16 +181,17 @@ class EnhancedOdometry(Node):
             ]
             markers.append(marker)
             
-            self.get_logger().debug(
-                f"ArUco {aruco_marker.marker_id}: "
-                f"rel_pos=({marker[1]:.2f}, {marker[2]:.2f}), "
-                f"rel_angle={math.degrees(marker[3]):.1f}°"
-            )
+            #self.get_logger().debug(
+            #    f"ArUco {aruco_marker.marker_id}: "
+            #    f"rel_pos=({marker[1]:.2f}, {marker[2]:.2f}), "
+            #    f"rel_angle={math.degrees(marker[3]):.1f}°"
+            #)
         
         if markers:
             success = self.kalman_correction(markers, 0.1)  # 0.1 is measurement noise
             if success:
-                self.get_logger().info(f"Kalman correction applied: x={self.pose_x:.3f}, y={self.pose_y:.3f}, θ={math.degrees(self.pose_theta):.1f}°")
+                pass
+                #self.get_logger().info(f"Kalman correction applied: x={self.pose_x:.3f}, y={self.pose_y:.3f}, θ={math.degrees(self.pose_theta):.1f}°")
 
     def run_loop(self):
         """Main execution loop (matching kalman.py structure)"""
@@ -233,9 +234,9 @@ class EnhancedOdometry(Node):
         self.pose_y += dt * self.Vr * math.sin(self.pose_theta + dt * self.Wr / 2) 
         self.pose_theta = wrap_to_pi(self.pose_theta + dt * self.Wr)
         
-        self.get_logger().info(
-            f"[Kalman Prediction] x={self.pose_x:.3f}, y={self.pose_y:.3f}, θ={math.degrees(self.pose_theta):.1f}°"
-        )
+        #self.get_logger().info(
+        #    f"[Kalman Prediction] x={self.pose_x:.3f}, y={self.pose_y:.3f}, θ={math.degrees(self.pose_theta):.1f}°"
+        #)
         # Compute Jacobian (exactly from kalman.py)
         H = np.array([[1, 0, -dt * self.Vr * math.sin(self.pose_theta)],
                       [0, 1,  dt * self.Vr * math.cos(self.pose_theta)],

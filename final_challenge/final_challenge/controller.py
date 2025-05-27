@@ -33,8 +33,8 @@ class Controller(Node):
         self.lidar_msg = None
         self.kp = 1.0
         self.wall_desired = 0.5      # distancia deseada a la pared derecha
-        self.max_linear = 0.25
-        self.max_angular = 0.2
+        self.max_linear = 0.3
+        self.max_angular = 0.5
         self.threshold_front = 0.4   # si algo está más cerca, se considera obstáculo
         # Bug 2
         self.initial_point_x = 0.0
@@ -115,18 +115,19 @@ class Controller(Node):
 
         # dist_wall = min(dist_front,dist_45, dist_15)
 
-        dist_wall = self.get_distance_at_angle_range(15,-15)
+        dist_wall = self.get_distance_at_angle_range(15,-5)
 
-        if self.state == 'GO_TO_GOAL':
-            if dist_wall < self.threshold_front:
-                self.state = 'FOLLOW_WALL'
-                self.last_state_change_time = self.get_clock().now()
-                self.get_logger().info("estado: FOLLOW_WALL")
-        elif self.state == 'FOLLOW_WALL':
-            if self.can_change_state() and self.is_on_mline():
-                self.state = 'GO_TO_GOAL'
-                self.last_state_change_time = self.get_clock().now()
-                self.get_logger().info("estado: GO_TO_GOAL")
+
+        if dist_wall < self.threshold_front:
+            self.state = 'FOLLOW_WALL'
+            self.last_state_change_time = self.get_clock().now()
+            self.get_logger().info("estado: FOLLOW_WALL")
+            
+        else:
+            
+            self.state = 'GO_TO_GOAL'
+            self.last_state_change_time = self.get_clock().now()
+            self.get_logger().info("estado: GO_TO_GOAL")
 
 
 
