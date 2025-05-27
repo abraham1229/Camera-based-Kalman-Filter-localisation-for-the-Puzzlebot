@@ -755,7 +755,7 @@
           <geometry>
             <mesh>
               <scale>1 1 1</scale>
-              <uri>file:///home/abraham1229/ros2_ws/install/puzzlebot_description/share/puzzlebot_description/meshes/bases/Puzzlebot_Jetson_Lidar_Edition_Base.stl</uri>
+              <uri>file:///home/ai31/ros2_ws/install/puzzlebot_description/share/puzzlebot_description/meshes/bases/Puzzlebot_Jetson_Lidar_Edition_Base.stl</uri>
             </mesh>
           </geometry>
           <material>
@@ -768,7 +768,7 @@
           <geometry>
             <mesh>
               <scale>1 1 1</scale>
-              <uri>file:///home/abraham1229/ros2_ws/install/puzzlebot_description/share/puzzlebot_description/meshes/sensors/Laser_Camera_Bracket.stl</uri>
+              <uri>file:///home/ai31/ros2_ws/install/puzzlebot_description/share/puzzlebot_description/meshes/sensors/Laser_Camera_Bracket.stl</uri>
             </mesh>
           </geometry>
           <material>
@@ -781,7 +781,7 @@
           <geometry>
             <mesh>
               <scale>1 1 1</scale>
-              <uri>file:///home/abraham1229/ros2_ws/install/puzzlebot_description/share/puzzlebot_description/meshes/wheels/Puzzlebot_Caster_Wheel.stl</uri>
+              <uri>file:///home/ai31/ros2_ws/install/puzzlebot_description/share/puzzlebot_description/meshes/wheels/Puzzlebot_Caster_Wheel.stl</uri>
             </mesh>
           </geometry>
           <material>
@@ -794,7 +794,7 @@
           <geometry>
             <mesh>
               <scale>1 1 1</scale>
-              <uri>file:///home/abraham1229/ros2_ws/install/puzzlebot_description/share/puzzlebot_description/meshes/misc/NVIDIA_Jetson.stl</uri>
+              <uri>file:///home/ai31/ros2_ws/install/puzzlebot_description/share/puzzlebot_description/meshes/misc/NVIDIA_Jetson.stl</uri>
             </mesh>
           </geometry>
           <material>
@@ -807,7 +807,7 @@
           <geometry>
             <mesh>
               <scale>1 1 1</scale>
-              <uri>file:///home/abraham1229/ros2_ws/install/puzzlebot_description/share/puzzlebot_description/meshes/sensors/RPLidar.stl</uri>
+              <uri>file:///home/ai31/ros2_ws/install/puzzlebot_description/share/puzzlebot_description/meshes/sensors/RPLidar.stl</uri>
             </mesh>
           </geometry>
           <material>
@@ -1011,7 +1011,7 @@
           <geometry>
             <mesh>
               <scale>1 1 1</scale>
-              <uri>file:///home/abraham1229/ros2_ws/install/puzzlebot_description/share/puzzlebot_description/meshes/wheels/Puzzlebot_Wheel.stl</uri>
+              <uri>file:///home/ai31/ros2_ws/install/puzzlebot_description/share/puzzlebot_description/meshes/wheels/Puzzlebot_Wheel.stl</uri>
             </mesh>
           </geometry>
           <material>
@@ -1093,7 +1093,7 @@
           <geometry>
             <mesh>
               <scale>1 1 1</scale>
-              <uri>file:///home/abraham1229/ros2_ws/install/puzzlebot_description/share/puzzlebot_description/meshes/wheels/Puzzlebot_Wheel.stl</uri>
+              <uri>file:///home/ai31/ros2_ws/install/puzzlebot_description/share/puzzlebot_description/meshes/wheels/Puzzlebot_Wheel.stl</uri>
             </mesh>
           </geometry>
           <material>
