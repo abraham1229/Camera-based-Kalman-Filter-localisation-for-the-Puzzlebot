@@ -314,7 +314,7 @@ class Controller(Node):
         return min_dist if min_dist != float('inf') else self.default_distance
 
     
-    def is_on_mline(self, tolerance=0.4):
+    def is_on_mline(self, tolerance=0.8):
         if self.mline_slope is None:
             return False
 
