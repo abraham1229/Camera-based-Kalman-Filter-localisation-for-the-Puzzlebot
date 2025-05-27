@@ -32,18 +32,18 @@ class Controller(Node):
         # Variables para Bug algorithm
         self.lidar_msg = None
         self.kp = 1.0
-        self.wall_desired = 0.5      # distancia deseada a la pared derecha
+        self.wall_desired = 0.3      # distancia deseada a la pared derecha
         self.max_linear = 0.1
         self.max_angular = 0.2
-        self.threshold_front = 0.5   # si algo está más cerca, se considera obstáculo
+        self.threshold_front = 0.4   # si algo está más cerca, se considera obstáculo
         # Bug 2
         self.initial_point_x = 0.0
         self.initial_point_y = 0.0
         self.mline_slope = None
         self.mline_intercept = None
         self.last_state_change_time = self.get_clock().now()
-        self.min_state_duration = 5.0 # segundos
-        self.default_distance = 2.5
+        self.min_state_duration = 10.0 # segundos
+        self.default_distance = 2.0
         self.danger_distance = 0.25
 
         # Estado de la trayectoria
@@ -211,40 +211,35 @@ class Controller(Node):
     def wall_follower(self):
         dist_right = self.get_distance_at_angle(-90)
         dist_right_45 = self.get_distance_at_angle(-45)
-        dist_right_side = np.mean([dist_right, dist_right_45])
-        dist_front_mean = self.get_distance_at_angle_range(-25,25)
-        dist_all_front = self.get_distance_at_angle_range(-90,90)
+        dist_right_side = min([dist_right, dist_right_45])
+        dist_front = self.get_distance_at_angle( 0)
+        dist_front_5 = self.get_distance_at_angle(-15)
+        dist_front_mean = min([dist_front, dist_front_5])
 
+        self.get_logger().info(f"Distancia frente: {dist_front_mean:.2f}")
+        self.get_logger().info(f"Distancia right: {dist_right_side:.2f}")
 
-
-        self.print_success(f"All front: {dist_front_mean}")
         twist = Twist()
 
-        if dist_all_front < self.danger_distance: # too close
-            twist.linear.x = 0.0
-            twist.angular.z = self.max_angular
-            self.print_success(f"Too close")
-
-
-        elif dist_front_mean > self.threshold_front:
-            self.print_success(f"Following")
-
+        if dist_front_mean > self.threshold_front:
             error = dist_right_side - self.wall_desired
             turn_rate = -error * self.kp
             twist.linear.x = self.max_linear
             twist.angular.z = turn_rate
+
             if abs(error) > 0.9: #to make sure it will reach the point
                 twist.linear.x = self.max_linear / 5 
 
             # Diagnóstico de giro
-            # self.print_success(f"Error: {error}")
+            self.get_logger().info(f"Error: {error}")
         else:
             # Obstáculo al frente, detener avance y girar a la izquierda
             twist.linear.x = 0.0
             twist.angular.z = self.max_angular
-            self.print_success("Frente")
+            # self.get_logger().info("Frente")
 
-        # Limitar velocidades
+    
+        
         twist.linear.x = max(min(twist.linear.x, self.max_linear), -self.max_linear)
         twist.angular.z = max(min(twist.angular.z, self.max_angular), -self.max_angular)
 
@@ -255,35 +250,23 @@ class Controller(Node):
         if self.lidar_msg is None:
             return self.default_distance
 
-        # Convertimos el ángulo deseado a radianes en [-π, π)
-        angle_rad_input = math.radians(angle_deg)
-        angle_rad_input = ((angle_rad_input + math.pi) % (2 * math.pi)) - math.pi
+        # Convertir de grados a radianes
+        angle_rad = np.radians(angle_deg)
 
-        angle_min = self.lidar_msg.angle_min
-        angle_max = self.lidar_msg.angle_max
-        angle_increment = self.lidar_msg.angle_increment
+        # Validar que el ángulo deseado está dentro del rango del LiDAR
+        if not (self.lidar_msg.angle_min <= angle_rad <= self.lidar_msg.angle_max):
+            return 2.0
 
-        # Acomodamos el ángulo para que esté en el mismo rango que el LIDAR
-        # Si el LIDAR va de -π a π → no hacemos nada
-        # Si el LIDAR va de 0 a 2π → convertimos el ángulo a ese rango
-        if angle_min >= 0.0:
-            if angle_rad_input < 0:
-                angle_rad_input += 2 * math.pi
+        # Calcular el índice correspondiente en el arreglo
+        index = int((angle_rad - self.lidar_msg.angle_min) / self.lidar_msg.angle_increment)
 
-        # Validamos que el ángulo está en el rango del sensor
-        if not (angle_min <= angle_rad_input <= angle_max):
-            return self.default_distance
-
-        # Índice al que corresponde ese ángulo
-        index = int((angle_rad_input - angle_min) / angle_increment)
-
-        # Aseguramos que esté en rango válido
+        # Verificar y devolver la distancia si es válida
         if 0 <= index < len(self.lidar_msg.ranges):
-            val = self.lidar_msg.ranges[index]
-            if not math.isnan(val) and not math.isinf(val):
-                return val
+            value = self.lidar_msg.ranges[index]
+            if not np.isnan(value) and not np.isinf(value):
+                return value
 
-        return self.default_distance
+        return 2.0  # Valor por defecto si el índice no es válido
 
     
     def get_distance_at_angle_range(self, angle_start_deg, angle_end_deg):
