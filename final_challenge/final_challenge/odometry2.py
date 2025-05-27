@@ -60,7 +60,7 @@ class EnhancedOdometry(Node):
         self.declare_parameter('init_pose_x', 0.0)
         self.declare_parameter('init_pose_y', 0.0) 
         self.declare_parameter('init_pose_yaw', 0.0)
-        self.declare_parameter('odom_frame', 'odom')
+        self.declare_parameter('odom_frame', 'world')
         self.declare_parameter('base_frame', 'base_link')
         self.declare_parameter("use_kalman_filter", True)
 
@@ -98,7 +98,7 @@ class EnhancedOdometry(Node):
             rclpy.qos.qos_profile_sensor_data)
         
         # Publishers
-        self.pub_odometry = self.create_publisher(Odometry, 'odom', 10)
+        self.pub_odometry = self.create_publisher(Odometry, 'odometria', 10)
         
         # TF2 broadcaster
         self.tf_broadcaster = TransformBroadcaster(self)
@@ -138,10 +138,10 @@ class EnhancedOdometry(Node):
         #            [1, 0.0, -1.0, 3.1415]]  # Marker 1 at position (0, -1) with orientation π
         
         self.map = [
-            [0, 2.5, -0.5, 0.0],   # Marker 0 at (2.5, -0.5)
-            [1, 2.5,  2.5, 0.0],   # Marker 1 at (2.5, 2.5)
-            [2, -0.5, 2.5, 0.0],   # Marker 2 at (-0.5, 2.5)
-            [3, -0.5, -0.5, 0.0],  # Marker 3 at (-0.5, -0.5)
+            [0, 2.5, -0.5, 0],   # Marker 0 at (2.5, -0.5) -3.1415
+            [1, 2.5,  2.5, 1.57],   # Marker 1 at (2.5, 2.5)
+            [2, -0.5, 2.5, 3.1415],   # Marker 2 at (-0.5, 2.5)
+            [3, -0.5, -0.5, -1.57],  # Marker 3 at (-0.5, -0.5)
         ]
         
         # Timing variables for proper dt calculation
@@ -194,6 +194,7 @@ class EnhancedOdometry(Node):
 
     def run_loop(self):
         """Main execution loop (matching kalman.py structure)"""
+
         # Compute robot velocities from wheel encoders (matching kalman.py exactly)
         self.Vr = (self.velocityR + self.velocityL) * self.wheel_radius / 2
         self.Wr = (self.velocityR - self.velocityL) * self.wheel_radius / self.robot_width
@@ -232,6 +233,9 @@ class EnhancedOdometry(Node):
         self.pose_y += dt * self.Vr * math.sin(self.pose_theta + dt * self.Wr / 2) 
         self.pose_theta = wrap_to_pi(self.pose_theta + dt * self.Wr)
         
+        self.get_logger().info(
+            f"[Kalman Prediction] x={self.pose_x:.3f}, y={self.pose_y:.3f}, θ={math.degrees(self.pose_theta):.1f}°"
+        )
         # Compute Jacobian (exactly from kalman.py)
         H = np.array([[1, 0, -dt * self.Vr * math.sin(self.pose_theta)],
                       [0, 1,  dt * self.Vr * math.cos(self.pose_theta)],
