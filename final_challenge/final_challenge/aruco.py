@@ -187,7 +187,7 @@ class ArucoDetectorNode(Node):
                            cv.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
                 cv.putText(img, f"Range: {range_base:.2f}m", (cX, cY + 15), 
                            cv.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
-                cv.putText(img, f"Bearing: {math.degrees(bearing_base):.1f}°", (cX, cY + 30), 
+                cv.putText(img, f"Bearing: {math.degrees(bearing_base):.2f}°", (cX, cY + 30), 
                            cv.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
                 
                 # Check if this marker's position is known in world frame
