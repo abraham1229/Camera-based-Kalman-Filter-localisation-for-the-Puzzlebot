@@ -66,7 +66,7 @@ class Kalman(Node):
     def __init__(self):
         super().__init__('kalman')
                 
-        self.pub_odom = self.create_publisher(Odometry, 'odom', 10)
+        self.pub_odom = self.create_publisher(Odometry, 'odometria', 10)
         
         self.sub_encR = self.create_subscription(Float32,'VelocityEncR',self.encR_callback,qos.qos_profile_sensor_data)
         self.sub_encL = self.create_subscription(Float32,'VelocityEncL',self.encL_callback,qos.qos_profile_sensor_data)

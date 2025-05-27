@@ -26,17 +26,24 @@ def generate_launch_description():
     )
 
     odometry_node = Node(
-        name='odometry',
+        name='odometry2',
         package='final_challenge',
-        executable='odometry',
+        executable='odometry2',
         parameters=[config]
     )
 
-    aruco_node = Node(name="aruco",
-      package='final_challenge',
-      executable='aruco',
-      parameters=[config]
-      )
+    aruco_node = Node(
+        package='aruco_opencv',
+        executable='aruco_tracker_autostart',
+        parameters=[
+                {"cam_base_topic": "/camera"},
+                {"marker_size": 0.14},
+                {"marker_dict": "4X4_50"},
+                {"publish_tf": True}
+        ],
+        remappings=[],
+        output='screen'
+    )
 
     return LaunchDescription([
         path_generator_node,
