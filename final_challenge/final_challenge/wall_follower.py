@@ -15,21 +15,35 @@ class WallFollowerLidar(Node):
         # Parámetros de control
         self.kp = 1.0
         self.wall_desired = 0.5      # distancia deseada a la pared derecha
-        self.linear_velocity = 0.4
-        self.max_angular = 2.0
-        self.threshold_front = 0.6   # si algo está más cerca, se considera obstáculo
+        self.linear_velocity = 0.1
+        self.max_angular = 0.2
+        self.threshold_front = 0.5   # si algo está más cerca, se considera obstáculo
 
         self.get_logger().info("Wall Follower with LiDAR node started")
 
-    def get_distance_at_angle(self, msg, angle_deg):
-        angle_rad = np.radians(angle_deg) % (2 * np.pi)
+    def get_distance_at_angle(self, msg: LaserScan, angle_deg: float):
+        if msg is None:
+            return 2.0
+
+        # Convertir de grados a radianes
+        angle_rad = np.radians(angle_deg)
+
+        # Validar que el ángulo deseado está dentro del rango del LiDAR
+        if not (msg.angle_min <= angle_rad <= msg.angle_max):
+            return 2.0
+
+        # Calcular el índice correspondiente en el arreglo
         index = int((angle_rad - msg.angle_min) / msg.angle_increment)
 
+        # Verificar y devolver la distancia si es válida
         if 0 <= index < len(msg.ranges):
             value = msg.ranges[index]
             if not np.isnan(value) and not np.isinf(value):
                 return value
-        return 2.0
+
+        return 2.0  # Valor por defecto si el índice no es válido
+
+
 
     def scan_callback(self, msg: LaserScan):
         dist_right = self.get_distance_at_angle(msg, -90)
