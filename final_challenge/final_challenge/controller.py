@@ -302,27 +302,27 @@ class Controller(Node):
 
 
     
-    def is_on_mline(self, tolerance=0.8):
-        if self.mline_slope is None:
-            return False
+    # def is_on_mline(self, tolerance=0.8):
+    #     if self.mline_slope is None:
+    #         return False
 
-        if self.mline_slope == float('inf'):
-            error = abs(self.Posx - self.mline_intercept)
-        elif self.mline_slope == 0:
-            error = abs(self.Posy - self.mline_intercept)
-        else:
-            expected_y = self.mline_slope * self.Posx + self.mline_intercept
-            error = abs(self.Posy - expected_y)
+    #     if self.mline_slope == float('inf'):
+    #         error = abs(self.Posx - self.mline_intercept)
+    #     elif self.mline_slope == 0:
+    #         error = abs(self.Posy - self.mline_intercept)
+    #     else:
+    #         expected_y = self.mline_slope * self.Posx + self.mline_intercept
+    #         error = abs(self.Posy - expected_y)
 
-        # Imprimir el error actual con respecto a la línea
-        # self.get_logger().info(f"M-line error: {error:.3f}")
+    #     # Imprimir el error actual con respecto a la línea
+    #     # self.get_logger().info(f"M-line error: {error:.3f}")
 
-        return error < tolerance
+    #     return error < tolerance
     
-    def can_change_state(self):
-        now = self.get_clock().now()
-        elapsed = (now - self.last_state_change_time).nanoseconds / 1e9
-        return elapsed > self.min_state_duration
+    # def can_change_state(self):
+    #     now = self.get_clock().now()
+    #     elapsed = (now - self.last_state_change_time).nanoseconds / 1e9
+    #     return elapsed > self.min_state_duration
 
 
 
