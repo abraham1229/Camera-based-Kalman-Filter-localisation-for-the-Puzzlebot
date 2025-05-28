@@ -113,29 +113,29 @@ class Controller(Node):
     def callback_lidar(self, msg: LaserScan):
         self.lidar_msg = msg
 
-        dist_front = self.get_distance_at_angle(0)
-        dist_45 = self.get_distance_at_angle(-45)
-        dist_15 = self.get_distance_at_angle(-15)
-        dist_15 = self.get_distance_at_angle(-35)
-        dist_plus_15 = self.get_distance_at_angle(15)
+        # dist_front = self.get_distance_at_angle(0)
+        # dist_45 = self.get_distance_at_angle(-45)
+        # dist_15 = self.get_distance_at_angle(-15)
+        # dist_15 = self.get_distance_at_angle(-35)
+        # dist_plus_15 = self.get_distance_at_angle(15)
 
-        dist_wall = min(dist_front,dist_45, dist_15,)
+        # dist_wall = min(dist_front,dist_45, dist_15,)
 
         dist_wall = self.get_distance_at_angle_range(-45,15)
         self.print_success(f"distwall: {dist_wall}")
 
 
         if dist_wall < self.threshold_front:
+            if self.state != 'FOLLOW_WALL':
                 self.state = 'FOLLOW_WALL'
                 self.last_state_change_time = self.get_clock().now()
-                self.get_logger().info("estado: FOLLOW_WALL")
-
-        # if self.state == 'GO_TO_GOAL':
-            
+                self.get_logger().info("FOLLOW_WALL")
         else:
-            self.state = 'GO_TO_GOAL'
-            self.last_state_change_time = self.get_clock().now()
-            self.get_logger().info("estado: GO_TO_GOAL")
+            if self.state != 'GO_TO_GOAL':
+                self.state = 'GO_TO_GOAL'
+                self.last_state_change_time = self.get_clock().now()
+                self.get_logger().info("GO_TO_GOAL")
+
 
 
 
