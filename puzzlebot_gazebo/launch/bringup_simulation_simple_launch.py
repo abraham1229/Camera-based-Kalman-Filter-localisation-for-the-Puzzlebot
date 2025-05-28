@@ -12,8 +12,8 @@ def generate_launch_description():
     # -----------------------------------------------------------------------------
     
     # Name of the Gazebo world to load
-    # world = 'my_aruco2.sdf'
-    world = 'puzzlebot_aruco_markers.world'
+    world = 'my_aruco2.sdf'
+    #world = 'Our_world.sdf'
 
     # General Gazebo settings
     pause = 'false'           # Start Gazebo in paused state
