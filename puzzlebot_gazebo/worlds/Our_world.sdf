@@ -78,11 +78,11 @@
         </inertial>
         <enable_wind>false</enable_wind>
       </link>
-      <pose>2.1416399478912354 -0.76597112417221069 0 0 0 0</pose>
+      <pose>2 0 0 0 0 0</pose>
       <self_collide>false</self_collide>
     </model>
     <model name='marker_0'>
-      <pose>2.5 -0.5 0.090999999999999998 0 0 -3.1415926531795866</pose>
+      <pose>5 -3.0000000000000004 0.089999999999999997 0 0 -3.1400000000000001</pose>
       <static>true</static>
       <link name='link'>
         <inertial>
@@ -163,7 +163,7 @@
       <self_collide>false</self_collide>
     </model>
     <model name='marker_1'>
-      <pose>2.5 2.5 0.090999999999999998 0 0 -1.5708853071795863</pose>
+      <pose>2 2.5 0.089999999999999997 0 0 -1.5700000000000001</pose>
       <static>true</static>
       <link name='link'>
         <inertial>
@@ -244,7 +244,7 @@
       <self_collide>false</self_collide>
     </model>
     <model name='marker_2'>
-      <pose>4 -4 0.089999999999999997 0 0 1.5700000000000001</pose>
+      <pose>-1 -0.5 0.089999999999999997 0 0 0</pose>
       <static>true</static>
       <link name='link'>
         <inertial>
@@ -325,7 +325,7 @@
       <self_collide>false</self_collide>
     </model>
     <model name='marker_3'>
-      <pose>-0.5 -0.5 0.090999999999999998 0 0 1.5708000000000009</pose>
+      <pose>0.45000000000000007 -3.0000000000000004 0.089999999999999997 0 0 1.5699999999999998</pose>
       <static>true</static>
       <link name='link'>
         <inertial>
@@ -944,7 +944,7 @@
         <enable_wind>false</enable_wind>
       </link>
       <joint name='wheel_left_joint' type='revolute'>
-        <pose>2.0816681711721685e-17 -2.7755575615628914e-17 6.9388939039072284e-18 0 6.6819117752304867e-51 0</pose>
+        <pose>2.7755575615628914e-17 -4.163336342344337e-17 6.9388939039072284e-18 0 2.0045735325691474e-50 0</pose>
         <parent>base_footprint</parent>
         <child>wheel_left_link</child>
         <axis>
@@ -966,7 +966,7 @@
         </axis>
       </joint>
       <link name='wheel_left_link'>
-        <pose>0.052000000000000025 0.095000000000000029 0.049999999999999989 1.9387045613528282e-26 -3.0620721718293948e-05 -2.9682266435905295e-31</pose>
+        <pose>0.052000000000000018 0.095000000000000043 0.049999999999999989 3.4785781125630472e-26 -3.0620721723341777e-05 -3.3087229831827672e-24</pose>
         <inertial>
           <pose>0 0 0 1.5707963267948959 0 0</pose>
           <mass>0.027</mass>
@@ -1026,7 +1026,7 @@
         <enable_wind>false</enable_wind>
       </link>
       <joint name='wheel_right_joint' type='revolute'>
-        <pose>0 0 -6.9388939039072284e-18 0 1.0156505898350345e-49 0</pose>
+        <pose>0 0 -6.9388939039072284e-18 0 2.2050308858260606e-49 0</pose>
         <parent>base_footprint</parent>
         <child>wheel_right_link</child>
         <axis>
@@ -1048,7 +1048,7 @@
         </axis>
       </joint>
       <link name='wheel_right_link'>
-        <pose>0.052000000000000032 -0.094999999999999987 0.049999999999999975 5.185061762112611e-26 -3.0591730521962189e-05 -9.9261681448975744e-24</pose>
+        <pose>0.052000000000000032 -0.094999999999999973 0.049999999999999975 6.712278073927292e-26 -3.059173051779972e-05 -4.9630847025997672e-24</pose>
         <inertial>
           <pose>0 0 0 -1.5707963267948959 0 0</pose>
           <mass>0.027</mass>
@@ -1205,7 +1205,7 @@
       <frame name='base_link' attached_to='chassis_joint'>
         <pose>0 0 0 0 0 0</pose>
       </frame>
-      <pose>-1.4758185002618193e-06 -3.972879781439564e-10 -8.3799209991662109e-05 -5.5152372196876092e-11 -0.0016126287145561604 7.6329841923776658e-09</pose>
+      <pose>-1.4758185002679619e-06 -3.9728756758427388e-10 -8.3799209991040088e-05 -5.5154623737390019e-11 -0.001612628714552864 7.6329870269174915e-09</pose>
       <static>false</static>
       <self_collide>false</self_collide>
     </model>
@@ -1243,7 +1243,7 @@
         </inertial>
         <enable_wind>false</enable_wind>
       </link>
-      <pose>2.7364370822906494 -2.0588219165802002 0 0 0 1.5669999894964606</pose>
+      <pose>2.7400491237640381 -1.9995145797729497 0 0 0 1.5700000841906609</pose>
       <self_collide>false</self_collide>
     </model>
     <model name='nist_maze_wall_120_0'>
@@ -1280,7 +1280,7 @@
         </inertial>
         <enable_wind>false</enable_wind>
       </link>
-      <pose>2.0690922737121582 -2.0695176124572754 0 0 0 -0.36079499390042696</pose>
+      <pose>2.5 -2 0 0 0 0</pose>
       <self_collide>false</self_collide>
     </model>
     <model name='nist_maze_wall_120_1'>
@@ -1317,7 +1317,7 @@
         </inertial>
         <enable_wind>false</enable_wind>
       </link>
-      <pose>2.3659963607788086 0.39561200141906738 0 0 0 0</pose>
+      <pose>3.1000000000000001 -0.23000000000000001 0 0 0 0</pose>
       <self_collide>false</self_collide>
     </model>
     <model name='nist_maze_wall_120_2'>

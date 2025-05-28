@@ -34,8 +34,6 @@ setup(
             'controller = final_challenge.controller:main',
             'path_generator = final_challenge.path_generator:main',
             'aruco = final_challenge.aruco:main',
-            'odometry2 = final_challenge.odometry2:main',
-            'kalman = final_challenge.kalman:main',
         ],
     },
 )

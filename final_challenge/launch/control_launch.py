@@ -26,9 +26,9 @@ def generate_launch_description():
     )
 
     odometry_node = Node(
-        name='odometry2',
+        name='odometry',
         package='final_challenge',
-        executable='odometry2',
+        executable='odometry',
         parameters=[config]
     )
 
