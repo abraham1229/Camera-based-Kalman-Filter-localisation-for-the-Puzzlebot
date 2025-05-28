@@ -122,7 +122,7 @@ class Controller(Node):
         # dist_wall = min(dist_front,dist_45, dist_15,)
 
         dist_wall = self.get_distance_at_angle_range(-45,15)
-        self.print_success(f"distwall: {dist_wall}")
+        # self.print_success(f"distwall: {dist_wall}")
 
 
         if dist_wall < self.threshold_front:
@@ -222,34 +222,41 @@ class Controller(Node):
         dist_front = self.get_distance_at_angle( 0)
         dist_front_5 = self.get_distance_at_angle(-15)
         dist_front_mean = min([dist_front, dist_front_5])
+        dist_front_mean = self.get_distance_at_angle_range(-25,25)
+
         dist_all_front = self.get_distance_at_angle_range(-90,90)
 
 
-        # self.get_logger().info(f"Distancia frente: {dist_front_mean:.2f}")
-        # self.get_logger().info(f"Distancia right: {dist_right_side:.2f}")
+        # self.get_logger().info(f"derecha: {dist_right_side:.2f}")
 
         twist = Twist()
 
         if dist_all_front < self.danger_distance:
             twist.linear.x = 0.0
             twist.angular.z = self.max_angular
+            self.get_logger().info(f"Danger: {dist_all_front:.2f}")
 
-        if dist_front_mean > self.threshold_front:
+
+        elif dist_front_mean > self.threshold_front:
             error = dist_right_side - self.wall_desired
             turn_rate = -error * self.kp
             twist.linear.x = self.max_linear
             twist.angular.z = turn_rate
+            self.get_logger().info(f"derecha: {dist_right_side:.2f}")
+            
+
 
             if abs(error) > 0.9: #to make sure it will reach the point
                 twist.linear.x = self.max_linear / 5 
 
             # Diagnóstico de giro
-            self.get_logger().info(f"Error: {error}")
+            # self.get_logger().info(f"Error: {error}")
         else:
+            self.get_logger().info(f"frente: {dist_front_mean:.2f}")
             # Obstáculo al frente, detener avance y girar a la izquierda
             twist.linear.x = 0.0
             twist.angular.z = self.max_angular
-            self.get_logger().info("Frente")
+            # self.get_logger().info("Frente")
 
     
         
