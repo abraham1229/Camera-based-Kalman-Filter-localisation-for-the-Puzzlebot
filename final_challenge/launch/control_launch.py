@@ -32,15 +32,8 @@ def generate_launch_description():
         parameters=[config]
     )
 
-    aruco_node = Node(name="aruco",
-      package='final_challenge',
-      executable='aruco',
-      parameters=[config]
-      )
-
     return LaunchDescription([
         path_generator_node,
         controller_node,
         odometry_node,
-        aruco_node
     ])
