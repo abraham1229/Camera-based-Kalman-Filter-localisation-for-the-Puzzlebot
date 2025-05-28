@@ -32,6 +32,29 @@ def generate_launch_description():
         parameters=[config]
     )
 
+<<<<<<< HEAD
+=======
+    aruco_node = Node(
+        package='aruco_opencv',
+        executable='aruco_tracker_autostart',
+        parameters=[
+                {"cam_base_topic": "/image_raw"},
+                {"marker_size": 0.045},
+                {"marker_dict": "4X4_50"},
+                {"publish_tf": True}
+        ],
+        remappings=[],
+        output='screen'
+    )
+
+    rqt_image_view_node = Node(
+        package='rqt_image_view',
+        executable='rqt_image_view',
+        name='rqt_image_view',
+        output='screen'
+    )
+
+>>>>>>> real_robot_test
     return LaunchDescription([
         path_generator_node,
         controller_node,
