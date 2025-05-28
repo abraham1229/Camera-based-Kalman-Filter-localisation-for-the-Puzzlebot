@@ -36,13 +36,14 @@ class Controller(Node):
         self.max_linear = 0.3
         self.max_angular = 0.5
         self.threshold_front = 0.4   # si algo está más cerca, se considera obstáculo
+
         # Bug 2
         self.initial_point_x = 0.0
         self.initial_point_y = 0.0
         self.mline_slope = None
         self.mline_intercept = None
         self.last_state_change_time = self.get_clock().now()
-        self.min_state_duration = 5.0 # segundos
+        self.min_state_duration = 0.05 # segundos
         self.default_distance = 2.5
         self.danger_distance = 0.17
 
@@ -57,6 +58,7 @@ class Controller(Node):
         self.create_subscription(Odometry, 'odometria', self.callback_odometry, qos)
         self.create_subscription(Goal, 'path_generator', self.callback_goal, qos)
         self.create_subscription(LaserScan, 'scan', self.callback_lidar, qos)
+
         self.timer_period = 0.1
         self.timer = self.create_timer(self.timer_period, self.timer_callback)
 
@@ -105,32 +107,24 @@ class Controller(Node):
         else:
             self.mline_slope = float('inf')
             self.mline_intercept = x1  
-
+    
     def callback_lidar(self, msg: LaserScan):
         self.lidar_msg = msg
 
-        # dist_front = self.get_distance_at_angle(0)
-        # dist_45 = self.get_distance_at_angle(-45)
-        # dist_15 = self.get_distance_at_angle(-15)
+        dist_wall = self.get_distance_at_angle_range(15, -5)
 
-        # dist_wall = min(dist_front,dist_45, dist_15)
-
-        dist_wall = self.get_distance_at_angle_range(15,-5)
-
+        previous_state = self.state  # Store the previous state
 
         if dist_wall < self.threshold_front:
             self.state = 'FOLLOW_WALL'
-            self.last_state_change_time = self.get_clock().now()
-            self.get_logger().info("estado: FOLLOW_WALL")
-            
         else:
-            
             self.state = 'GO_TO_GOAL'
+
+        # Only log/publish when the state changes
+        if self.state != previous_state:
             self.last_state_change_time = self.get_clock().now()
-            self.get_logger().info("estado: GO_TO_GOAL")
-
-
-
+            self.get_logger().info(f"estado: {self.state}")
+        
 
     def timer_callback(self):
         if self.final_goal_reached or self.goal is None:
@@ -140,7 +134,6 @@ class Controller(Node):
         elif self.state == 'FOLLOW_WALL':
             self.wall_follower()
         
-    
 
     def go_to_goal(self):
         gx, gy = self.goal
@@ -216,7 +209,10 @@ class Controller(Node):
 
         twist = Twist()
 
-        if dist_all_front < self.danger_distance: # too close
+        if not hasattr(self, 'was_frente'):
+            self.was_frente = False
+
+        if dist_all_front < self.danger_distance:
             twist.linear.x = 0.0
             twist.angular.z = self.max_angular
 
@@ -225,16 +221,19 @@ class Controller(Node):
             turn_rate = -error * self.kp
             twist.linear.x = self.max_linear
             twist.angular.z = turn_rate
-            if abs(error) > 0.9: #to make sure it will reach the point
+            if abs(error) > 0.9: 
                 twist.linear.x = self.max_linear / 5 
 
-            # Diagnóstico de giro
-            self.get_logger().info(f"Error: {error}")
         else:
-            # Obstáculo al frente, detener avance y girar a la izquierda
+            # Obstáculo al frente
+            if not self.was_frente:
+                pass
+                #self.get_logger().info("Frente")
             twist.linear.x = 0.0
             twist.angular.z = self.max_angular
-            self.get_logger().info("Frente")
+
+        # Update was_frente state
+        self.was_frente = (dist_all_front >= self.danger_distance and dist_front_mean <= self.threshold_front)
 
         # Limitar velocidades
         twist.linear.x = max(min(twist.linear.x, self.max_linear), -self.max_linear)
@@ -254,9 +253,9 @@ class Controller(Node):
         lidar_min = self.lidar_msg.angle_min
         lidar_max = self.lidar_msg.angle_max
 
-        if lidar_min < 0 and lidar_max <= math.pi:  # caso real (-π, π)
+        if lidar_min < 0 and lidar_max <= math.pi:  
             angle_rad = ((angle_rad_input + math.pi) % (2 * math.pi)) - math.pi
-        else:  # caso simulación (0, 2π)
+        else:  
             angle_rad = angle_rad_input % (2 * math.pi)
 
         # Calcular el índice correspondiente
@@ -309,9 +308,6 @@ class Controller(Node):
         else:
             expected_y = self.mline_slope * self.Posx + self.mline_intercept
             error = abs(self.Posy - expected_y)
-
-        # Imprimir el error actual con respecto a la línea
-        # self.get_logger().info(f"M-line error: {error:.3f}")
 
         return error < tolerance
     

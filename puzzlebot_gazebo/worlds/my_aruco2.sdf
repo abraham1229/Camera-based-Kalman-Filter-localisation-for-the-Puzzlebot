@@ -163,7 +163,7 @@
       <self_collide>false</self_collide>
     </model>
     <model name='marker_1'>
-      <pose>2.5 2.5 0.090999999999999998 0 0 -1.5708853071795863</pose>
+      <pose>2.75 2.5 0.089999999999999997 0 0 -1.5700000000000001</pose>
       <static>true</static>
       <link name='link'>
         <inertial>
@@ -244,7 +244,7 @@
       <self_collide>false</self_collide>
     </model>
     <model name='marker_2'>
-      <pose>4 -4 0.089999999999999997 0 0 1.5700000000000001</pose>
+      <pose>4 -4 0.089999999999999997 0 0 1.5699999999999998</pose>
       <static>true</static>
       <link name='link'>
         <inertial>
@@ -325,7 +325,7 @@
       <self_collide>false</self_collide>
     </model>
     <model name='marker_3'>
-      <pose>-0.5 -0.5 0.090999999999999998 0 0 1.5708000000000009</pose>
+      <pose>-0.5 -0.5 0.090999999999999998 0 0 1.5708000000000013</pose>
       <static>true</static>
       <link name='link'>
         <inertial>
@@ -392,6 +392,87 @@
               <metal>
                 <albedo_map>model://aruco_marker_3/materials/textures/marker3.png</albedo_map>
                 <normal_map>model://aruco_marker_3/materials/textures/marker3.png</normal_map>
+              </metal>
+            </pbr>
+            <ambient>1 1 1 1</ambient>
+            <diffuse>1 1 1 1</diffuse>
+            <specular>1 1 1 1</specular>
+            <emissive>0 0 0 1</emissive>
+          </material>
+        </visual>
+        <pose>0 0 0 0 0 0</pose>
+        <enable_wind>false</enable_wind>
+      </link>
+      <self_collide>false</self_collide>
+    </model>
+    <model name='marker_4'>
+      <pose>0.45000000000000001 -3 0.10000000000000001 0 0 1.5708000000000013</pose>
+      <static>true</static>
+      <link name='link'>
+        <inertial>
+          <pose>0 0 0 0 0 0</pose>
+          <mass>0.28100000000000003</mass>
+          <inertia>
+            <ixx>0.00061669999999999997</ixx>
+            <ixy>0</ixy>
+            <ixz>0</ixz>
+            <iyy>0.00061669999999999997</iyy>
+            <iyz>0</iyz>
+            <izz>0.00061669999999999997</izz>
+          </inertia>
+        </inertial>
+        <collision name='collision'>
+          <geometry>
+            <box>
+              <size>0.001 0.17999999999999999 0.17999999999999999</size>
+            </box>
+          </geometry>
+          <surface>
+            <contact>
+              <ode>
+                <max_vel>1</max_vel>
+                <min_depth>0.001</min_depth>
+                <kp>1000000</kp>
+                <kd>10</kd>
+              </ode>
+            </contact>
+            <friction>
+              <ode>
+                <mu>1</mu>
+                <mu2>1</mu2>
+              </ode>
+            </friction>
+            <bounce/>
+          </surface>
+        </collision>
+        <visual name='box_visual'>
+          <cast_shadows>false</cast_shadows>
+          <geometry>
+            <box>
+              <size>0.001 0.17999999999999999 0.17999999999999999</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>1 1 1 1</ambient>
+            <diffuse>1 1 1 1</diffuse>
+            <specular>1 1 1 1</specular>
+            <emissive>0.600000024 0.600000024 0.600000024 1</emissive>
+          </material>
+        </visual>
+        <visual name='aruco_visual1'>
+          <cast_shadows>false</cast_shadows>
+          <pose>0.00064999999999999997 0 0 1.5708 -5.5511151231257827e-17 1.5708</pose>
+          <geometry>
+            <plane>
+              <normal>0 0 1</normal>
+              <size>0.14000000000000001 0.14000000000000001</size>
+            </plane>
+          </geometry>
+          <material>
+            <pbr>
+              <metal>
+                <albedo_map>model://aruco_marker_4/materials/textures/marker4.png</albedo_map>
+                <normal_map>model://aruco_marker_4/materials/textures/marker4.png</normal_map>
               </metal>
             </pbr>
             <ambient>1 1 1 1</ambient>
@@ -944,11 +1025,11 @@
         <enable_wind>false</enable_wind>
       </link>
       <joint name='wheel_left_joint' type='revolute'>
-        <pose>2.0816681711721685e-17 -2.7755575615628914e-17 6.9388939039072284e-18 0 6.6819117752304867e-51 0</pose>
+        <pose>2.7755575615628914e-17 -4.163336342344337e-17 1.3877787807814457e-17 -4.3572637149585377e-129 8.4896991364000441e-73 -1.0264824806986467e-56</pose>
         <parent>base_footprint</parent>
         <child>wheel_left_link</child>
         <axis>
-          <xyz>0 1 0</xyz>
+          <xyz>1.0264824806986467e-56 1 -4.3572637149585377e-129</xyz>
           <limit>
             <lower>-inf</lower>
             <upper>inf</upper>
@@ -966,7 +1047,7 @@
         </axis>
       </joint>
       <link name='wheel_left_link'>
-        <pose>0.052000000000000025 0.095000000000000029 0.049999999999999989 1.9387045613528282e-26 -3.0620721718293948e-05 -2.9682266435905295e-31</pose>
+        <pose>0.052000000000000011 0.095000000000000029 0.049999999999999975 2.9080568420292424e-26 -3.0620721718453543e-05 -4.4523399654089993e-31</pose>
         <inertial>
           <pose>0 0 0 1.5707963267948959 0 0</pose>
           <mass>0.027</mass>
@@ -1026,7 +1107,7 @@
         <enable_wind>false</enable_wind>
       </link>
       <joint name='wheel_right_joint' type='revolute'>
-        <pose>0 0 -6.9388939039072284e-18 0 1.0156505898350345e-49 0</pose>
+        <pose>-6.9388939039072284e-18 0 -6.9388939039072284e-18 0 2.5658541216885093e-49 0</pose>
         <parent>base_footprint</parent>
         <child>wheel_right_link</child>
         <axis>
@@ -1048,7 +1129,7 @@
         </axis>
       </joint>
       <link name='wheel_right_link'>
-        <pose>0.052000000000000032 -0.094999999999999987 0.049999999999999975 5.185061762112611e-26 -3.0591730521962189e-05 -9.9261681448975744e-24</pose>
+        <pose>0.052000000000000032 -0.094999999999999973 0.04999999999999994 5.6646769251698303e-26 -3.0591730521804546e-05 -6.6174457676596931e-24</pose>
         <inertial>
           <pose>0 0 0 -1.5707963267948959 0 0</pose>
           <mass>0.027</mass>
@@ -1205,7 +1286,7 @@
       <frame name='base_link' attached_to='chassis_joint'>
         <pose>0 0 0 0 0 0</pose>
       </frame>
-      <pose>-1.4758185002618193e-06 -3.972879781439564e-10 -8.3799209991662109e-05 -5.5152372196876092e-11 -0.0016126287145561604 7.6329841923776658e-09</pose>
+      <pose>-1.4758185002523043e-06 -3.972879696264721e-10 -8.3799209991124358e-05 -5.5151638124457802e-11 -0.001612628714554327 7.6329842646685133e-09</pose>
       <static>false</static>
       <self_collide>false</self_collide>
     </model>
@@ -1280,7 +1361,7 @@
         </inertial>
         <enable_wind>false</enable_wind>
       </link>
-      <pose>2.0690922737121582 -2.0695176124572754 0 0 0 -0.36079499390042696</pose>
+      <pose>2.0690922737121582 -2.0695176124572754 0 0 0 -0.36079499390042702</pose>
       <self_collide>false</self_collide>
     </model>
     <model name='nist_maze_wall_120_1'>

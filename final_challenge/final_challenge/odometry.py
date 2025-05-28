@@ -77,7 +77,6 @@ class EnhancedOdometry(Node):
         if ns:
             self.base_frame = f'{ns}/{self.base_frame}' if not self.base_frame.startswith(ns) else self.base_frame
 
-        # Set up subscriptions for wheel velocities (matching kalman.py exactly)
         self.subscription_velocity_left = self.create_subscription(
             Float32,
             'VelocityEncL',
@@ -90,7 +89,6 @@ class EnhancedOdometry(Node):
             self.encR_callback,
             rclpy.qos.qos_profile_sensor_data)
         
-        # Subscribe to ArUco detections using the full Pose message
         self.subscription_aruco = self.create_subscription(
             ArucoDetection,
             '/aruco_detections',
@@ -103,15 +101,15 @@ class EnhancedOdometry(Node):
         # TF2 broadcaster
         self.tf_broadcaster = TransformBroadcaster(self)
         
-        # Timer for main odometry loop at 50Hz (matching kalman.py)
+        # Timer for main odometry loop at 50Hz
         self.run_dt = 0.02  # 50Hz
         self.timer = self.create_timer(self.run_dt, self.run_loop)
         
-        # Physical robot parameters (matching kalman.py exactly)
+        # Physical robot parameters
         self.wheel_radius = 0.05    # Wheel radius in meters
         self.robot_width = 0.1875   # Distance between wheels in meters
 
-        # State variables (matching kalman.py naming)
+        # State variables
         self.pose_x = init_x
         self.pose_y = init_y 
         self.pose_theta = init_theta
@@ -125,23 +123,20 @@ class EnhancedOdometry(Node):
         self.Wr = 0.0  # Angular velocity
         
         # Kalman filter variables (matching kalman.py)
-        self.Sig = np.array([[0.0, 0.0, 0.0],
-                            [0.0, 0.0, 0.0], 
-                            [0.0, 0.0, 0.0]])
+        self.Sig = np.array([[0.02, 0.0, 0.0],
+                            [0.0, 0.02, 0.0], 
+                            [0.0, 0.0, 0.05]])
         
         # Process noise parameter (from kalman.py)
-        self.sigma_squared = 0.3
-        
-        # Landmark map (matching kalman.py format: [id, x, y, theta])
-        # You can modify this map according to your environment
-        #self.map = [[0, 3.0, 1.0, 0.0],      # Marker 0 at position (3, 1) with orientation 0
-        #            [1, 0.0, -1.0, 3.1415]]  # Marker 1 at position (0, -1) with orientation π
+        self.sigma_squared = 0.32
         
         self.map = [
-            [0, 2.5, -0.5, 0],   # Marker 0 at (2.5, -0.5) -3.1415
-            [1, 2.5,  2.5, 1.57],   # Marker 1 at (2.5, 2.5)
-            [2, 4, -4, -1.57],   # Marker 2 at (-0.5, 2.5)
-            [3, -0.5, -0.5, -1.57],  # Marker 3 at (-0.5, -0.5)
+            # Landmarks with IDs, x, y, theta
+            [0, 2.5, -0.5, 0],   
+            [1, 2.75,  2.5, 1.57],   
+            [2, 4, -4, -1.57],   
+            [3, -0.5, -0.5, -1.57],  
+            [4, 0.45, -3, -1.57]
         ]
         
         # Timing variables for proper dt calculation
@@ -149,9 +144,6 @@ class EnhancedOdometry(Node):
         self.prev_stamp = None
         self.dt = self.run_dt  # Default dt
         
-        #self.get_logger().info(f'Enhanced Odometry node initialized')
-        #self.get_logger().info(f'Using Kalman filter: {self.use_kalman}')
-        #self.get_logger().info(f'Initial pose: x={init_x}, y={init_y}, θ={math.degrees(init_theta):.1f}°')
 
     def encL_callback(self, msg):
         """Left wheel velocity callback (matching kalman.py)"""
@@ -168,11 +160,9 @@ class EnhancedOdometry(Node):
             
         markers = []
         for aruco_marker in msg.markers:
-            # Extract pose information similar to kalman.py but with enhanced data
+            # Extract pose information
             roll, pitch, yaw = euler_from_quaternion(aruco_marker.pose.orientation)
             
-            # Create marker data: [id, x_relative, y_relative, theta_relative]
-            # kalman.py uses: z (forward), -x (right), -pitch for the relative measurements
             marker = [
                 aruco_marker.marker_id,
                 aruco_marker.pose.position.z,    # Forward distance (range)
@@ -181,22 +171,13 @@ class EnhancedOdometry(Node):
             ]
             markers.append(marker)
             
-            #self.get_logger().debug(
-            #    f"ArUco {aruco_marker.marker_id}: "
-            #    f"rel_pos=({marker[1]:.2f}, {marker[2]:.2f}), "
-            #    f"rel_angle={math.degrees(marker[3]):.1f}°"
-            #)
-        
         if markers:
             success = self.kalman_correction(markers, 0.1)  # 0.1 is measurement noise
-            if success:
-                pass
-                #self.get_logger().info(f"Kalman correction applied: x={self.pose_x:.3f}, y={self.pose_y:.3f}, θ={math.degrees(self.pose_theta):.1f}°")
 
     def run_loop(self):
         """Main execution loop (matching kalman.py structure)"""
 
-        # Compute robot velocities from wheel encoders (matching kalman.py exactly)
+        # Compute robot velocities from wheel encoders
         self.Vr = (self.velocityR + self.velocityL) * self.wheel_radius / 2
         self.Wr = (self.velocityR - self.velocityL) * self.wheel_radius / self.robot_width
         
@@ -218,7 +199,6 @@ class EnhancedOdometry(Node):
         """Simple dead reckoning integration"""
         dt = self.dt
         
-        # Use same integration method as kalman.py
         self.pose_x += dt * self.Vr * math.cos(self.pose_theta + dt * self.Wr / 2)
         self.pose_y += dt * self.Vr * math.sin(self.pose_theta + dt * self.Wr / 2)
         self.pose_theta = wrap_to_pi(self.pose_theta + dt * self.Wr)
@@ -229,36 +209,32 @@ class EnhancedOdometry(Node):
         R = self.wheel_radius
         L = self.robot_width
         
-        # Update pose using same integration as kalman.py
         self.pose_x += dt * self.Vr * math.cos(self.pose_theta + dt * self.Wr / 2)
         self.pose_y += dt * self.Vr * math.sin(self.pose_theta + dt * self.Wr / 2) 
         self.pose_theta = wrap_to_pi(self.pose_theta + dt * self.Wr)
         
-        #self.get_logger().info(
-        #    f"[Kalman Prediction] x={self.pose_x:.3f}, y={self.pose_y:.3f}, θ={math.degrees(self.pose_theta):.1f}°"
-        #)
-        # Compute Jacobian (exactly from kalman.py)
+        # Compute Jacobian 
         H = np.array([[1, 0, -dt * self.Vr * math.sin(self.pose_theta)],
                       [0, 1,  dt * self.Vr * math.cos(self.pose_theta)],
                       [0, 0, 1]])
         
-        # Compute process noise Jacobian (exactly from kalman.py)
+        # Compute process noise Jacobian 
         dH = np.array([[0.5 * dt * R * math.cos(self.pose_theta), 0.5 * dt * R * math.cos(self.pose_theta)],
                        [0.5 * dt * R * math.sin(self.pose_theta), 0.5 * dt * R * math.sin(self.pose_theta)],
                        [dt * R / L, -dt * R / L]])
         
-        # Control input covariance (exactly from kalman.py)
+        # Control input covariance 
         K = np.array([[self.sigma_squared * abs(self.velocityR), 0],
                       [0, self.sigma_squared * abs(self.velocityL)]])
         
         # Process noise covariance
         Q = dH @ K @ dH.T
         
-        # Update covariance (exactly from kalman.py)
+        # Update covariance 
         self.Sig = H @ self.Sig @ H.T + Q
 
     def kalman_correction(self, markers, cov):
-        """Kalman correction step (adapted from kalman.py)"""
+        """Kalman correction step"""
         try:
             S = [self.pose_x, self.pose_y, self.pose_theta]
             
@@ -266,28 +242,28 @@ class EnhancedOdometry(Node):
                 found, M = self.get_landmark(marker[0])
                 
                 if found:
-                    # Expected measurement (exactly from kalman.py sensor model)
+                    # Expected measurement
                     Z_hat = np.array([
                         (M[0] - S[0]) * math.cos(S[2]) + (M[1] - S[1]) * math.sin(S[2]),
                         -(M[0] - S[0]) * math.sin(S[2]) + (M[1] - S[1]) * math.cos(S[2]),
                         wrap_to_pi(M[2] - S[2])
                     ])
                     
-                    # Measurement Jacobian (exactly from kalman.py)
+                    # Measurement Jacobian 
                     G = np.array([
                         [-math.cos(S[2]), -math.sin(S[2]), -(M[0] - S[0]) * math.sin(S[2]) + (M[1] - S[1]) * math.cos(S[2])],
                         [math.sin(S[2]), -math.cos(S[2]), -(M[0] - S[0]) * math.cos(S[2]) - (M[1] - S[1]) * math.sin(S[2])],
                         [0, 0, -1]
                     ])
                     
-                    # Measurement noise covariance (exactly from kalman.py)
+                    # Measurement noise covariance 
                     R = np.array([[cov, 0, 0],
                                   [0, cov, 0],
                                   [0, 0, cov]])
                     
                     # Innovation
                     diff = np.array(marker[1:4]) - Z_hat
-                    diff[2] = wrap_to_pi(diff[2])  # Wrap angle difference
+                    diff[2] = wrap_to_pi(diff[2])  
                     
                     # Innovation covariance
                     Z = G @ self.Sig @ G.T + R
@@ -297,13 +273,13 @@ class EnhancedOdometry(Node):
                         self.get_logger().warn(f"Singular innovation covariance for marker {marker[0]}")
                         continue
                     
-                    # Kalman gain (exactly from kalman.py)
+                    # Kalman gain 
                     K = self.Sig @ G.T @ np.linalg.inv(Z)
                     
-                    # Update pose mean (exactly from kalman.py)
+                    # Update pose mean 
                     S = S + K @ diff
                     
-                    # Update covariance (exactly from kalman.py)
+                    # Update covariance 
                     self.Sig = (np.eye(3) - K @ G) @ self.Sig
                     
                     self.get_logger().debug(f"Updated with marker {marker[0]}: innovation=({diff[0]:.3f}, {diff[1]:.3f}, {math.degrees(diff[2]):.1f}°)")
@@ -322,14 +298,14 @@ class EnhancedOdometry(Node):
             return False
 
     def get_landmark(self, marker_id):
-        """Get landmark from map (exactly from kalman.py)"""
+        """Get landmark from map """
         for mark in self.map:
             if mark[0] == marker_id:
                 return True, mark[1:4]
         return False, [0, 0, 0]
 
     def create_odometry_message(self, timestamp):
-        """Create odometry message (matching kalman.py format)"""
+        """Create odometry message"""
         odom = Odometry()
         
         odom.header.stamp = timestamp

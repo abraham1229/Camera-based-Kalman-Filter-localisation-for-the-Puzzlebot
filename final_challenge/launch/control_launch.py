@@ -45,9 +45,31 @@ def generate_launch_description():
         output='screen'
     )
 
+    rqt_image_view_node = Node(
+        package='rqt_image_view',
+        executable='rqt_image_view',
+        name='rqt_image_view',
+        output='screen'
+    )
+
+    rviz_config = os.path.join(
+        get_package_share_directory('final_challenge'),
+        'rviz',
+        'puzzlebot.rviz'
+    )
+
+    rviz_node = Node(
+        name='rviz',
+        package='rviz2',
+        executable='rviz2',
+        arguments=['-d', rviz_config],
+    )
+
     return LaunchDescription([
         path_generator_node,
         controller_node,
         odometry_node,
-        aruco_node
+        aruco_node,
+        rqt_image_view_node,
+        rviz_node
     ])
