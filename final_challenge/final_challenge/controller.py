@@ -116,10 +116,12 @@ class Controller(Node):
         dist_front = self.get_distance_at_angle(0)
         dist_45 = self.get_distance_at_angle(-45)
         dist_15 = self.get_distance_at_angle(-15)
+        dist_15 = self.get_distance_at_angle(-35)
+        dist_plus_15 = self.get_distance_at_angle(15)
 
-        dist_wall = min(dist_front,dist_45, dist_15)
+        dist_wall = min(dist_front,dist_45, dist_15,)
 
-        # dist_wall = self.get_distance_at_angle_range(-15,15)
+        dist_wall = self.get_distance_at_angle_range(-45,15)
         self.print_success(f"distwall: {dist_wall}")
 
 
@@ -278,45 +280,26 @@ class Controller(Node):
         if self.lidar_msg is None:
             return self.default_distance
 
-        # Convertimos a radianes en rango [-π, π)
-        angle_start_rad = ((math.radians(angle_start_deg) + math.pi) % (2 * math.pi)) - math.pi
-        angle_end_rad = ((math.radians(angle_end_deg) + math.pi) % (2 * math.pi)) - math.pi
+        # Convertir de grados a radianes (rango [-pi, pi])
+        angle_start_rad = np.radians(angle_start_deg)
+        angle_end_rad = np.radians(angle_end_deg)
 
-        lidar_min = self.lidar_msg.angle_min
-        lidar_max = self.lidar_msg.angle_max
-
-        # Si el LIDAR trabaja en [0, 2π], convertimos el rango a ese sistema
-        if lidar_min >= 0.0:
-            if angle_start_rad < 0:
-                angle_start_rad += 2 * math.pi
-            if angle_end_rad < 0:
-                angle_end_rad += 2 * math.pi
-
-        # Asegurar orden del rango (circularmente válido)
+        # Si el rango está invertido, lo corrige (por ejemplo, de 160° a -160°)
         if angle_end_rad < angle_start_rad:
-            angle_end_rad += 2 * math.pi
+            angle_start_rad, angle_end_rad = angle_end_rad, angle_start_rad
 
         min_dist = float('inf')
+        angle = self.lidar_msg.angle_min
 
-        current_angle = lidar_min
-        for r in self.lidar_msg.ranges:
-            # Convertir al mismo sistema de comparación
-            normalized_angle = current_angle
-            if lidar_min < 0 and lidar_max <= math.pi:
-                # No conversion needed
-                pass
-            else:
-                # Convertir a [0, 2π)
-                normalized_angle = normalized_angle % (2 * math.pi)
-
-            # Comparar si el ángulo está dentro del rango deseado
-            if angle_start_rad <= normalized_angle <= angle_end_rad:
-                if not math.isnan(r) and not math.isinf(r):
+        for i, r in enumerate(self.lidar_msg.ranges):
+            # Solo revisa los ángulos dentro del rango solicitado
+            if angle_start_rad <= angle <= angle_end_rad:
+                if not np.isnan(r) and not np.isinf(r):
                     min_dist = min(min_dist, r)
-
-            current_angle += self.lidar_msg.angle_increment
+            angle += self.lidar_msg.angle_increment
 
         return min_dist if min_dist != float('inf') else self.default_distance
+
 
     
     def is_on_mline(self, tolerance=0.8):
