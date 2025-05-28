@@ -222,11 +222,17 @@ class Controller(Node):
         dist_front = self.get_distance_at_angle( 0)
         dist_front_5 = self.get_distance_at_angle(-15)
         dist_front_mean = min([dist_front, dist_front_5])
+        dist_all_front = self.get_distance_at_angle_range(-90,90)
+
 
         # self.get_logger().info(f"Distancia frente: {dist_front_mean:.2f}")
         # self.get_logger().info(f"Distancia right: {dist_right_side:.2f}")
 
         twist = Twist()
+
+        if dist_all_front < self.danger_distance:
+            twist.linear.x = 0.0
+            twist.angular.z = self.max_angular
 
         if dist_front_mean > self.threshold_front:
             error = dist_right_side - self.wall_desired
