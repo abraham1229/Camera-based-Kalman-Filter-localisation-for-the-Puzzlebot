@@ -231,13 +231,13 @@ class Controller(Node):
 
         twist = Twist()
 
-        if dist_all_front < self.danger_distance:
-            twist.linear.x = 0.0
-            twist.angular.z = self.max_angular
-            self.get_logger().info(f"Danger: {dist_all_front:.2f}")
+        # if dist_all_front < self.danger_distance:
+        #     twist.linear.x = 0.0
+        #     twist.angular.z = self.max_angular
+        #     self.get_logger().info(f"Danger: {dist_all_front:.2f}")
 
 
-        elif dist_front_mean > self.threshold_front:
+        if dist_front_mean > self.threshold_front:
             error = dist_right_side - self.wall_desired
             turn_rate = -error * self.kp
             twist.linear.x = self.max_linear
