@@ -71,9 +71,9 @@ class Controller(Node):
                           msg.pose.pose.orientation.z, msg.pose.pose.orientation.w)
         _, _, yaw = transforms3d.euler.quat2euler([qw, qx, qy, qz])
         self.Postheta = yaw
-        self.print_success(f'x:{self.Posx}')
-        self.print_success(f'y:{self.Posy}')
-        self.print_success(f'theta:{self.Postheta}')
+        # self.print_success(f'x:{self.Posx}')
+        # self.print_success(f'y:{self.Posy}')
+        # self.print_success(f'theta:{self.Postheta}')
 
 
     def callback_goal(self, msg: Goal):
@@ -113,26 +113,27 @@ class Controller(Node):
     def callback_lidar(self, msg: LaserScan):
         self.lidar_msg = msg
 
-        # dist_front = self.get_distance_at_angle(0)
-        # dist_45 = self.get_distance_at_angle(-45)
-        # dist_15 = self.get_distance_at_angle(-15)
+        dist_front = self.get_distance_at_angle(0)
+        dist_45 = self.get_distance_at_angle(-45)
+        dist_15 = self.get_distance_at_angle(-15)
 
-        # dist_wall = min(dist_front,dist_45, dist_15)
+        dist_wall = min(dist_front,dist_45, dist_15)
 
-        dist_wall = self.get_distance_at_angle_range(-15,15)
-        # self.print_success(f"distwall: {dist_wall}")
+        # dist_wall = self.get_distance_at_angle_range(-15,15)
+        self.print_success(f"distwall: {dist_wall}")
 
 
-        if self.state == 'GO_TO_GOAL':
-            if dist_wall < self.threshold_front:
+        if dist_wall < self.threshold_front:
                 self.state = 'FOLLOW_WALL'
                 self.last_state_change_time = self.get_clock().now()
                 self.get_logger().info("estado: FOLLOW_WALL")
-        elif self.state == 'FOLLOW_WALL':
-            if self.can_change_state() and self.is_on_mline():
-                self.state = 'GO_TO_GOAL'
-                self.last_state_change_time = self.get_clock().now()
-                self.get_logger().info("estado: GO_TO_GOAL")
+
+        # if self.state == 'GO_TO_GOAL':
+            
+        else:
+            self.state = 'GO_TO_GOAL'
+            self.last_state_change_time = self.get_clock().now()
+            self.get_logger().info("estado: GO_TO_GOAL")
 
 
 
@@ -235,12 +236,12 @@ class Controller(Node):
                 twist.linear.x = self.max_linear / 5 
 
             # Diagnóstico de giro
-            # self.get_logger().info(f"Error: {error}")
+            self.get_logger().info(f"Error: {error}")
         else:
             # Obstáculo al frente, detener avance y girar a la izquierda
             twist.linear.x = 0.0
             twist.angular.z = self.max_angular
-            # self.get_logger().info("Frente")
+            self.get_logger().info("Frente")
 
     
         
