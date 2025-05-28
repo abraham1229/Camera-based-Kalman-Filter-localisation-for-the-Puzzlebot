@@ -71,6 +71,10 @@ class Controller(Node):
                           msg.pose.pose.orientation.z, msg.pose.pose.orientation.w)
         _, _, yaw = transforms3d.euler.quat2euler([qw, qx, qy, qz])
         self.Postheta = yaw
+        # self.print_success(f'x:{self.Posx}')
+        # self.print_success(f'y:{self.Posy}')
+        # self.print_success(f'theta:{self.Postheta}')
+
 
     def callback_goal(self, msg: Goal):
         # Detectar mensaje especial de fin (inf)
@@ -112,23 +116,26 @@ class Controller(Node):
         # dist_front = self.get_distance_at_angle(0)
         # dist_45 = self.get_distance_at_angle(-45)
         # dist_15 = self.get_distance_at_angle(-15)
+        # dist_15 = self.get_distance_at_angle(-35)
+        # dist_plus_15 = self.get_distance_at_angle(15)
 
-        # dist_wall = min(dist_front,dist_45, dist_15)
+        # dist_wall = min(dist_front,dist_45, dist_15,)
 
-        dist_wall = self.get_distance_at_angle_range(-15,15)
+        dist_wall = self.get_distance_at_angle_range(-45,15)
         # self.print_success(f"distwall: {dist_wall}")
 
 
-        if self.state == 'GO_TO_GOAL':
-            if dist_wall < self.threshold_front:
+        if dist_wall < self.threshold_front:
+            if self.state != 'FOLLOW_WALL':
                 self.state = 'FOLLOW_WALL'
                 self.last_state_change_time = self.get_clock().now()
-                self.get_logger().info("estado: FOLLOW_WALL")
-        elif self.state == 'FOLLOW_WALL':
-            if self.can_change_state() and self.is_on_mline():
+                self.get_logger().info("FOLLOW_WALL")
+        else:
+            if self.state != 'GO_TO_GOAL':
                 self.state = 'GO_TO_GOAL'
                 self.last_state_change_time = self.get_clock().now()
-                self.get_logger().info("estado: GO_TO_GOAL")
+                self.get_logger().info("GO_TO_GOAL")
+
 
 
 
@@ -215,24 +222,37 @@ class Controller(Node):
         dist_front = self.get_distance_at_angle( 0)
         dist_front_5 = self.get_distance_at_angle(-15)
         dist_front_mean = min([dist_front, dist_front_5])
+        dist_front_mean = self.get_distance_at_angle_range(-25,25)
 
-        self.get_logger().info(f"Distancia frente: {dist_front_mean:.2f}")
-        self.get_logger().info(f"Distancia right: {dist_right_side:.2f}")
+        dist_all_front = self.get_distance_at_angle_range(-90,90)
+
+
+        # self.get_logger().info(f"derecha: {dist_right_side:.2f}")
 
         twist = Twist()
+
+        # if dist_all_front < self.danger_distance:
+        #     twist.linear.x = 0.0
+        #     twist.angular.z = self.max_angular
+        #     self.get_logger().info(f"Danger: {dist_all_front:.2f}")
+
 
         if dist_front_mean > self.threshold_front:
             error = dist_right_side - self.wall_desired
             turn_rate = -error * self.kp
             twist.linear.x = self.max_linear
             twist.angular.z = turn_rate
+            self.get_logger().info(f"derecha: {dist_right_side:.2f}")
+            
+
 
             if abs(error) > 0.9: #to make sure it will reach the point
                 twist.linear.x = self.max_linear / 5 
 
             # Diagnóstico de giro
-            self.get_logger().info(f"Error: {error}")
+            # self.get_logger().info(f"Error: {error}")
         else:
+            self.get_logger().info(f"frente: {dist_front_mean:.2f}")
             # Obstáculo al frente, detener avance y girar a la izquierda
             twist.linear.x = 0.0
             twist.angular.z = self.max_angular
@@ -273,68 +293,49 @@ class Controller(Node):
         if self.lidar_msg is None:
             return self.default_distance
 
-        # Convertimos a radianes en rango [-π, π)
-        angle_start_rad = ((math.radians(angle_start_deg) + math.pi) % (2 * math.pi)) - math.pi
-        angle_end_rad = ((math.radians(angle_end_deg) + math.pi) % (2 * math.pi)) - math.pi
+        # Convertir de grados a radianes (rango [-pi, pi])
+        angle_start_rad = np.radians(angle_start_deg)
+        angle_end_rad = np.radians(angle_end_deg)
 
-        lidar_min = self.lidar_msg.angle_min
-        lidar_max = self.lidar_msg.angle_max
-
-        # Si el LIDAR trabaja en [0, 2π], convertimos el rango a ese sistema
-        if lidar_min >= 0.0:
-            if angle_start_rad < 0:
-                angle_start_rad += 2 * math.pi
-            if angle_end_rad < 0:
-                angle_end_rad += 2 * math.pi
-
-        # Asegurar orden del rango (circularmente válido)
+        # Si el rango está invertido, lo corrige (por ejemplo, de 160° a -160°)
         if angle_end_rad < angle_start_rad:
-            angle_end_rad += 2 * math.pi
+            angle_start_rad, angle_end_rad = angle_end_rad, angle_start_rad
 
         min_dist = float('inf')
+        angle = self.lidar_msg.angle_min
 
-        current_angle = lidar_min
-        for r in self.lidar_msg.ranges:
-            # Convertir al mismo sistema de comparación
-            normalized_angle = current_angle
-            if lidar_min < 0 and lidar_max <= math.pi:
-                # No conversion needed
-                pass
-            else:
-                # Convertir a [0, 2π)
-                normalized_angle = normalized_angle % (2 * math.pi)
-
-            # Comparar si el ángulo está dentro del rango deseado
-            if angle_start_rad <= normalized_angle <= angle_end_rad:
-                if not math.isnan(r) and not math.isinf(r):
+        for i, r in enumerate(self.lidar_msg.ranges):
+            # Solo revisa los ángulos dentro del rango solicitado
+            if angle_start_rad <= angle <= angle_end_rad:
+                if not np.isnan(r) and not np.isinf(r):
                     min_dist = min(min_dist, r)
-
-            current_angle += self.lidar_msg.angle_increment
+            angle += self.lidar_msg.angle_increment
 
         return min_dist if min_dist != float('inf') else self.default_distance
 
+
     
-    def is_on_mline(self, tolerance=0.4):
-        if self.mline_slope is None:
-            return False
+    # def is_on_mline(self, tolerance=0.8):
+    #     if self.mline_slope is None:
+    #         return False
 
-        if self.mline_slope == float('inf'):
-            error = abs(self.Posx - self.mline_intercept)
-        elif self.mline_slope == 0:
-            error = abs(self.Posy - self.mline_intercept)
-        else:
-            expected_y = self.mline_slope * self.Posx + self.mline_intercept
-            error = abs(self.Posy - expected_y)
+    #     if self.mline_slope == float('inf'):
+    #         error = abs(self.Posx - self.mline_intercept)
+    #     elif self.mline_slope == 0:
+    #         error = abs(self.Posy - self.mline_intercept)
+    #     else:
+    #         expected_y = self.mline_slope * self.Posx + self.mline_intercept
+    #         error = abs(self.Posy - expected_y)
 
-        # Imprimir el error actual con respecto a la línea
-        # self.get_logger().info(f"M-line error: {error:.3f}")
+    #     # Imprimir el error actual con respecto a la línea
+    #     # self.get_logger().info(f"M-line error: {error:.3f}")
 
-        return error < tolerance
+    #     return error < tolerance
     
-    def can_change_state(self):
-        now = self.get_clock().now()
-        elapsed = (now - self.last_state_change_time).nanoseconds / 1e9
-        return elapsed > self.min_state_duration
+    # def can_change_state(self):
+    #     now = self.get_clock().now()
+    #     elapsed = (now - self.last_state_change_time).nanoseconds / 1e9
+    #     return elapsed > self.min_state_duration
 
 
 
