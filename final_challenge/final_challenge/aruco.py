@@ -21,7 +21,7 @@ class ArucoDetectorNode(Node):
             [0.0, 0.0, 1.0]
         ])
         self.D = np.array([0.12, -0.23, 0.001, 0.002, 0.05])
-        self.markerLength = 0.06
+        self.markerLength = 0.07
 
         self.dictionary = aruco.getPredefinedDictionary(aruco.DICT_4X4_50)
         self.parameters = aruco.DetectorParameters()
@@ -31,7 +31,7 @@ class ArucoDetectorNode(Node):
 
         self.subscription_image = self.create_subscription(
             Image,
-            'image_raw',
+            '/video_source/raw',
             self.image_callback,
             rclpy.qos.qos_profile_sensor_data)
 
