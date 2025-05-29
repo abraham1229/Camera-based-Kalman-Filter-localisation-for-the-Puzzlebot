@@ -90,7 +90,11 @@ class EnhancedOdometry(Node):
             self.encR_callback,
             rclpy.qos.qos_profile_sensor_data)
         
-        self.sub_aruco = self.create_subscription(MarkerArray,'/marker_publisher/markers',self.aruco_callback,rclpy.qos.qos_profile_sensor_data)
+        self.subscription_aruco = self.create_subscription(
+            ArucoDetection,
+            '/aruco_detections',
+            self.aruco_callback,
+            rclpy.qos.qos_profile_sensor_data)
         
         # Publishers
         self.pub_odometry = self.create_publisher(Odometry, 'odometria', 10)
