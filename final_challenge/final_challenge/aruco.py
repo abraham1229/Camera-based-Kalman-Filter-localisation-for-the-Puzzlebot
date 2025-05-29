@@ -16,12 +16,15 @@ class ArucoDetectorNode(Node):
 
         # Calibración hardcodeada
         self.K = np.array([
-            [650.123, 0.0, 320.456],
-            [0.0, 649.789, 240.123],
+            [776.88108, 0.0, 662.6974],
+            [0.0, 777.29396, 406.37559],
             [0.0, 0.0, 1.0]
         ])
-        self.D = np.array([0.12, -0.23, 0.001, 0.002, 0.05])
-        self.markerLength = 0.07
+        
+        # Distortion coefficients D (plumb_bob model)
+        self.D = np.array([-0.33888, 0.116192, 0.000114, -0.001292, 0.0])
+
+        self.markerLength = 0.0814
 
         self.dictionary = aruco.getPredefinedDictionary(aruco.DICT_4X4_50)
         self.parameters = aruco.DetectorParameters()
@@ -38,7 +41,7 @@ class ArucoDetectorNode(Node):
         self.publisher_aruco = self.create_publisher(
             ArucoDetection,
             '/aruco_detections',
-            10)
+            rclpy.qos.qos_profile_sensor_data)
 
         self.get_logger().info("Aruco detector node started (publicando MarkerPose en array)")
 
@@ -92,6 +95,9 @@ class ArucoDetectorNode(Node):
                 cX = int((markerCorners[i][0][0][0] + markerCorners[i][0][2][0]) / 2.0)
                 cY = int((markerCorners[i][0][0][1] + markerCorners[i][0][2][1]) / 2.0)
                 distance = np.linalg.norm(tvec[0][0])
+                self.get_logger().info(
+                    f"Id={int(marker_id)},Cx={cX:.3f}, Cy={cY:.3f}, distance={distance:.3f}°"
+                )
                 cv.putText(img, f"{distance:.2f} m", (cX, cY - 15),
                            cv.FONT_HERSHEY_SIMPLEX, 0.4, (0, 255, 0), 2)
 
