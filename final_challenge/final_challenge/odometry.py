@@ -336,7 +336,7 @@ class EnhancedOdometry(Node):
         return odom
 
     def publish_transform(self, timestamp):
-        """Publish TF transform (matching kalman.py)"""
+        """Publish TF transform"""
         t = TransformStamped()
         
         t.header.stamp = timestamp
