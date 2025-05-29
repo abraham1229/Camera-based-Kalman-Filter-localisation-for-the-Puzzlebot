@@ -90,7 +90,11 @@ class EnhancedOdometry(Node):
             self.encR_callback,
             rclpy.qos.qos_profile_sensor_data)
         
-        self.sub_aruco = self.create_subscription(MarkerArray,'/marker_publisher/markers',self.aruco_callback,rclpy.qos_profile_sensor_data)
+        self.subscription_aruco = self.create_subscription(
+            ArucoDetection,
+            '/aruco_detections',
+            self.aruco_callback,
+            rclpy.qos.qos_profile_sensor_data)
         
         # Publishers
         self.pub_odometry = self.create_publisher(Odometry, 'odometria', 10)
@@ -129,10 +133,10 @@ class EnhancedOdometry(Node):
         
         self.map = [
             # Landmarks with IDs, x, y, theta
-            [0, 2.5, -0.5, 0],   
-            [1, 2.75,  2.5, 1.57],   
-            [2, 4, -4, -1.57],   
-            [3, -0.5, -0.5, -1.57],  
+            [1, 1.6, 0.5, 0],   
+            [2, 1.29,  2.29, 1.57],   
+            [3, 0.8, 0.73, -3.1],   
+            [0, -0.5, -0.5, -1.57],  
             [4, 0.45, -3, -1.57]
         ]
         
