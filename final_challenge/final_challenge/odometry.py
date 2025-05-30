@@ -122,34 +122,23 @@ class EnhancedOdometry(Node):
         # Computed robot velocities
         self.Vr = 0.0  # Linear velocity
         self.Wr = 0.0  # Angular velocity
-
-        self.correction_wr = 1.13
         
         # Kalman filter variables (matching kalman.py)
-        self.Sig = np.array([[0.001, 0.0, 0.0],
-                            [0.0, 0.001, 0.0], 
-                            [0.0, 0.0, 0.003]])
+        self.Sig = np.array([[0.02, 0.0, 0.0],
+                            [0.0, 0.02, 0.0], 
+                            [0.0, 0.0, 0.05]])
         
         # Process noise parameter (from kalman.py)
-        self.sigma_squared = 0.3
-
+        self.sigma_squared = 0.32
+        
         self.map = [
             # Landmarks with IDs, x, y, theta
-            [0, 1.3, 0, 0],   
+            [0, 1.6, 0.5, 0],   
             [1, 1.29,  2.29, 1.57],   
             [2, 0.8, 0.73, -3.1],   
             [3, -0.5, -0.5, -1.57],  
             [4, 0.45, -3, -1.57]
         ]
-        
-        #self.map = [
-        #    # Landmarks with IDs, x, y, theta
-        #    [1, 1.6, 0.5, 0],   
-        #    [2, 1.29,  2.29, 1.57],   
-        #    [3, 0.8, 0.73, -3.1],   
-        #    [0, -0.5, -0.5, -1.57],  
-        #    [4, 0.45, -3, -1.57]
-        #]
         
         # Timing variables for proper dt calculation
         self.first_stamp = True
@@ -191,7 +180,7 @@ class EnhancedOdometry(Node):
 
         # Compute robot velocities from wheel encoders
         self.Vr = (self.velocityR + self.velocityL) * self.wheel_radius / 2
-        self.Wr = (self.velocityR - self.velocityL) * self.wheel_radius / self.robot_width * self.correction_wr
+        self.Wr = (self.velocityR - self.velocityL) * self.wheel_radius / self.robot_width
         
         # Apply motion model
         if self.use_kalman:
@@ -215,7 +204,6 @@ class EnhancedOdometry(Node):
         self.pose_y += dt * self.Vr * math.sin(self.pose_theta + dt * self.Wr / 2)
         self.pose_theta = wrap_to_pi(self.pose_theta + dt * self.Wr)
 
-
     def kalman_prediction(self):
         """Kalman prediction step (copied from kalman.py with minor adaptations)"""
         dt = self.dt
@@ -225,11 +213,6 @@ class EnhancedOdometry(Node):
         self.pose_x += dt * self.Vr * math.cos(self.pose_theta + dt * self.Wr / 2)
         self.pose_y += dt * self.Vr * math.sin(self.pose_theta + dt * self.Wr / 2) 
         self.pose_theta = wrap_to_pi(self.pose_theta + dt * self.Wr)
-
-        # Log the predicted pose
-        self.get_logger().info(
-            f"[Kalman Prediction] pose_x={self.pose_x:.3f}, pose_y={self.pose_y:.3f}, theta={math.degrees(self.pose_theta):.2f}°"
-        )
         
         # Compute Jacobian 
         H = np.array([[1, 0, -dt * self.Vr * math.sin(self.pose_theta)],

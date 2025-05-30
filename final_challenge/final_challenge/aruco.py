@@ -26,7 +26,7 @@ class SmoothedArucoDetectorNode(Node):
         # Distortion coefficients D (plumb_bob model)
         self.D = np.array([-0.33888, 0.116192, 0.000114, -0.001292, 0.0])
 
-        self.markerLength = 0.082
+        self.markerLength = 0.081
 
         self.dictionary = aruco.getPredefinedDictionary(aruco.DICT_4X4_50)
         self.parameters = aruco.DetectorParameters()
