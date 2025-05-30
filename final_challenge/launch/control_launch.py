@@ -32,24 +32,23 @@ def generate_launch_description():
         parameters=[config]
     )
 
-    #aruco_node = Node(
-    #    package='aruco_opencv',
-    #    executable='aruco_tracker_autostart',
-    #    parameters=[
-    #            {"cam_base_topic": "/camera"},
-    #            {"marker_size": 0.14},
-    #            {"marker_dict": "4X4_50"},
-    #            {"publish_tf": True}
-    #    ],
-    #    remappings=[],
-    #    output='screen'
-    #)
-
     aruco_node = Node(
-        name='aruco',
-        package='final_challenge',
-        executable='aruco',
+        package='aruco_opencv',
+        executable='aruco_tracker_autostart',
+        parameters=[
+                {"cam_base_topic": "/camera"},
+                {"marker_size": 0.14},
+                {"marker_dict": "4X4_50"},
+                {"publish_tf": True}
+        ],
+        remappings=[],
+        output='screen'
     )
+    #aruco_node = Node(
+    #    name='aruco',
+    #    package='final_challenge',
+    #    executable='aruco',
+    #)
 
     rqt_image_view_node = Node(
         package='rqt_image_view',
@@ -76,5 +75,6 @@ def generate_launch_description():
         controller_node,
         odometry_node,
         aruco_node,
-        rviz_node
+        rviz_node,
+        rqt_image_view_node
     ])
