@@ -31,6 +31,14 @@ To launch multiple nodes using a launch file
 ros2 launch <desired_package> <desired_launch.py>
 ```
 
+## Demo Video & Presentation 🎥🧠
+
+This section includes a demonstration of the robot's behavior and a brief explanation of the system’s internal logic.
+  
+- [View the slides](https://www.canva.com/design/DAGpJeb9LPc/OB18H8y1_iGPbxbvVS0cjQ/edit?utm_content=DAGpJeb9LPc&utm_campaign=designshare&utm_medium=link2&utm_source=sharebutton)
+
+- [Watch the system in action](https://your_video_link_here)
+
 ## Credits & License 👥 
 This project was created as part of a challenge by **Manchester Robotics**.  
 
