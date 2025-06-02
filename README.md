@@ -15,20 +15,20 @@ The course will guide students through a series of exercises that lead to a fina
 
 Build your ROS 2 workspace
 ```
-  colcon build
+colcon build
 ```
 Source the setup file
 ```
-  source install/setup.bash
+source install/setup.bash
 ```
 
 To run a single node
 ```
-  ros2 run <desired_package> <desired_node.py>
+ros2 run <desired_package> <desired_node.py>
 ```
 To launch multiple nodes using a launch file
 ```
-  ros2 launch <desired_package> <desired_launch.py>
+ros2 launch <desired_package> <desired_launch.py>
 ```
 
 ## Credits & License 👥 
