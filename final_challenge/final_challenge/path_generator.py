@@ -28,6 +28,7 @@ class Path_generator(Node):
         self.prepare_goal_list()
 
     def prepare_goal_list(self):
+        ''' Prepara la lista de objetivos a partir de los parámetros definidos '''
         self.goal_list = []
         for i in range(1, self.num_goals+1):
             x = self.get_parameter(f'x_goal_{i}').value + self.init_offset_x
@@ -39,10 +40,12 @@ class Path_generator(Node):
         self.current_goal_idx = 0
 
     def next_goal_callback(self, msg: Bool):
+        ''' Callback para recibir la señal de cambio de objetivo '''
         if msg.data and not self.finished:
             self.next_goal_flag = True
 
     def timer_callback(self):
+        ''' Timer callback para publicar el objetivo actual '''
         if not self.goal_list or self.finished:
             return
         # Publica el objetivo actual
