@@ -65,6 +65,7 @@ class Controller(Node):
         self.get_logger().info('Controller node initialized')
 
     def callback_odometry(self, msg: Odometry):
+        ''' Callback which updates the robot's position and orientation from odometry messages. '''
         if msg is None:
             return
         self.Posx = msg.pose.pose.position.x
@@ -75,6 +76,7 @@ class Controller(Node):
         self.Postheta = yaw
 
     def callback_goal(self, msg: Goal):
+        ''' Callback which updates the goal position from the path generator messages. '''
         # Detectar mensaje especial de fin (inf)
         if math.isinf(msg.x_goal) or math.isinf(msg.y_goal):
             self.final_goal_reached = True
@@ -109,6 +111,7 @@ class Controller(Node):
             self.mline_intercept = x1  
     
     def callback_lidar(self, msg: LaserScan):
+        ''' Callback which updates the LiDAR message and changes the state based on wall distance. '''
         self.lidar_msg = msg
 
         dist_wall = self.get_distance_at_angle_range(15, -5)
@@ -127,6 +130,7 @@ class Controller(Node):
         
 
     def timer_callback(self):
+        ''' Timer callback which executes the control logic based on the current state. '''
         if self.final_goal_reached or self.goal is None:
             return
         if self.state == 'GO_TO_GOAL':
@@ -136,6 +140,7 @@ class Controller(Node):
         
 
     def go_to_goal(self):
+        ''' Control logic to move towards the current goal using PD control. '''
         gx, gy = self.goal
         dx = gx - self.Posx
         dy = gy - self.Posy
@@ -201,6 +206,7 @@ class Controller(Node):
 
     
     def wall_follower(self):
+        ''' Control logic to follow the wall on the right side using Bug 0 algorithm. '''
         dist_right = self.get_distance_at_angle(-90)
         dist_right_45 = self.get_distance_at_angle(-45)
         dist_right_side = np.mean([dist_right, dist_right_45])
@@ -243,6 +249,7 @@ class Controller(Node):
         self.pub_cmd_vel.publish(twist)
 
     def get_distance_at_angle(self, angle_deg):
+        ''' Get the distance from the LiDAR at a specific angle in degrees. '''
         if self.lidar_msg is None:
             return self.default_distance
 
@@ -267,6 +274,7 @@ class Controller(Node):
         return self.default_distance
     
     def get_distance_at_angle_range(self, angle_start_deg, angle_end_deg):
+        ''' Get the minimum distance from the LiDAR within a specific angle range in degrees. '''
         if self.lidar_msg is None:
             return self.default_distance
         
@@ -298,6 +306,7 @@ class Controller(Node):
 
     
     def is_on_mline(self, tolerance=0.4):
+        ''' Check if the robot is on the M-line defined by the initial point and the goal. '''
         if self.mline_slope is None:
             return False
 
@@ -312,6 +321,7 @@ class Controller(Node):
         return error < tolerance
     
     def can_change_state(self):
+        ''' Check if enough time has passed since the last state change to allow a new state change. '''
         now = self.get_clock().now()
         elapsed = (now - self.last_state_change_time).nanoseconds / 1e9
         return elapsed > self.min_state_duration
