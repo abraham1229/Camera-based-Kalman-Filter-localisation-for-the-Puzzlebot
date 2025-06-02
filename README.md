@@ -10,14 +10,26 @@ The course will guide students through a series of exercises that lead to a fina
 - Basic knowledge of robotics (recommended) 🤖
 - Access to a **Puzzlebot Jetson/Lidar Edition** 🚗
 
-<!--
-## Installation & Usage 🚀 
-# Example command to install dependencies
-npm install
 
-# Example command to run the project
-npm start
--->
+## Installation & Usage 🚀
+
+# Build your ROS 2 workspace
+```
+  colcon build
+```
+# Source the setup file
+```
+  source install/setup.bash
+```
+
+# To run a single node
+```
+  ros2 run <desired_package> <desired_node.py>
+```
+# To launch multiple nodes using a launch file
+```
+  ros2 launch <desired_package> <desired_launch.py>
+```
 
 ## Credits & License 👥 
 This project was created as part of a challenge by **Manchester Robotics**.  
@@ -25,10 +37,3 @@ This project was created as part of a challenge by **Manchester Robotics**.
 Developed by:  
 - **Abraham Ortiz** - [GitHub](https://github.com/abrahamortiz) 
 - **Alan Flores** - [GitHub](https://github.com/AIF31)
-
-
-
-
-
-
-The repository will be updated with new content and exercises that build towards the final project. Stay tuned!
