@@ -146,15 +146,15 @@ class EnhancedOdometry(Node):
         
 
     def encL_callback(self, msg):
-        """Left wheel velocity callback (matching kalman.py)"""
+        """Left wheel velocity callback"""
         self.velocityL = msg.data
 
     def encR_callback(self, msg):
-        """Right wheel velocity callback (matching kalman.py)"""  
+        """Right wheel velocity callback"""  
         self.velocityR = msg.data
 
     def aruco_callback(self, msg):
-        """Process ArUco detections using full Pose message (enhanced from kalman.py)"""
+        """Process ArUco detections using full Pose message """
         if not self.use_kalman:
             return
             
@@ -175,7 +175,7 @@ class EnhancedOdometry(Node):
             success = self.kalman_correction(markers, 0.1)  # 0.1 is measurement noise
 
     def run_loop(self):
-        """Main execution loop (matching kalman.py structure)"""
+        """Main execution loop """
 
         # Compute robot velocities from wheel encoders
         self.Vr = (self.velocityR + self.velocityL) * self.wheel_radius / 2
@@ -204,7 +204,7 @@ class EnhancedOdometry(Node):
         self.pose_theta = wrap_to_pi(self.pose_theta + dt * self.Wr)
 
     def kalman_prediction(self):
-        """Kalman prediction step (copied from kalman.py with minor adaptations)"""
+        """Kalman prediction step"""
         dt = self.dt
         R = self.wheel_radius
         L = self.robot_width
@@ -339,7 +339,7 @@ class EnhancedOdometry(Node):
         return odom
 
     def publish_transform(self, timestamp):
-        """Publish TF transform (matching kalman.py)"""
+        """Publish TF transform"""
         t = TransformStamped()
         
         t.header.stamp = timestamp
